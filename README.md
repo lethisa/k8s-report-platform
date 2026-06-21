@@ -65,15 +65,15 @@ Planned modules:
 
 ### Inventory Overview
 
-> Screenshot placeholder
+![alt text](docs/images/inventory-overview.png)
 
 ### Analytics Overview
 
-> Screenshot placeholder
+> Coming Soon
 
 ### Reporting
 
-> Screenshot placeholder
+> Coming Soon
 
 ---
 
