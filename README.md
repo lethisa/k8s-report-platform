@@ -1,8 +1,23 @@
 # KubeReport
 
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![Flask](https://img.shields.io/badge/Flask-3.x-black)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 KubeReport is an open-source Kubernetes Capacity Planning and Reporting Platform built with Flask.
 
 It helps platform engineers, DevOps teams, SREs, and infrastructure operators collect inventory data from Kubernetes clusters, analyze resource utilization, generate operational insights, and create capacity planning reports.
+
+---
+
+## Current Status
+
+Current Development Phase:
+
+- ✅ Sprint 1 - Foundation & Inventory
+- 🚧 Sprint 2 - Analytics
+- 📋 Sprint 3 - Reporting
 
 ---
 
@@ -65,7 +80,7 @@ Planned modules:
 
 ### Inventory Overview
 
-![alt text](docs/images/inventory-overview.png)
+![Inventory Overview](docs/images/inventory-overview.png)
 
 ### Analytics Overview
 
@@ -242,44 +257,15 @@ pytest
 
 ---
 
-## Roadmap
+## Documentation
 
-### Phase 1 - Inventory
+Additional documentation is available under the `docs/` directory.
 
-- [x] Cluster Management
-- [x] Inventory Overview
-- [x] Nodes
-- [x] Namespaces
-- [x] Workloads
-- [x] Pods
-- [x] Services
-- [x] Ingresses
-- [x] Storage
-
-### Phase 2 - Analytics
-
-- [ ] Analytics Overview
-- [ ] Resource Utilization
-- [ ] Capacity Analysis
-- [ ] Trends & Forecasting
-- [ ] Top Consumers
-- [ ] Alerts & Anomalies
-
-### Phase 3 - Reporting
-
-- [ ] Report Generator
-- [ ] Capacity Reports
-- [ ] Health Reports
-- [ ] Executive Reports
-
-### Phase 4 - Capacity Planning
-
-- [ ] Prometheus Integration
-- [ ] Forecasting Engine
-- [ ] Recommendations Engine
-- [ ] Capacity Projection
-
-See: docs/roadmap/roadmap.md
+- Architecture
+- Development Guides
+- Sprint History
+- Roadmap
+- Design Decisions
 
 ---
 
@@ -304,6 +290,6 @@ This project is released under the MIT License.
 
 ---
 
-## Author
+## Maintainer
 
 Lethisa Putri
