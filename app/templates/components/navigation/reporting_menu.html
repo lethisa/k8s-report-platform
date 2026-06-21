@@ -1,0 +1,58 @@
+<div x-data="{ reportsOpen: true }" class="space-y-1">
+    <a
+        href="{{ url_for('reports.index') }}"
+        @click="
+            if(sidebarOpen){
+                reportsOpen = !reportsOpen;
+                $event.preventDefault();
+            }
+        "
+        class="flex items-center justify-between rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+    >
+        <div class="flex items-center gap-3">
+            <i data-lucide="file-text" class="h-5 w-5"></i>
+            <span x-show="sidebarOpen">Reporting</span>
+        </div>
+
+        <i
+            x-show="sidebarOpen"
+            :class="reportsOpen ? 'rotate-90' : ''"
+            data-lucide="chevron-right"
+            class="h-4 w-4 transition-transform"
+        ></i>
+    </a>
+
+    <div x-show="reportsOpen && sidebarOpen" x-transition class="ml-6 border-l border-slate-700 pl-4">
+        <a
+            href="{{ url_for('reports.index') }}"
+            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+        >
+            <i data-lucide="files" class="h-3.5 w-3.5"></i>
+            <span>Reports</span>
+        </a>
+
+        <a
+            href="{{ url_for('reports.generate') }}"
+            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+        >
+            <i data-lucide="plus-circle" class="h-3.5 w-3.5"></i>
+            <span>Generate Report</span>
+        </a>
+
+        <a
+            href="{{ url_for('reports.templates') }}"
+            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+        >
+            <i data-lucide="layout-template" class="h-3.5 w-3.5"></i>
+            <span>Templates</span>
+        </a>
+
+        <a
+            href="{{ url_for('reports.history') }}"
+            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+        >
+            <i data-lucide="history" class="h-3.5 w-3.5"></i>
+            <span>History</span>
+        </a>
+    </div>
+</div>

@@ -61,149 +61,7 @@
             Operations
         </div>
 
-        <div x-data="{ inventoryOpen: true }" class="space-y-1">
-            <!-- Inventory Parent -->
-
-            <a
-                href="{{ url_for('inventory.overview') }}"
-                @click="
-        if(sidebarOpen){
-            inventoryOpen = !inventoryOpen;
-            $event.preventDefault();
-        }
-    "
-                class="flex items-center justify-between rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-            >
-                <div class="flex items-center gap-3">
-                    <i data-lucide="package-search" class="h-5 w-5"></i>
-
-                    <span x-show="sidebarOpen">Inventory</span>
-                </div>
-
-                <i
-                    x-show="sidebarOpen"
-                    :class="inventoryOpen ? 'rotate-90' : ''"
-                    data-lucide="chevron-right"
-                    class="h-4 w-4 transition-transform"
-                ></i>
-            </a>
-
-            <!-- Inventory Sub Menu -->
-
-            <div x-show="inventoryOpen && sidebarOpen" x-transition class="ml-6 border-l border-slate-700 pl-4">
-                <!-- Overview -->
-
-                <a
-                    href="{{ url_for('inventory.overview') }}"
-                    class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'inventory.overview'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="layout-grid" class="h-3.5 w-3.5"></i>
-
-                    <span>Overview</span>
-                </a>
-
-                <!-- Nodes -->
-
-                <a
-                    href="{{ url_for('inventory.nodes') }}"
-                    class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'inventory.nodes'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="server" class="h-3.5 w-3.5"></i>
-
-                    <span>Nodes</span>
-                </a>
-
-                <!-- Namespaces -->
-
-                <a
-                    href="{{ url_for('inventory.namespaces') }}"
-                    class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'inventory.namespaces'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="folders" class="h-3.5 w-3.5"></i>
-
-                    <span>Namespaces</span>
-                </a>
-
-                <!-- Workloads -->
-
-                <a
-                    href="{{ url_for('inventory.workloads') }}"
-                    class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'inventory.workloads'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="boxes" class="h-3.5 w-3.5"></i>
-
-                    <span>Workloads</span>
-                </a>
-
-                <!-- Pods -->
-
-                <a
-                    href="{{ url_for('inventory.pods') }}"
-                    class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'inventory.pods'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="box" class="h-3.5 w-3.5"></i>
-
-                    <span>Pods</span>
-                </a>
-
-                <!-- Services -->
-
-                <a
-                    href="{{ url_for('inventory.services') }}"
-                    class="{{
-        'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-        if request.endpoint == 'inventory.services'
-        else 'text-slate-400 hover:text-white'
-    }} flex items-center gap-2 py-2 pl-3 text-sm"
-                >
-                    <i data-lucide="network" class="h-3.5 w-3.5"></i>
-
-                    <span>Services</span>
-                </a>
-
-                <!-- Ingresses -->
-
-                <a
-                    href="{{ url_for('inventory.ingresses') }}"
-                    class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
-                >
-                    <i data-lucide="route" class="h-3.5 w-3.5"></i>
-
-                    <span>Ingresses</span>
-                </a>
-
-                <!-- Storage -->
-
-                <a
-                    href="{{ url_for('inventory.storage') }}"
-                    class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
-                >
-                    <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i>
-
-                    <span>Storage</span>
-                </a>
-            </div>
-        </div>
+        {% include "components/navigation/inventory_menu.html" %}
 
         <!-- ANALYTICS -->
 
@@ -211,16 +69,15 @@
             Analytics
         </div>
 
-        <div class="space-y-1">
-            <a
-                href="#"
-                class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition-all duration-200 hover:bg-slate-800 hover:text-white"
-            >
-                <i data-lucide="chart-column" class="h-5 w-5"></i>
+        {% include "components/navigation/analytics_menu.html" %}
 
-                <span x-show="sidebarOpen" x-transition>Analytics</span>
-            </a>
+        <!-- REPORTING -->
+
+        <div x-show="sidebarOpen" class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            Reporting
         </div>
+
+        {% include "components/navigation/reporting_menu.html" %}
 
         <!-- SYSTEM -->
 
