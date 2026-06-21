@@ -9,6 +9,8 @@ KubeReport is an open-source Kubernetes Capacity Planning and Reporting Platform
 
 It helps platform engineers, DevOps teams, SREs, and infrastructure operators collect inventory data from Kubernetes clusters, analyze resource utilization, generate operational insights, and create capacity planning reports.
 
+![Inventory Overview](docs/images/logo.png)
+
 ---
 
 ## Current Status
