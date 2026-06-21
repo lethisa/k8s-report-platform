@@ -1,0 +1,9 @@
+.venv
+node_modules
+migrations
+dist
+build
+coverage
+
+*.pyc
+__pycache__

@@ -1,0 +1,148 @@
+<tr
+    id="cluster-row-{{ cluster.id }}"
+    class="border-t border-slate-200 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40"
+>
+    <!-- Name -->
+
+    <td class="px-6 py-4">
+        <div class="font-medium text-slate-900 dark:text-white">{{ cluster.name }}</div>
+    </td>
+
+    <!-- Environment -->
+
+    <td class="px-6 py-4">
+        {% if cluster.environment == "prd" %}
+
+        <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+            Production
+        </span>
+
+        {% elif cluster.environment == "stg" %}
+
+        <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+            Staging
+        </span>
+
+        {% else %}
+
+        <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+            Development
+        </span>
+
+        {% endif %}
+    </td>
+
+    <!-- Status -->
+
+    <td class="px-6 py-4">{% include "cluster/partials/status_badge.html" %}</td>
+
+    <!-- Nodes -->
+
+    <td class="px-6 py-4 text-slate-600">{{ cluster.node_count if cluster.node_count else "-" }}</td>
+
+    <!-- K8S Version -->
+
+    <td class="px-6 py-4 text-slate-600">{{ inventory_summary.get(cluster.id, {}).get('version', '-') }}</td>
+
+    <!-- Namespaces -->
+
+    <td class="px-6 py-4 text-slate-600">{{ inventory_summary.get(cluster.id, {}).get('namespaces', 0) }}</td>
+
+    <!-- Inventory Status -->
+
+    <td class="px-6 py-4">{% include "cluster/partials/inventory_badge.html" %}</td>
+
+    <!-- Last Check -->
+
+    <td class="px-6 py-4 text-slate-500 dark:text-slate-400">
+        {% if cluster.last_check %} {{ cluster.last_check.strftime('%Y-%m-%d %H:%M') }} {% else %} Never {% endif %}
+    </td>
+
+    <!-- Actions -->
+
+    <td class="px-6 py-4">
+        <div class="flex justify-end gap-2">
+            <!-- Test Connection -->
+
+            <form
+                hx-post="{{ url_for(
+        'cluster.test_cluster',
+        cluster_id=cluster.id
+    ) }}"
+                hx-target="#cluster-table-container"
+                hx-swap="outerHTML"
+            >
+                <button
+                    type="submit"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 transition hover:bg-slate-100 dark:border-slate-700"
+                    title="Test Connection"
+                >
+                    <i data-lucide="plug-zap" class="h-4 w-4"></i>
+                </button>
+
+                <div id="inventory-result-{{ cluster.id }}" class="hidden"></div>
+            </form>
+
+            <!-- Sync Inventory -->
+
+            <form
+                hx-post="{{ url_for(
+        'inventory.sync',
+        cluster_id=cluster.id
+    ) }}"
+                hx-target="#cluster-table-container"
+                hx-swap="outerHTML"
+            >
+                <button
+                    type="submit"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 text-blue-600 transition hover:bg-blue-50"
+                    title="Sync Inventory"
+                >
+                    <i data-lucide="database" class="h-4 w-4"></i>
+                </button>
+            </form>
+
+            <!-- Edit -->
+
+            <a
+                href="{{ url_for(
+        'cluster.edit_cluster',
+        cluster_id=cluster.id
+    ) }}"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 transition hover:bg-slate-100 dark:border-slate-700"
+                title="Edit Cluster"
+            >
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+            </a>
+
+            <!-- Delete -->
+
+            <form
+                method="POST"
+                action="{{ url_for(
+        'cluster.delete_cluster_route',
+        cluster_id=cluster.id
+    ) }}"
+                onsubmit="return confirm(
+        'Delete cluster {{ cluster.name }}?'
+    )"
+            >
+                <button
+                    type="button"
+                    @click="
+        deleteModal = true;
+        deleteName = '{{ cluster.name }}';
+        deleteUrl = '{{ url_for(
+            'cluster.delete_cluster_route',
+            cluster_id=cluster.id
+        ) }}';
+    "
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+                    title="Delete Cluster"
+                >
+                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>

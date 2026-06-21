@@ -1,0 +1,224 @@
+{% extends "layouts/dashboard.html" %} {% block title %} Namespace Inventory {% endblock %} {% block dashboard_content
+%}
+
+<div class="space-y-6 p-8">
+    <!-- Hero -->
+
+    <div
+        class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="flex items-center gap-4">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                <i data-lucide="folder-tree" class="h-5 w-5"></i>
+            </div>
+
+            <div>
+                <h1 class="text-3xl font-bold">Namespace Inventory</h1>
+
+                <p class="mt-1 text-slate-500">Discover and explore Kubernetes namespaces across connected clusters.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI -->
+
+    <div class="grid gap-6 md:grid-cols-3">
+        <!-- Total Namespaces -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Total Namespaces</span>
+
+                <i data-lucide="folder-tree" class="h-5 w-5 text-slate-400"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_namespaces }}</div>
+
+            <p class="text-xs text-slate-500">Kubernetes namespaces</p>
+        </div>
+
+        <!-- Clusters -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Clusters</span>
+
+                <i data-lucide="server" class="h-5 w-5 text-slate-400"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_clusters }}</div>
+
+            <p class="text-xs text-slate-500">Connected clusters</p>
+        </div>
+
+        <!-- Active -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Active</span>
+
+                <i data-lucide="badge-check" class="h-5 w-5 text-slate-400"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.active_namespaces }}</div>
+
+            <p class="text-xs text-slate-500">Active namespaces</p>
+        </div>
+    </div>
+
+    <!-- Namespace Inventory -->
+
+    <div
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <h2 class="text-lg font-semibold">Namespace Inventory</h2>
+
+            <p class="mt-1 text-sm text-slate-500">Kubernetes namespaces collected from connected clusters.</p>
+        </div>
+
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <form method="GET" class="grid gap-4 lg:grid-cols-4">
+                <!-- Cluster -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Cluster</label>
+
+                    <select name="cluster_id" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                        <option value="">All Clusters</option>
+
+                        {% for cluster in clusters %} {% if selected_cluster_id == cluster.id %}
+
+                        <option value="{{ cluster.id }}" selected>{{ cluster.name }}</option>
+
+                        {% else %}
+
+                        <option value="{{ cluster.id }}">{{ cluster.name }}</option>
+
+                        {% endif %} {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Status</label>
+
+                    <select name="status" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                        {% if not selected_status %}
+                        <option value="" selected>All Status</option>
+                        {% else %}
+                        <option value="">All Status</option>
+                        {% endif %} {% if selected_status == 'Active' %}
+                        <option value="Active" selected>Active</option>
+                        {% else %}
+                        <option value="Active">Active</option>
+                        {% endif %} {% if selected_status == 'Terminating' %}
+                        <option value="Terminating" selected>Terminating</option>
+                        {% else %}
+                        <option value="Terminating">Terminating</option>
+                        {% endif %} {% if selected_status == 'Unknown' %}
+                        <option value="Unknown" selected>Unknown</option>
+                        {% else %}
+                        <option value="Unknown">Unknown</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Search Namespace</label>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search namespace..."
+                        class="w-full rounded-xl border border-slate-300 px-3 py-2"
+                    />
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-white">Apply</button>
+
+                    <a
+                        href="{{ url_for('inventory.namespaces') }}"
+                        class="rounded-xl border border-slate-300 px-4 py-2"
+                    >
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-slate-900 dark:text-slate-100">
+                <thead>
+                    <tr
+                        class="bg-slate-50 text-center text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-300"
+                    >
+                        <th class="px-6 py-3">Cluster</th>
+
+                        <th class="px-6 py-3">Namespace</th>
+
+                        <th class="px-6 py-3">Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for namespace, cluster_name in inventory.namespaces %}
+
+                    <tr class="border-t border-slate-100 text-center dark:border-slate-700">
+                        <td class="px-6 py-4">{{ cluster_name }}</td>
+
+                        <td class="px-6 py-4 font-medium">{{ namespace.namespace }}</td>
+
+                        <td class="px-6 py-4">
+                            {% if namespace.status == 'Active' %}
+
+                            <span
+                                class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                            >
+                                Active
+                            </span>
+
+                            {% elif namespace.status == 'Terminating' %}
+
+                            <span
+                                class="inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700"
+                            >
+                                Terminating
+                            </span>
+
+                            {% else %}
+
+                            <span
+                                class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+                            >
+                                {{ namespace.status or 'Unknown' }}
+                            </span>
+
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">No inventory data found.</td>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="border-t border-slate-200 px-6 py-4 text-sm text-slate-500 dark:border-slate-700">
+                Showing {{ inventory.namespaces|length }} namespace(s)
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

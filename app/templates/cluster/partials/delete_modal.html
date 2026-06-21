@@ -1,0 +1,46 @@
+<div
+    x-show="deleteModal"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+    style="display: none"
+>
+    <div
+        @click.away="deleteModal = false"
+        x-transition
+        class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl"
+    >
+        <div class="p-6">
+            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i>
+            </div>
+
+            <h3 class="text-lg font-semibold text-slate-900">Delete Cluster</h3>
+
+            <p class="mt-2 text-sm text-slate-600">
+                Are you sure you want to delete
+                <span class="font-semibold" x-text="deleteName"></span>
+                ?
+            </p>
+
+            <p class="mt-1 text-sm text-red-600">This action cannot be undone.</p>
+        </div>
+
+        <div class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+            <button
+                @click="deleteModal = false"
+                class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50"
+            >
+                Cancel
+            </button>
+
+            <form :action="deleteUrl" method="POST">
+                <button
+                    type="submit"
+                    class="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                    Delete Cluster
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html
+    lang="en"
+    x-data="{
+        darkMode: localStorage.getItem('theme') === 'dark'
+    }"
+    :class="{ 'dark': darkMode }"
+>
+    <head>
+        <meta charset="UTF-8" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}" />
+
+        <title>K8S Capacity Report</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}" />
+    </head>
+
+    <body
+        class="bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 dark:text-white"
+    >
+        <div class="flex min-h-screen">
+            <div class="flex min-w-0 flex-1 flex-col">
+                {% include 'partials/topbar.html' %}
+
+                <main class="flex-1 overflow-y-auto">
+                    <div class="p-6 lg:p-8">{% block content %} {% endblock %}</div>
+                </main>
+            </div>
+        </div>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+        <script src="https://unpkg.com/lucide@latest"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                lucide.createIcons()
+            })
+
+            document.body.addEventListener('htmx:afterSwap', () => {
+                if (window.lucide) {
+                    lucide.createIcons()
+                }
+            })
+        </script>
+    </body>
+</html>

@@ -1,0 +1,301 @@
+{% extends "layouts/dashboard.html" %} {% block title %} Pod Inventory {% endblock %} {% block dashboard_content %}
+
+<div class="space-y-6 p-8">
+    <!-- Hero -->
+
+    <div
+        class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="flex items-center gap-4">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                <i data-lucide="package" class="h-5 w-5"></i>
+            </div>
+
+            <div>
+                <h1 class="text-3xl font-bold">Pod Inventory</h1>
+
+                <p class="mt-1 text-slate-500">Discover and explore Kubernetes pods across connected clusters.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI -->
+
+    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <!-- Total Pods -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Total Pods</span>
+
+                <i data-lucide="package" class="h-5 w-5 text-slate-400"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_pods }}</div>
+
+            <p class="text-xs text-slate-500">Kubernetes pods</p>
+        </div>
+
+        <!-- Running -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Running</span>
+
+                <i data-lucide="circle-check-big" class="h-5 w-5 text-green-500"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.running }}</div>
+
+            <p class="text-xs text-slate-500">Healthy pods</p>
+        </div>
+
+        <!-- Pending -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Pending</span>
+
+                <i data-lucide="clock-3" class="h-5 w-5 text-yellow-500"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.pending }}</div>
+
+            <p class="text-xs text-slate-500">Waiting for scheduling</p>
+        </div>
+
+        <!-- Failed -->
+
+        <div
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500">Failed</span>
+
+                <i data-lucide="circle-x" class="h-5 w-5 text-red-500"></i>
+            </div>
+
+            <div class="text-4xl font-bold text-blue-600">{{ inventory.failed }}</div>
+
+            <p class="text-xs text-slate-500">Failed pods</p>
+        </div>
+    </div>
+
+    <!-- Table -->
+
+    <div
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Pod Inventory</h2>
+
+            <p class="mt-1 text-sm text-slate-500">Kubernetes pods collected from connected clusters.</p>
+        </div>
+
+        <!-- FILTER BAR -->
+
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <form method="GET" class="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_2fr_auto]">
+                <!-- Cluster -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Cluster</label>
+
+                    <select name="cluster_id" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                        <option value="">All Clusters</option>
+
+                        {% for cluster in clusters %} {% if selected_cluster_id == cluster.id|string %}
+
+                        <option value="{{ cluster.id }}" selected>{{ cluster.name }}</option>
+
+                        {% else %}
+
+                        <option value="{{ cluster.id }}">{{ cluster.name }}</option>
+
+                        {% endif %} {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Namespace -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Namespace</label>
+
+                    <select name="namespace" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                        <option value="">All Namespaces</option>
+
+                        {% for ns in inventory.namespaces %} {% if selected_namespace == ns %}
+
+                        <option value="{{ ns }}" selected>{{ ns }}</option>
+
+                        {% else %}
+
+                        <option value="{{ ns }}">{{ ns }}</option>
+
+                        {% endif %} {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Status -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Status</label>
+
+                    <select name="status" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                        {% if not selected_status %}
+                        <option value="" selected>All Status</option>
+                        {% else %}
+                        <option value="">All Status</option>
+                        {% endif %} {% if selected_status == 'Running' %}
+                        <option value="Running" selected>Running</option>
+                        {% else %}
+                        <option value="Running">Running</option>
+                        {% endif %} {% if selected_status == 'Pending' %}
+                        <option value="Pending" selected>Pending</option>
+                        {% else %}
+                        <option value="Pending">Pending</option>
+                        {% endif %} {% if selected_status == 'Succeeded' %}
+                        <option value="Succeeded" selected>Succeeded</option>
+                        {% else %}
+                        <option value="Succeeded">Succeeded</option>
+                        {% endif %} {% if selected_status == 'Failed' %}
+                        <option value="Failed" selected>Failed</option>
+                        {% else %}
+                        <option value="Failed">Failed</option>
+                        {% endif %} {% if selected_status == 'Unknown' %}
+                        <option value="Unknown" selected>Unknown</option>
+                        {% else %}
+                        <option value="Unknown">Unknown</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Search -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Search Pod</label>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search pod..."
+                        class="w-full rounded-xl border border-slate-300 px-3 py-2"
+                    />
+                </div>
+
+                <!-- Button -->
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-white">Apply</button>
+
+                    <a href="{{ url_for('inventory.pods') }}" class="rounded-xl border border-slate-300 px-4 py-2">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-slate-900 dark:text-slate-100">
+                    <thead>
+                        <tr
+                            class="bg-slate-50 text-center text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-300"
+                        >
+                            <th class="px-4 py-3">Cluster</th>
+                            <th class="px-4 py-3">Namespace</th>
+                            <th class="px-4 py-3">Pod</th>
+                            <th class="px-4 py-3">Node</th>
+                            <th class="px-4 py-3">Ready</th>
+                            <th class="px-4 py-3">Restarts</th>
+                            <th class="px-4 py-3">IP</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Age</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for pod in inventory.pods %}
+
+                        <tr class="border-t border-slate-100 text-center dark:border-slate-700">
+                            <td class="px-4 py-4">{{ pod.cluster_name }}</td>
+
+                            <td class="px-4 py-4">{{ pod.namespace }}</td>
+
+                            <td class="px-4 py-4 font-medium">{{ pod.name }}</td>
+
+                            <td class="px-4 py-4">{{ pod.node or '-' }}</td>
+
+                            <td class="px-4 py-4">{{ pod.ready }}</td>
+
+                            <td class="px-4 py-4">{{ pod.restarts }}</td>
+
+                            <td class="px-4 py-4">{{ pod.ip or '-' }}</td>
+
+                            <td class="px-4 py-4">
+                                {% if pod.status == "Running" %}
+
+                                <span
+                                    class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                                >
+                                    Running
+                                </span>
+
+                                {% elif pod.status == "Pending" %}
+
+                                <span
+                                    class="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700"
+                                >
+                                    Pending
+                                </span>
+
+                                {% elif pod.status == "Failed" %}
+
+                                <span
+                                    class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                >
+                                    Failed
+                                </span>
+
+                                {% else %}
+
+                                <span
+                                    class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                                >
+                                    {{ pod.status }}
+                                </span>
+
+                                {% endif %}
+                            </td>
+
+                            <td class="px-4 py-4">{{ pod.age }}</td>
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="9" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                No pod inventory found.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="border-t border-slate-200 px-6 py-4 text-sm text-slate-500 dark:border-slate-700">
+                Showing {{ inventory.pods|length }} pod(s)
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}
+</div>

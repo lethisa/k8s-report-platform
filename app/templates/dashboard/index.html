@@ -1,0 +1,291 @@
+{% extends "layouts/dashboard.html" %} {% block dashboard_content %}
+
+<div class="space-y-8 p-8">
+    <!-- Header -->
+
+    <!-- Hero -->
+
+    <div
+        class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-slate-900 dark:text-white">
+                    Good Morning, {{ current_user.username }} 👋
+                </h1>
+
+                <p class="mt-3 max-w-2xl text-slate-500 dark:text-slate-400">
+                    Monitor your Kubernetes environments, analyze capacity,
+                    track workloads, and generate executive reports.
+                </p>
+            </div>
+
+            <div class="hidden xl:block">
+                <img
+                    src="{{ url_for('static', filename='images/kubernetes-logo.svg') }}"
+                    class="h-16 opacity-40"
+                />
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI -->
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div
+            class="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Clusters</p>
+
+                    <h3 class="mt-2 text-4xl font-bold">0</h3>
+                </div>
+
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100"
+                >
+                    <i data-lucide="server" class="h-6 w-6 text-blue-600"></i>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-500">Registered clusters</p>
+        </div>
+
+        <div
+            class="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Nodes</p>
+
+                    <h3 class="mt-2 text-4xl font-bold">0</h3>
+                </div>
+
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-100"
+                >
+                    <i data-lucide="network" class="h-6 w-6 text-green-600"></i>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-500">Discovered nodes</p>
+        </div>
+
+        <div
+            class="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Workloads</p>
+
+                    <h3 class="mt-2 text-4xl font-bold">0</h3>
+                </div>
+
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100"
+                >
+                    <i
+                        data-lucide="clipboard-list"
+                        class="h-6 w-6 text-violet-600"
+                    ></i>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-500">Running workloads</p>
+        </div>
+
+        <div
+            class="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Reports</p>
+
+                    <h3 class="mt-2 text-4xl font-bold">0</h3>
+                </div>
+
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100"
+                >
+                    <i
+                        data-lucide="file-text"
+                        class="h-6 w-6 text-orange-600"
+                    ></i>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-500">Generated reports</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+
+    <div>
+        <h2 class="mb-4 text-xl font-semibold">Quick Actions</h2>
+
+        <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <a
+                href="{{ url_for('cluster.add_cluster') }}"
+                class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            >
+                <i
+                    data-lucide="plus-circle"
+                    class="mb-3 h-6 w-6 text-blue-600"
+                ></i>
+
+                <div class="font-medium">Add Cluster</div>
+            </a>
+
+            <a
+                href="#"
+                class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            >
+                <i
+                    data-lucide="refresh-cw"
+                    class="mb-3 h-6 w-6 text-green-600"
+                ></i>
+
+                <div class="font-medium">Sync Inventory</div>
+            </a>
+
+            <a
+                href="#"
+                class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            >
+                <i
+                    data-lucide="file-text"
+                    class="mb-3 h-6 w-6 text-orange-600"
+                ></i>
+
+                <div class="font-medium">Generate Report</div>
+            </a>
+
+            <a
+                href="#"
+                class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            >
+                <i
+                    data-lucide="chart-column"
+                    class="mb-3 h-6 w-6 text-violet-600"
+                ></i>
+
+                <div class="font-medium">Analytics</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Health & Activity -->
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <!-- Cluster Health -->
+
+        <div
+            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="mb-6 flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Cluster Health</h2>
+
+                <i
+                    data-lucide="shield-check"
+                    class="h-5 w-5 text-slate-400"
+                ></i>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-3 w-3 rounded-full bg-green-500"></div>
+
+                        <span>Healthy</span>
+                    </div>
+
+                    <span class="font-semibold">{{ health.healthy }}</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
+
+                        <span>Warning</span>
+                    </div>
+
+                    <span class="font-semibold">{{ health.warning }}</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-3 w-3 rounded-full bg-red-500"></div>
+
+                        <span>Critical</span>
+                    </div>
+
+                    <span class="font-semibold">{{ health.critical }}</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-3 w-3 rounded-full bg-slate-400"></div>
+
+                        <span>Unknown</span>
+                    </div>
+
+                    <span class="font-semibold">{{ health.unknown }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+
+        <div
+            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <div class="mb-6 flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Recent Activity</h2>
+
+                <i data-lucide="history" class="h-5 w-5 text-slate-400"></i>
+            </div>
+
+            <div class="space-y-4">
+                {% for activity in activities %}
+
+                <div
+                    class="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-700"
+                >
+                    <i
+                        data-lucide="{{ activity.icon }}"
+                        class="h-5 w-5 text-blue-600"
+                    ></i>
+
+                    <span>{{ activity.message }}</span>
+                </div>
+
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+        <div
+            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <h2 class="mb-4 text-xl font-semibold">Recent Reports</h2>
+
+            <div class="flex h-56 items-center justify-center text-slate-400">
+                No reports generated yet
+            </div>
+        </div>
+
+        <div
+            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+            <h2 class="mb-4 text-xl font-semibold">System Overview</h2>
+
+            <div class="flex h-56 items-center justify-center text-slate-400">
+                Inventory synchronization required
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
