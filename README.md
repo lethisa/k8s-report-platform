@@ -279,6 +279,8 @@ pytest
 - [ ] Recommendations Engine
 - [ ] Capacity Projection
 
+See: docs/roadmap/roadmap.md
+
 ---
 
 ## Contributing
