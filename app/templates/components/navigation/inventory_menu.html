@@ -1,4 +1,10 @@
-<div x-data="{ inventoryOpen: true }" class="space-y-1">
+<div
+    x-data="{
+    inventoryOpen:
+        {{ 'true' if request.endpoint and request.endpoint.startswith('inventory.') else 'false' }}
+}"
+    class="space-y-1"
+>
     <!-- Inventory Parent -->
 
     <a

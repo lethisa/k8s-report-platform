@@ -1,4 +1,10 @@
-<div x-data="{ reportsOpen: true }" class="space-y-1">
+<div
+    x-data="{
+    reportsOpen:
+        {{ 'true' if request.endpoint and request.endpoint.startswith('reports.') else 'false' }}
+}"
+    class="space-y-1"
+>
     <a
         href="{{ url_for('reports.index') }}"
         @click="

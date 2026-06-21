@@ -1,4 +1,10 @@
-<div x-data="{ analyticsOpen: true }" class="space-y-1">
+<div
+    x-data="{
+    analyticsOpen:
+        {{ 'true' if request.endpoint and request.endpoint.startswith('analytics.') else 'false' }}
+}"
+    class="space-y-1"
+>
     <!-- Analytics Parent -->
 
     <a
