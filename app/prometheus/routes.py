@@ -1,6 +1,11 @@
+from uuid import UUID
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
 from app.models.cluster import Cluster
+from app.prometheus.exceptions import (
+    PrometheusError,
+)
 from app.prometheus.forms import (
     PrometheusConfigForm,
 )
@@ -16,11 +21,11 @@ bp = Blueprint(
 
 
 @bp.route(
-    '/cluster/<int:cluster_id>',
+    '/cluster/<uuid:cluster_id>',
     methods=['GET', 'POST'],
 )
 def configuration(
-    cluster_id: int,
+    cluster_id: UUID,
 ):
 
     cluster = Cluster.query.get_or_404(cluster_id)
@@ -49,13 +54,11 @@ def configuration(
 
     if request.method == 'GET' and config:
         form.endpoint.data = config.endpoint
-
         form.auth_type.data = config.auth_type
-
         form.username.data = config.username
-
+        form.password.data = config.password
+        form.bearer_token.data = config.bearer_token
         form.timeout.data = config.timeout
-
         form.verify_ssl.data = config.verify_ssl
 
     return render_template(
@@ -82,7 +85,7 @@ def test_connection(
 
         return jsonify(result)
 
-    except Exception as exc:
+    except PrometheusError as exc:
         return jsonify(
             {
                 'success': False,

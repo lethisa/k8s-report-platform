@@ -9,6 +9,7 @@ from app.prometheus.client import PrometheusClient
 from app.prometheus.exceptions import (
     PrometheusError,
 )
+from app.prometheus.forms import PrometheusConfigForm
 
 
 class PrometheusService:
@@ -49,7 +50,10 @@ class PrometheusService:
 
         started = time.perf_counter()
 
-        self.client.query('vector(1)')
+        result = self.client.query('vector(1)')
+
+        if result.get('status') != 'success':
+            raise PrometheusError('Prometheus query failed')
 
         build_info = self.client.get_build_info()
 
@@ -68,8 +72,8 @@ class PrometheusService:
 
     @staticmethod
     def save_config(
-        cluster,
-        form,
+        cluster: Cluster,
+        form: PrometheusConfigForm,
     ) -> PrometheusConfig:
 
         config = cluster.prometheus_config
@@ -80,19 +84,48 @@ class PrometheusService:
 
             db.session.add(config)
 
-        config.endpoint = form.endpoint.data
+        endpoint = form.endpoint.data
+        auth_type = form.auth_type.data
+        timeout = form.timeout.data
+        verify_ssl = form.verify_ssl.data
 
-        config.auth_type = form.auth_type.data
+        if endpoint is None:
+            raise PrometheusError('Endpoint is required')
 
-        config.username = form.username.data
+        if auth_type is None:
+            raise PrometheusError('Authentication type is required')
 
-        config.password = form.password.data
+        if timeout is None:
+            raise PrometheusError('Timeout is required')
 
-        config.bearer_token = form.bearer_token.data
+        if verify_ssl is None:
+            verify_ssl = True
 
-        config.timeout = form.timeout.data
+        config.endpoint = endpoint
+        config.auth_type = auth_type
 
-        config.verify_ssl = form.verify_ssl.data
+        if auth_type == 'none':
+            config.username = None
+            config.password = None
+            config.bearer_token = None
+
+        elif auth_type == 'basic':
+            config.username = form.username.data
+            config.bearer_token = None
+
+        elif auth_type == 'bearer':
+            config.username = None
+            config.password = None
+
+        if form.password.data:
+            config.password = form.password.data
+
+        if form.bearer_token.data:
+            config.bearer_token = form.bearer_token.data
+
+        config.timeout = timeout
+
+        config.verify_ssl = verify_ssl
 
         db.session.commit()
 

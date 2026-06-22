@@ -129,3 +129,69 @@ class MetricsService:
                 2,
             ),
         }
+
+    def get_top_memory_consumers(
+        self,
+    ) -> list[dict]:
+
+        response = self.prometheus.instant_query(queries.TOP_MEMORY_PODS)
+
+        results = response.get('data', {}).get('result', [])
+
+        consumers = []
+
+        for item in results:
+            metric = item.get(
+                'metric',
+                {},
+            )
+
+            consumers.append(
+                {
+                    'namespace': metric.get(
+                        'namespace',
+                        '-',
+                    ),
+                    'pod': metric.get(
+                        'pod',
+                        '-',
+                    ),
+                    'value': float(item['value'][1]),
+                }
+            )
+
+        return consumers
+
+    def get_cpu_capacity(
+        self,
+    ) -> float:
+
+        response = self.prometheus.instant_query(queries.CLUSTER_CPU_CAPACITY)
+
+        return self._extract_scalar(response)
+
+    def get_memory_capacity(
+        self,
+    ) -> float:
+
+        response = self.prometheus.instant_query(queries.CLUSTER_MEMORY_CAPACITY)
+
+        return self._extract_scalar(response)
+
+    def get_storage_capacity(
+        self,
+    ) -> float:
+
+        response = self.prometheus.instant_query(queries.CLUSTER_STORAGE_CAPACITY)
+
+        return self._extract_scalar(response)
+
+    def get_cluster_capacity_summary(
+        self,
+    ) -> dict:
+
+        return {
+            'cpu_capacity': self.get_cpu_capacity(),
+            'memory_capacity': self.get_memory_capacity(),
+            'storage_capacity': self.get_storage_capacity(),
+        }

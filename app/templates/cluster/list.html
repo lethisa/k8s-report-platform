@@ -48,24 +48,28 @@
         <div id="cluster-table-container" class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
-                    <tr class="bg-slate-50 text-xs tracking-wide uppercase dark:bg-slate-900">
-                        <th class="px-6 py-4 text-left text-slate-700">Name</th>
+                    <tr
+                        class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-400"
+                    >
+                        <th class="px-6 py-4 text-left">Name</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Environment</th>
+                        <th class="px-6 py-4 text-center">Environment</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Status</th>
+                        <th class="px-6 py-4 text-center">Status</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Nodes</th>
+                        <th class="px-6 py-4 text-center">Nodes</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">K8S Version</th>
+                        <th class="px-6 py-4 text-center">K8S Version</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Namespaces</th>
+                        <th class="px-6 py-4 text-center">Namespaces</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Inventory</th>
+                        <th class="px-6 py-4 text-center">Inventory</th>
 
-                        <th class="px-6 py-4 text-left text-slate-700">Last Check</th>
+                        <th class="px-6 py-4 text-center">Prometheus</th>
 
-                        <th class="px-6 py-4 text-right text-slate-700">Actions</th>
+                        <th class="px-6 py-4 text-center">Last Check</th>
+
+                        <th class="w-64 px-6 py-4 text-center">Actions</th>
                     </tr>
                 </thead>
 
@@ -73,7 +77,7 @@
                     {% for cluster in clusters %} {% include "cluster/partials/row.html" %}{% else %}
 
                     <tr>
-                        <td colspan="9" class="py-16 text-center text-slate-400">
+                        <td colspan="10" class="py-16 text-center text-slate-400">
                             <div class="flex flex-col items-center gap-3">
                                 <i data-lucide="server-off" class="h-12 w-12"></i>
 

@@ -1,9 +1,33 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField
-from wtforms.validators import URL, DataRequired, Length, NumberRange, Optional
+from wtforms.validators import URL, DataRequired, Length, NumberRange, Optional, ValidationError
 
 
 class PrometheusConfigForm(FlaskForm):
+    def validate(self, extra_validators=None):
+
+        if not super().validate(extra_validators):
+            return False
+
+        try:
+            if self.auth_type.data == 'basic':
+                if not self.username.data:
+                    raise ValidationError('Username is required for Basic Auth')
+
+                if not self.password.data:
+                    raise ValidationError('Password is required for Basic Auth')
+
+            if self.auth_type.data == 'bearer':
+                if not self.bearer_token.data:
+                    raise ValidationError('Bearer token is required')
+
+        except ValidationError as exc:
+            self.auth_type.errors = [str(exc)]
+
+            return False
+
+        return True
+
     endpoint = StringField(
         'Endpoint',
         validators=[

@@ -3,7 +3,7 @@ count(kube_node_info)
 """
 
 CLUSTER_NAMESPACE_COUNT = """
-count(kube_namespace_created)
+count(kube_namespace_labels)
 """
 
 CLUSTER_POD_COUNT = """

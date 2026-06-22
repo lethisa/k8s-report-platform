@@ -67,6 +67,9 @@ class PrometheusClient:
         except requests.exceptions.Timeout as exc:
             raise PrometheusConnectionError('Connection timeout') from exc
 
+        except requests.exceptions.RequestException as exc:
+            raise PrometheusConnectionError(str(exc)) from exc
+
     def query_range(
         self,
         query: str,
@@ -102,6 +105,9 @@ class PrometheusClient:
         except requests.exceptions.Timeout as exc:
             raise PrometheusConnectionError('Connection timeout') from exc
 
+        except requests.exceptions.RequestException as exc:
+            raise PrometheusConnectionError(str(exc)) from exc
+
     def get_build_info(
         self,
     ) -> dict[str, Any]:
@@ -122,6 +128,12 @@ class PrometheusClient:
             return response.json()
 
         except requests.exceptions.ConnectionError as exc:
+            raise PrometheusConnectionError(str(exc)) from exc
+
+        except requests.exceptions.Timeout as exc:
+            raise PrometheusConnectionError('Connection timeout') from exc
+
+        except requests.exceptions.RequestException as exc:
             raise PrometheusConnectionError(str(exc)) from exc
 
     @staticmethod
