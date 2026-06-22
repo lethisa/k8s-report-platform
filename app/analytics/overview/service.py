@@ -1,11 +1,18 @@
-class AnalyticsOverviewService:
-    def get_overview(self):
+def get_analytics_overview():
 
-        return {
-            'avg_cpu_usage': 68,
-            'avg_memory_usage': 72,
-            'avg_storage_usage': 61,
-            'cluster_health_score': 92,
-            'active_alerts': 3,
-            'generated_reports': 48,
-        }
+    return {
+        'cpu_utilization': None,
+        'memory_utilization': None,
+        'efficiency_score': None,
+        'forecast_horizon': 90,
+        'resource_summary': {
+            'status': 'pending',
+        },
+        'cluster_health': {
+            'status': 'pending',
+        },
+        'top_cpu_consumers': [],
+        'top_memory_consumers': [],
+        'recent_reports': [],
+        'alerts': [],
+    }
