@@ -17,12 +17,17 @@ class PrometheusService:
         self,
         cluster: Cluster,
     ) -> None:
+
         self.cluster = cluster
 
-        if not cluster.prometheus_config:
+        config = PrometheusConfig.query.filter_by(
+            cluster_id=cluster.id,
+        ).first()
+
+        if not config:
             raise PrometheusError('Prometheus configuration not found')
 
-        self.client = PrometheusClient(cluster.prometheus_config)
+        self.client = PrometheusClient(config)
 
     def instant_query(
         self,
@@ -78,21 +83,25 @@ class PrometheusService:
 
         config = cluster.prometheus_config
 
-        if not config:
-            config = PrometheusConfig()
-            config.cluster = cluster
-
-            db.session.add(config)
-
         endpoint = form.endpoint.data
         auth_type = form.auth_type.data
         timeout = form.timeout.data
         verify_ssl = form.verify_ssl.data
 
-        if endpoint is None:
+        if not endpoint:
             raise PrometheusError('Endpoint is required')
 
-        if auth_type is None:
+        endpoint = endpoint.strip()
+
+        if not endpoint.startswith(
+            (
+                'http://',
+                'https://',
+            )
+        ):
+            endpoint = f'http://{endpoint}'
+
+        if not auth_type:
             raise PrometheusError('Authentication type is required')
 
         if timeout is None:
@@ -101,8 +110,22 @@ class PrometheusService:
         if verify_ssl is None:
             verify_ssl = True
 
-        config.endpoint = endpoint
-        config.auth_type = auth_type
+        if not config:
+            config = PrometheusConfig(
+                cluster_id=cluster.id,
+                endpoint=endpoint,
+                auth_type=auth_type,
+                timeout=timeout,
+                verify_ssl=verify_ssl,
+            )
+
+            db.session.add(config)
+
+        else:
+            config.endpoint = endpoint
+            config.auth_type = auth_type
+            config.timeout = timeout
+            config.verify_ssl = verify_ssl
 
         if auth_type == 'none':
             config.username = None
@@ -111,21 +134,13 @@ class PrometheusService:
 
         elif auth_type == 'basic':
             config.username = form.username.data
+            config.password = form.password.data
             config.bearer_token = None
 
         elif auth_type == 'bearer':
             config.username = None
             config.password = None
-
-        if form.password.data:
-            config.password = form.password.data
-
-        if form.bearer_token.data:
             config.bearer_token = form.bearer_token.data
-
-        config.timeout = timeout
-
-        config.verify_ssl = verify_ssl
 
         db.session.commit()
 

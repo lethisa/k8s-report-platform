@@ -1,12 +1,16 @@
 import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
 from app.models.pod import Pod
+
+if TYPE_CHECKING:
+    from app.models.prometheus import PrometheusConfig
 
 
 class ClusterStatus(StrEnum):
@@ -48,11 +52,9 @@ class Cluster(db.Model):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
-    prometheus_config = relationship(
-        'PrometheusConfig',
+    prometheus_config: Mapped['PrometheusConfig'] = relationship(
         back_populates='cluster',
         uselist=False,
-        cascade='all, delete-orphan',
     )
 
     def __init__(

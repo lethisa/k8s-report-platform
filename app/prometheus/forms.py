@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField
-from wtforms.validators import URL, DataRequired, Length, NumberRange, Optional, ValidationError
+from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
 
 
 class PrometheusConfigForm(FlaskForm):
@@ -28,20 +28,32 @@ class PrometheusConfigForm(FlaskForm):
 
         return True
 
+    def validate_endpoint(self, field):
+
+        endpoint = field.data.strip()
+
+        if not (endpoint.startswith('http://') or endpoint.startswith('https://')):
+            raise ValidationError('Endpoint must start with http:// or https://')
+
     endpoint = StringField(
         'Endpoint',
         validators=[
             DataRequired(),
-            URL(),
-            Length(max=255),
+            Length(
+                min=10,
+                max=255,
+            ),
         ],
+        render_kw={
+            'placeholder': 'http://localhost:9090',
+        },
     )
 
     auth_type = SelectField(
         'Authentication',
         choices=[
             ('none', 'None'),
-            ('basic', 'Basic Auth'),
+            ('basic', 'Basic Authentication'),
             ('bearer', 'Bearer Token'),
         ],
         default='none',
@@ -53,6 +65,9 @@ class PrometheusConfigForm(FlaskForm):
             Optional(),
             Length(max=255),
         ],
+        render_kw={
+            'placeholder': 'admin',
+        },
     )
 
     password = PasswordField(
@@ -69,6 +84,9 @@ class PrometheusConfigForm(FlaskForm):
             Optional(),
             Length(max=4096),
         ],
+        render_kw={
+            'placeholder': 'eyJhbGciOi...',
+        },
     )
 
     timeout = IntegerField(

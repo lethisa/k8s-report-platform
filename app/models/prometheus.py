@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions.db import db
+
+if TYPE_CHECKING:
+    from app.models.cluster import Cluster
 
 
 class PrometheusConfig(db.Model):
@@ -13,7 +17,7 @@ class PrometheusConfig(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    cluster_id: Mapped[int] = mapped_column(
+    cluster_id: Mapped[str] = mapped_column(
         ForeignKey('clusters.id'),
         nullable=False,
         unique=True,
@@ -68,7 +72,7 @@ class PrometheusConfig(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    cluster = relationship(
+    cluster: Mapped[Cluster] = relationship(
         'Cluster',
         back_populates='prometheus_config',
     )

@@ -1,6 +1,4 @@
-from uuid import UUID
-
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 
 from app.models.cluster import Cluster
 from app.prometheus.exceptions import (
@@ -21,22 +19,44 @@ bp = Blueprint(
 
 
 @bp.route(
-    '/cluster/<uuid:cluster_id>',
+    '/cluster/<string:cluster_id>',
     methods=['GET', 'POST'],
 )
-def configuration(
-    cluster_id: UUID,
-):
+def configuration(cluster_id: str):
 
     cluster = Cluster.query.get_or_404(cluster_id)
 
     form = PrometheusConfigForm()
 
+    if request.method == 'POST':
+        print('===== POST RECEIVED =====')
+        print(request.form)
+
+    current_app.logger.warning('PROMETHEUS CONFIG POST')
+
+    if request.method == 'POST':
+        print('========== POST ==========')
+        print(request.form)
+
+        print(
+            'FORM VALID:',
+            form.validate(),
+        )
+
+        print(
+            'FORM ERRORS:',
+            form.errors,
+        )
+
     if form.validate_on_submit():
-        PrometheusService.save_config(
+        print('SAVE CONFIG CALLED')
+
+        config = PrometheusService.save_config(
             cluster,
             form,
         )
+
+        print(f'SAVED CONFIG={config.id}')
 
         flash(
             'Prometheus configuration saved',
@@ -49,6 +69,10 @@ def configuration(
                 cluster_id=cluster.id,
             )
         )
+
+    if request.method == 'POST':
+        print('===== FORM INVALID =====')
+        print(form.errors)
 
     config = cluster.prometheus_config
 
@@ -69,11 +93,11 @@ def configuration(
 
 
 @bp.route(
-    '/cluster/<int:cluster_id>/test',
+    '/cluster/<string:cluster_id>/test',
     methods=['POST'],
 )
 def test_connection(
-    cluster_id: int,
+    cluster_id: str,
 ):
 
     cluster = Cluster.query.get_or_404(cluster_id)
