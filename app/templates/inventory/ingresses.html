@@ -234,10 +234,9 @@
                             {{ ingress.host }}
                         </td>
 
-                        <td
-                            class="max-w-[180px] truncate px-4 py-4 font-mono text-xs"
-                            title="{{ ingress.address }}"
-                        ></td>
+                        <td class="max-w-[180px] truncate px-4 py-4 font-mono text-xs" title="{{ ingress.address }}">
+                            {{ ingress.address }}
+                        </td>
 
                         <td class="px-4 py-4">
                             {% if ingress.tls %}

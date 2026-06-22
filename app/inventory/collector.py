@@ -245,10 +245,17 @@ def get_ingresses(
         if spec and spec.rules:
             host = spec.rules[0].host or '-'
 
-        address = '-'
+        addresses = []
 
         if status and status.load_balancer and status.load_balancer.ingress:
-            address = status.load_balancer.ingress[0].ip or '-'
+            for item in status.load_balancer.ingress:
+                if item.ip:
+                    addresses.append(item.ip)
+
+                elif item.hostname:
+                    addresses.append(item.hostname)
+
+        address = ', '.join(addresses) if addresses else '-'
 
         tls_enabled = bool(spec and spec.tls)
 
@@ -274,10 +281,6 @@ def get_storage_inventory(
 
     items = []
 
-    #
-    # Storage Classes
-    #
-
     storage_classes = cast(
         V1StorageClassList,
         storage_api.list_storage_class(),
@@ -300,10 +303,6 @@ def get_storage_inventory(
                 'created_at': metadata.creation_timestamp,
             }
         )
-
-    #
-    # Persistent Volumes
-    #
 
     persistent_volumes = cast(
         V1PersistentVolumeList,
