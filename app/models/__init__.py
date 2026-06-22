@@ -9,6 +9,7 @@ from app.models.inventory import (
     StorageInventory,
     WorkloadInventory,
 )
+from app.models.prometheus import PrometheusConfig
 from app.models.user import User
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     'ServiceInventory',
     'IngressInventory',
     'StorageInventory',
+    'PrometheusConfig',
 ]

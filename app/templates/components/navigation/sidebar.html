@@ -85,16 +85,7 @@
             System
         </div>
 
-        <div class="space-y-1">
-            <a
-                href="#"
-                class="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition-all duration-200 hover:bg-slate-800 hover:text-white"
-            >
-                <i data-lucide="settings" class="h-5 w-5"></i>
-
-                <span x-show="sidebarOpen" x-transition>Settings</span>
-            </a>
-        </div>
+        {% include "components/navigation/settings_menu.html" %}
     </nav>
 
     <!-- User Profile -->

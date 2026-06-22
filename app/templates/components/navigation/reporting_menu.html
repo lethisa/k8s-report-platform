@@ -1,10 +1,12 @@
 <div
     x-data="{
-    reportsOpen:
-        {{ 'true' if request.endpoint and request.endpoint.startswith('reports.') else 'false' }}
-}"
+        reportsOpen:
+            {{ 'true' if request.endpoint and request.endpoint.startswith('reports.') else 'false' }}
+    }"
     class="space-y-1"
 >
+    <!-- Parent -->
+
     <a
         href="{{ url_for('reports.index') }}"
         @click="
@@ -17,6 +19,7 @@
     >
         <div class="flex items-center gap-3">
             <i data-lucide="file-text" class="h-5 w-5"></i>
+
             <span x-show="sidebarOpen">Reporting</span>
         </div>
 
@@ -28,36 +31,66 @@
         ></i>
     </a>
 
+    <!-- Sub Menu -->
+
     <div x-show="reportsOpen && sidebarOpen" x-transition class="ml-6 border-l border-slate-700 pl-4">
+        <!-- Reports -->
+
         <a
             href="{{ url_for('reports.index') }}"
-            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+            class="{{
+                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
+                if request.endpoint == 'reports.index'
+                else 'text-slate-400 hover:text-white'
+            }} flex items-center gap-2 py-2 pl-3 text-sm"
         >
             <i data-lucide="files" class="h-3.5 w-3.5"></i>
+
             <span>Reports</span>
         </a>
 
+        <!-- Generate Report -->
+
         <a
             href="{{ url_for('reports.generate') }}"
-            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+            class="{{
+                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
+                if request.endpoint == 'reports.generate'
+                else 'text-slate-400 hover:text-white'
+            }} flex items-center gap-2 py-2 pl-3 text-sm"
         >
             <i data-lucide="plus-circle" class="h-3.5 w-3.5"></i>
+
             <span>Generate Report</span>
         </a>
 
+        <!-- Templates -->
+
         <a
             href="{{ url_for('reports.templates') }}"
-            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+            class="{{
+                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
+                if request.endpoint == 'reports.templates'
+                else 'text-slate-400 hover:text-white'
+            }} flex items-center gap-2 py-2 pl-3 text-sm"
         >
             <i data-lucide="layout-template" class="h-3.5 w-3.5"></i>
+
             <span>Templates</span>
         </a>
 
+        <!-- History -->
+
         <a
             href="{{ url_for('reports.history') }}"
-            class="flex items-center gap-2 py-2 pl-3 text-sm text-slate-400 hover:text-white"
+            class="{{
+                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
+                if request.endpoint == 'reports.history'
+                else 'text-slate-400 hover:text-white'
+            }} flex items-center gap-2 py-2 pl-3 text-sm"
         >
             <i data-lucide="history" class="h-3.5 w-3.5"></i>
+
             <span>History</span>
         </a>
     </div>

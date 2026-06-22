@@ -48,6 +48,13 @@ class Cluster(db.Model):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
+    prometheus_config = relationship(
+        'PrometheusConfig',
+        back_populates='cluster',
+        uselist=False,
+        cascade='all, delete-orphan',
+    )
+
     def __init__(
         self,
         name: str,

@@ -10,7 +10,9 @@ from app.config import CONFIG_MAP
 from app.dashboard.routes import dashboard_bp
 from app.extensions import db, login_manager, migrate
 from app.inventory import inventory_bp
+from app.prometheus import bp as prometheus_bp
 from app.reports import reports_bp
+from app.settings import bp as settings_bp
 
 
 def create_app():
@@ -51,5 +53,7 @@ def create_app():
     app.register_blueprint(inventory_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(prometheus_bp)
+    app.register_blueprint(settings_bp)
 
     return app
