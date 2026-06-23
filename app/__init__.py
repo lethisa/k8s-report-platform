@@ -6,6 +6,7 @@ from flask import Flask
 from app.analytics import analytics_bp
 from app.auth.routes import auth_bp
 from app.cluster import cluster_bp, routes  # noqa: F401
+from app.commands import register_commands
 from app.config import CONFIG_MAP
 from app.dashboard.routes import dashboard_bp
 from app.extensions import db, login_manager, migrate
@@ -55,5 +56,7 @@ def create_app():
     app.register_blueprint(reports_bp)
     app.register_blueprint(prometheus_bp)
     app.register_blueprint(settings_bp)
+
+    register_commands(app)
 
     return app
