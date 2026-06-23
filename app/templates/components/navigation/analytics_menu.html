@@ -70,15 +70,15 @@
         </a>
 
         <a
-            href="{{ url_for('analytics.forecasting') }}"
+            href="{{ url_for('analytics.forecast') }}"
             class="{{
                 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.forecasting'
+                if request.endpoint == 'analytics.forecast'
                 else 'text-slate-400 hover:text-white'
             }} flex items-center gap-2 py-2 pl-3 text-sm"
         >
             <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
-            <span>Trends & Forecasting</span>
+            <span>Trends & forecast</span>
         </a>
 
         <a

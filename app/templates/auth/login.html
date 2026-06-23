@@ -1,9 +1,7 @@
 {% extends "layouts/auth.html" %} {% block content %}
 
 <div class="flex min-h-screen items-center justify-center px-4">
-    <div
-        class="grid w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl lg:grid-cols-2 dark:bg-slate-800"
-    >
+    <div class="grid w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl lg:grid-cols-2 dark:bg-slate-800">
         <!-- Left Section -->
         <div
             class="hidden flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-14 text-white lg:flex"
@@ -11,17 +9,12 @@
             <div>
                 <h1 class="text-6xl leading-tight font-bold">KubeReport</h1>
 
-                <p class="mt-4 text-lg text-slate-300">
-                    Capacity Planning & Resource Optimization Platform
-                </p>
+                <p class="mt-4 text-lg text-slate-300">Capacity Planning & Resource Optimization Platform</p>
             </div>
 
             <div class="space-y-6">
                 <div class="flex items-center gap-4">
-                    <i
-                        data-lucide="chart-column"
-                        class="h-5 w-5 text-blue-400"
-                    ></i>
+                    <i data-lucide="chart-column" class="h-5 w-5 text-blue-400"></i>
                     <span>Cluster Capacity Analysis</span>
                 </div>
 
@@ -31,27 +24,19 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <i
-                        data-lucide="trending-up"
-                        class="h-5 w-5 text-blue-400"
-                    ></i>
-                    <span>3-Month Forecasting</span>
+                    <i data-lucide="trending-up" class="h-5 w-5 text-blue-400"></i>
+                    <span>3-Month forecast</span>
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <i
-                        data-lucide="file-text"
-                        class="h-5 w-5 text-blue-400"
-                    ></i>
+                    <i data-lucide="file-text" class="h-5 w-5 text-blue-400"></i>
                     <span>Executive PDF Reporting</span>
                 </div>
 
                 <div class="text-sm text-slate-400">
                     Powered by
 
-                    <span class="font-semibold">
-                        Flask • PostgreSQL • Prometheus
-                    </span>
+                    <span class="font-semibold">Flask • PostgreSQL • Prometheus</span>
                 </div>
             </div>
         </div>
@@ -68,27 +53,18 @@
                         />
                     </div>
 
-                    <h2
-                        class="text-4xl font-bold text-slate-900 dark:text-white"
-                    >
-                        Sign In
-                    </h2>
+                    <h2 class="text-4xl font-bold text-slate-900 dark:text-white">Sign In</h2>
 
-                    <p class="mt-2 text-slate-500 dark:text-slate-400">
-                        Sign in to continue
-                    </p>
+                    <p class="mt-2 text-slate-500 dark:text-slate-400">Sign in to continue</p>
                 </div>
 
-                {% with messages = get_flashed_messages( with_categories=true )
-                %} {% if messages %} {% for category, message in messages %}
+                {% with messages = get_flashed_messages( with_categories=true ) %} {% if messages %} {% for category,
+                message in messages %}
 
                 <div
                     class="mt-8 mb-6 flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700"
                 >
-                    <i
-                        data-lucide="triangle-alert"
-                        class="h-5 w-5 flex-shrink-0"
-                    ></i>
+                    <i data-lucide="triangle-alert" class="h-5 w-5 flex-shrink-0"></i>
 
                     <span>{{ message }}</span>
                 </div>
@@ -98,19 +74,15 @@
                 <form class="mt-10 space-y-5" method="POST">
                     {{ form.hidden_tag() }}
                     <div>
-                        {{ form.username.label }} {{ form.username(
-                        class="w-full border border-slate-300 rounded-xl px-4
-                        py-3 bg-slate-50 focus:outline-none focus:ring-2
-                        focus:ring-blue-500 focus:border-blue-500 transition" )
-                        }}
+                        {{ form.username.label }} {{ form.username( class="w-full border border-slate-300 rounded-xl
+                        px-4 py-3 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                        transition" ) }}
                     </div>
 
                     <div>
-                        {{ form.password.label }} {{ form.password(
-                        class="w-full border border-slate-300 rounded-xl px-4
-                        py-3 bg-slate-50 focus:outline-none focus:ring-2
-                        focus:ring-blue-500 focus:border-blue-500 transition" )
-                        }}
+                        {{ form.password.label }} {{ form.password( class="w-full border border-slate-300 rounded-xl
+                        px-4 py-3 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                        transition" ) }}
                     </div>
 
                     <div class="flex items-center">
@@ -119,14 +91,11 @@
                         <span class="ml-2">Remember Me</span>
                     </div>
 
-                    {{ form.submit( class="w-full bg-slate-900
-                    hover:bg-slate-800 text-white py-3 rounded-xl font-semibold
-                    transition duration-200 shadow-lg hover:shadow-xl" ) }}
+                    {{ form.submit( class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl
+                    font-semibold transition duration-200 shadow-lg hover:shadow-xl" ) }}
                 </form>
 
-                <div
-                    class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400"
-                >
+                <div class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                     © {{ current_year }} Kubernetes Capacity Report Platform
 
                     <div class="mt-2">

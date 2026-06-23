@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask import Flask
 
-from app.analytics import analytics_bp
+from app.analytics.routes import analytics_bp
 from app.auth.routes import auth_bp
 from app.cluster.routes import cluster_bp
 from app.commands import register_commands

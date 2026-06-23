@@ -61,7 +61,7 @@ Planned modules:
 - Analytics Overview
 - Resource Utilization
 - Capacity Analysis
-- Trends & Forecasting
+- Trends & forecast
 - Top Consumers
 - Alerts & Anomalies
 

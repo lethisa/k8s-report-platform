@@ -27,7 +27,7 @@ Status: In Progress
 - Workload Consumers
 - Pod Consumers
 
-## Sprint 2.4 - Forecasting
+## Sprint 2.4 - forecast
 
 - Growth Trend
 - 30 Day Forecast

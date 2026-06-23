@@ -34,7 +34,7 @@ Modules:
 - Resource Utilization
 - Capacity Analysis
 - Top Consumers
-- Forecasting
+- forecast
 - Alerts & Anomalies
 
 See:
