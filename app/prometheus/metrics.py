@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from app.prometheus import queries
 from app.prometheus.service import (
     PrometheusService,
@@ -14,8 +16,45 @@ class MetricsService:
         self.prometheus = prometheus_service
 
     @staticmethod
-    def _extract_scalar(
+    def _extract_consumers(
         response: dict,
+    ) -> list[dict[str, str | float]]:
+
+        results = response.get(
+            'data',
+            {},
+        ).get(
+            'result',
+            [],
+        )
+
+        consumers = []
+
+        for item in results:
+            metric = item.get(
+                'metric',
+                {},
+            )
+
+            consumers.append(
+                {
+                    'namespace': metric.get(
+                        'namespace',
+                        '-',
+                    ),
+                    'pod': metric.get(
+                        'pod',
+                        '-',
+                    ),
+                    'value': float(item['value'][1]),
+                }
+            )
+
+        return consumers
+
+    @staticmethod
+    def _extract_scalar(
+        response: dict[str, Any],
     ) -> float:
 
         try:
@@ -84,33 +123,19 @@ class MetricsService:
 
     def get_top_cpu_consumers(
         self,
-    ) -> list[dict]:
+    ) -> list[dict[str, str | float]]:
 
-        response = self.prometheus.instant_query(queries.TOP_CPU_PODS)
+        response = self.prometheus.instant_query(
+            queries.TOP_CPU_PODS,
+        )
 
-        results = response.get('data', {}).get('result', [])
-
-        consumers = []
-
-        for item in results:
-            metric = item.get(
-                'metric',
-                {},
-            )
-
-            consumers.append(
-                {
-                    'namespace': metric.get('namespace', '-'),
-                    'pod': metric.get('pod', '-'),
-                    'value': float(item['value'][1]),
-                }
-            )
-
-        return consumers
+        return self._extract_consumers(
+            response,
+        )
 
     def get_cluster_summary(
         self,
-    ) -> dict:
+    ) -> dict[str, int | float]:
 
         return {
             'nodes': self.get_node_count(),
@@ -132,35 +157,15 @@ class MetricsService:
 
     def get_top_memory_consumers(
         self,
-    ) -> list[dict]:
+    ) -> list[dict[str, str | float]]:
 
-        response = self.prometheus.instant_query(queries.TOP_MEMORY_PODS)
+        response = self.prometheus.instant_query(
+            queries.TOP_MEMORY_PODS,
+        )
 
-        results = response.get('data', {}).get('result', [])
-
-        consumers = []
-
-        for item in results:
-            metric = item.get(
-                'metric',
-                {},
-            )
-
-            consumers.append(
-                {
-                    'namespace': metric.get(
-                        'namespace',
-                        '-',
-                    ),
-                    'pod': metric.get(
-                        'pod',
-                        '-',
-                    ),
-                    'value': float(item['value'][1]),
-                }
-            )
-
-        return consumers
+        return self._extract_consumers(
+            response,
+        )
 
     def get_cpu_capacity(
         self,
@@ -188,7 +193,7 @@ class MetricsService:
 
     def get_cluster_capacity_summary(
         self,
-    ) -> dict:
+    ) -> dict[str, float]:
 
         return {
             'cpu_capacity': self.get_cpu_capacity(),

@@ -5,13 +5,13 @@ from flask import Flask
 
 from app.analytics import analytics_bp
 from app.auth.routes import auth_bp
-from app.cluster import cluster_bp, routes  # noqa: F401
+from app.cluster.routes import cluster_bp
 from app.commands import register_commands
 from app.config import CONFIG_MAP
 from app.dashboard.routes import dashboard_bp
 from app.extensions import db, login_manager, migrate
-from app.inventory import inventory_bp
-from app.prometheus import bp as prometheus_bp
+from app.inventory.routes import inventory_bp
+from app.prometheus.routes import prometheus_bp
 from app.reports import reports_bp
 from app.settings import bp as settings_bp
 

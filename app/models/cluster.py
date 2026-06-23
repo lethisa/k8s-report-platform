@@ -7,9 +7,9 @@ from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
-from app.models.pod import Pod
 
 if TYPE_CHECKING:
+    from app.models.pod import Pod
     from app.models.prometheus import PrometheusConfig
 
 
@@ -56,22 +56,6 @@ class Cluster(db.Model):
         back_populates='cluster',
         uselist=False,
     )
-
-    def __init__(
-        self,
-        name: str,
-        environment: str,
-        kubeconfig: str,
-        description: str | None = None,
-        server: str | None = None,
-        pods: list['Pod'] | None = None,
-    ) -> None:
-        self.name = name
-        self.environment = environment
-        self.kubeconfig = kubeconfig
-        self.description = description
-        self.server = server
-        self.pods = pods or []
 
     def __repr__(self) -> str:
         return f'<Cluster {self.name}>'

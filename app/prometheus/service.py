@@ -107,17 +107,14 @@ class PrometheusService:
         if timeout is None:
             raise PrometheusError('Timeout is required')
 
-        if verify_ssl is None:
-            verify_ssl = True
-
         if not config:
-            config = PrometheusConfig(
-                cluster_id=cluster.id,
-                endpoint=endpoint,
-                auth_type=auth_type,
-                timeout=timeout,
-                verify_ssl=verify_ssl,
-            )
+            config = PrometheusConfig()
+
+            config.cluster_id = cluster.id
+            config.endpoint = endpoint
+            config.auth_type = auth_type
+            config.timeout = timeout
+            config.verify_ssl = verify_ssl
 
             db.session.add(config)
 

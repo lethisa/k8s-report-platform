@@ -1,6 +1,13 @@
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    url_for,
+)
 
-from app.models.cluster import Cluster
+from app.models import Cluster
 from app.prometheus.exceptions import (
     PrometheusError,
 )
@@ -11,52 +18,32 @@ from app.prometheus.service import (
     PrometheusService,
 )
 
-bp = Blueprint(
+prometheus_bp = Blueprint(
     'prometheus',
     __name__,
     url_prefix='/prometheus',
 )
 
 
-@bp.route(
+@prometheus_bp.route(
     '/cluster/<string:cluster_id>',
     methods=['GET', 'POST'],
 )
-def configuration(cluster_id: str):
+def configuration(
+    cluster_id: str,
+):
 
-    cluster = Cluster.query.get_or_404(cluster_id)
+    cluster = Cluster.query.get_or_404(
+        cluster_id,
+    )
 
     form = PrometheusConfigForm()
 
-    if request.method == 'POST':
-        print('===== POST RECEIVED =====')
-        print(request.form)
-
-    current_app.logger.warning('PROMETHEUS CONFIG POST')
-
-    if request.method == 'POST':
-        print('========== POST ==========')
-        print(request.form)
-
-        print(
-            'FORM VALID:',
-            form.validate(),
-        )
-
-        print(
-            'FORM ERRORS:',
-            form.errors,
-        )
-
     if form.validate_on_submit():
-        print('SAVE CONFIG CALLED')
-
-        config = PrometheusService.save_config(
+        PrometheusService.save_config(
             cluster,
             form,
         )
-
-        print(f'SAVED CONFIG={config.id}')
 
         flash(
             'Prometheus configuration saved',
@@ -70,13 +57,9 @@ def configuration(cluster_id: str):
             )
         )
 
-    if request.method == 'POST':
-        print('===== FORM INVALID =====')
-        print(form.errors)
-
     config = cluster.prometheus_config
 
-    if request.method == 'GET' and config:
+    if config:
         form.endpoint.data = config.endpoint
         form.auth_type.data = config.auth_type
         form.username.data = config.username
@@ -92,7 +75,7 @@ def configuration(cluster_id: str):
     )
 
 
-@bp.route(
+@prometheus_bp.route(
     '/cluster/<string:cluster_id>/test',
     methods=['POST'],
 )
@@ -100,14 +83,16 @@ def test_connection(
     cluster_id: str,
 ):
 
-    cluster = Cluster.query.get_or_404(cluster_id)
+    cluster = Cluster.query.get_or_404(
+        cluster_id,
+    )
 
     try:
-        service = PrometheusService(cluster)
+        service = PrometheusService(
+            cluster,
+        )
 
-        result = service.test_connection()
-
-        return jsonify(result)
+        return jsonify(service.test_connection())
 
     except PrometheusError as exc:
         return jsonify(

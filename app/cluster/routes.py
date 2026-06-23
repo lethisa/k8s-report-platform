@@ -1,10 +1,11 @@
-from flask import flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import login_required
 
-from app.cluster import cluster_bp
 from app.cluster.forms import ClusterCreateForm, ClusterEditForm
 from app.cluster.service import create_cluster, delete_cluster, get_cluster_summary, run_test_cluster, update_cluster
 from app.models import Cluster
+
+cluster_bp = Blueprint('cluster', __name__, url_prefix='/clusters')
 
 
 @cluster_bp.route('/')

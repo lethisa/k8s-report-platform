@@ -1,8 +1,7 @@
-from flask import render_template, request
+from flask import Blueprint, render_template, request
 from flask_login import login_required
 
-from app.cluster import get_cluster_summary
-from app.inventory import inventory_bp
+from app.cluster.service import get_cluster_summary
 from app.inventory.service import (
     get_ingress_inventory,
     get_inventory_overview,
@@ -15,6 +14,12 @@ from app.inventory.service import (
     sync_inventory,
 )
 from app.models.cluster import Cluster
+
+inventory_bp = Blueprint(
+    'inventory',
+    __name__,
+    url_prefix='/inventory',
+)
 
 
 @inventory_bp.post('/<string:cluster_id>/sync')

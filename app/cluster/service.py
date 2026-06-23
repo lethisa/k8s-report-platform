@@ -4,7 +4,7 @@ import yaml
 from sqlalchemy import func
 
 from app.extensions import db
-from app.kubernetes import test_cluster_connection
+from app.kubernetes.service import test_cluster_connection
 from app.models import Cluster, ClusterInventory, ClusterStatus, NamespaceInventory
 
 
@@ -93,13 +93,13 @@ def create_cluster(
     if not result['valid']:
         raise ValueError('Invalid kubeconfig file')
 
-    cluster = Cluster(
-        name=name,
-        environment=environment,
-        description=description,
-        kubeconfig=kubeconfig,
-        server=result['server'],
-    )
+    cluster = Cluster()
+
+    cluster.name = name
+    cluster.environment = environment
+    cluster.description = description
+    cluster.kubeconfig = kubeconfig
+    cluster.server = result['server']
 
     db.session.add(cluster)
     db.session.commit()

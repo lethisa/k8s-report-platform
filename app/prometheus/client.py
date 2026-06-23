@@ -18,10 +18,14 @@ class PrometheusClient:
         self,
         config: PrometheusConfig,
     ) -> None:
+
         self.config = config
         self.base_url = config.endpoint.rstrip('/')
 
-    def _build_headers(self) -> dict[str, str]:
+    def _build_headers(
+        self,
+    ) -> dict[str, str]:
+
         headers: dict[str, str] = {}
 
         if self.config.auth_type == 'bearer' and self.config.bearer_token:
@@ -32,6 +36,7 @@ class PrometheusClient:
     def _build_auth(
         self,
     ) -> HTTPBasicAuth | None:
+
         if self.config.auth_type == 'basic' and self.config.username and self.config.password:
             return HTTPBasicAuth(
                 self.config.username,
@@ -40,17 +45,18 @@ class PrometheusClient:
 
         return None
 
-    def query(
+    def _get(
         self,
-        query: str,
+        path: str,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
 
-        url = f'{self.base_url}/api/v1/query'
+        url = f'{self.base_url}{path}'
 
         try:
             response = requests.get(
                 url,
-                params={'query': query},
+                params=params,
                 headers=self._build_headers(),
                 auth=self._build_auth(),
                 timeout=self.config.timeout,
@@ -69,6 +75,18 @@ class PrometheusClient:
 
         except requests.exceptions.RequestException as exc:
             raise PrometheusConnectionError(str(exc)) from exc
+
+    def query(
+        self,
+        query: str,
+    ) -> dict[str, Any]:
+
+        return self._get(
+            '/api/v1/query',
+            {
+                'query': query,
+            },
+        )
 
     def query_range(
         self,
@@ -78,70 +96,33 @@ class PrometheusClient:
         step: str,
     ) -> dict[str, Any]:
 
-        url = f'{self.base_url}/api/v1/query_range'
-
-        try:
-            response = requests.get(
-                url,
-                params={
-                    'query': query,
-                    'start': start,
-                    'end': end,
-                    'step': step,
-                },
-                headers=self._build_headers(),
-                auth=self._build_auth(),
-                timeout=self.config.timeout,
-                verify=self.config.verify_ssl,
-            )
-
-            self._validate_response(response)
-
-            return response.json()
-
-        except requests.exceptions.ConnectionError as exc:
-            raise PrometheusConnectionError(str(exc)) from exc
-
-        except requests.exceptions.Timeout as exc:
-            raise PrometheusConnectionError('Connection timeout') from exc
-
-        except requests.exceptions.RequestException as exc:
-            raise PrometheusConnectionError(str(exc)) from exc
+        return self._get(
+            '/api/v1/query_range',
+            {
+                'query': query,
+                'start': start,
+                'end': end,
+                'step': step,
+            },
+        )
 
     def get_build_info(
         self,
     ) -> dict[str, Any]:
 
-        url = f'{self.base_url}/api/v1/status/buildinfo'
-
-        try:
-            response = requests.get(
-                url,
-                headers=self._build_headers(),
-                auth=self._build_auth(),
-                timeout=self.config.timeout,
-                verify=self.config.verify_ssl,
-            )
-
-            self._validate_response(response)
-
-            return response.json()
-
-        except requests.exceptions.ConnectionError as exc:
-            raise PrometheusConnectionError(str(exc)) from exc
-
-        except requests.exceptions.Timeout as exc:
-            raise PrometheusConnectionError('Connection timeout') from exc
-
-        except requests.exceptions.RequestException as exc:
-            raise PrometheusConnectionError(str(exc)) from exc
+        return self._get(
+            '/api/v1/status/buildinfo',
+        )
 
     @staticmethod
     def _validate_response(
         response: requests.Response,
     ) -> None:
 
-        if response.status_code in (401, 403):
+        if response.status_code in (
+            401,
+            403,
+        ):
             raise PrometheusAuthenticationError('Authentication failed')
 
         if response.status_code >= 400:

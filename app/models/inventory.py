@@ -28,14 +28,6 @@ class ClusterInventory(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
-    def __init__(
-        self,
-        cluster_id: str,
-        kubernetes_version: str | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.kubernetes_version = kubernetes_version
-
 
 class NodeInventory(db.Model):
     __tablename__ = 'node_inventory'
@@ -82,26 +74,6 @@ class NodeInventory(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
-    def __init__(
-        self,
-        cluster_id: str,
-        node_name: str,
-        role: str | None = None,
-        os_image: str | None = None,
-        kernel_version: str | None = None,
-        container_runtime: str | None = None,
-        cpu: int | None = None,
-        memory: str | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.node_name = node_name
-        self.role = role
-        self.os_image = os_image
-        self.kernel_version = kernel_version
-        self.container_runtime = container_runtime
-        self.cpu = cpu
-        self.memory = memory
-
 
 class NamespaceInventory(db.Model):
     __tablename__ = 'namespace_inventory'
@@ -137,16 +109,6 @@ class NamespaceInventory(db.Model):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-
-    def __init__(
-        self,
-        cluster_id: str,
-        namespace: str,
-        status: str | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.status = status
 
 
 class WorkloadInventory(db.Model):
@@ -207,24 +169,6 @@ class WorkloadInventory(db.Model):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-
-    def __init__(
-        self,
-        cluster_id: str,
-        namespace: str,
-        name: str,
-        workload_type: str,
-        ready: str | None = None,
-        status: str | None = None,
-        created_at: datetime | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.name = name
-        self.workload_type = workload_type
-        self.ready = ready
-        self.status = status
-        self.created_at = created_at
 
 
 class PodInventory(db.Model):
@@ -292,28 +236,6 @@ class PodInventory(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
-    def __init__(
-        self,
-        cluster_id: str,
-        namespace: str,
-        pod_name: str,
-        node_name: str | None = None,
-        phase: str | None = None,
-        pod_ip: str | None = None,
-        ready: str | None = None,
-        restart_count: int | None = None,
-        created_at: datetime | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.pod_name = pod_name
-        self.node_name = node_name
-        self.phase = phase
-        self.pod_ip = pod_ip
-        self.ready = ready
-        self.restart_count = restart_count
-        self.created_at = created_at
-
 
 class ServiceInventory(db.Model):
     __tablename__ = 'service_inventory'
@@ -375,26 +297,6 @@ class ServiceInventory(db.Model):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-
-    def __init__(
-        self,
-        cluster_id: str,
-        namespace: str,
-        service_name: str,
-        service_type: str | None = None,
-        cluster_ip: str | None = None,
-        external_ip: str | None = None,
-        ports: str | None = None,
-        created_at: datetime | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.service_name = service_name
-        self.service_type = service_type
-        self.cluster_ip = cluster_ip
-        self.external_ip = external_ip
-        self.ports = ports
-        self.created_at = created_at
 
 
 class IngressInventory(db.Model):
@@ -459,26 +361,6 @@ class IngressInventory(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
-    def __init__(
-        self,
-        cluster_id: str,
-        namespace: str,
-        ingress_name: str,
-        ingress_class: str | None = None,
-        host: str | None = None,
-        address: str | None = None,
-        tls_enabled: bool = False,
-        created_at: datetime | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.ingress_name = ingress_name
-        self.ingress_class = ingress_class
-        self.host = host
-        self.address = address
-        self.tls_enabled = tls_enabled
-        self.created_at = created_at
-
 
 class StorageInventory(db.Model):
     __tablename__ = 'storage_inventory'
@@ -541,23 +423,3 @@ class StorageInventory(db.Model):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
-
-    def __init__(
-        self,
-        cluster_id: str,
-        name: str,
-        storage_type: str,
-        namespace: str | None = None,
-        storage_class: str | None = None,
-        capacity: str | None = None,
-        status: str | None = None,
-        created_at: datetime | None = None,
-    ) -> None:
-        self.cluster_id = cluster_id
-        self.namespace = namespace
-        self.name = name
-        self.storage_type = storage_type
-        self.storage_class = storage_class
-        self.capacity = capacity
-        self.status = status
-        self.created_at = created_at

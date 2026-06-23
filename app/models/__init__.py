@@ -9,20 +9,22 @@ from app.models.inventory import (
     StorageInventory,
     WorkloadInventory,
 )
+from app.models.pod import Pod
 from app.models.prometheus import PrometheusConfig
 from app.models.user import User
 
 __all__ = [
     'ClusterStatus',
     'Cluster',
-    'ClusterInventory',
-    'NamespaceInventory',
-    'NodeInventory',
     'User',
     'WorkloadInventory',
     'PodInventory',
     'ServiceInventory',
     'IngressInventory',
     'StorageInventory',
+    'ClusterInventory',
+    'NamespaceInventory',
+    'NodeInventory',
     'PrometheusConfig',
+    'Pod',
 ]

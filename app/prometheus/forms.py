@@ -1,40 +1,21 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
+from wtforms import (
+    BooleanField,
+    IntegerField,
+    PasswordField,
+    SelectField,
+    StringField,
+)
+from wtforms.validators import (
+    DataRequired,
+    Length,
+    NumberRange,
+    Optional,
+    ValidationError,
+)
 
 
 class PrometheusConfigForm(FlaskForm):
-    def validate(self, extra_validators=None):
-
-        if not super().validate(extra_validators):
-            return False
-
-        try:
-            if self.auth_type.data == 'basic':
-                if not self.username.data:
-                    raise ValidationError('Username is required for Basic Auth')
-
-                if not self.password.data:
-                    raise ValidationError('Password is required for Basic Auth')
-
-            if self.auth_type.data == 'bearer':
-                if not self.bearer_token.data:
-                    raise ValidationError('Bearer token is required')
-
-        except ValidationError as exc:
-            self.auth_type.errors = [str(exc)]
-
-            return False
-
-        return True
-
-    def validate_endpoint(self, field):
-
-        endpoint = field.data.strip()
-
-        if not (endpoint.startswith('http://') or endpoint.startswith('https://')):
-            raise ValidationError('Endpoint must start with http:// or https://')
-
     endpoint = StringField(
         'Endpoint',
         validators=[
@@ -105,3 +86,50 @@ class PrometheusConfigForm(FlaskForm):
         'Verify SSL',
         default=True,
     )
+
+    def validate_endpoint(
+        self,
+        field: StringField,
+    ) -> None:
+
+        endpoint = (field.data or '').strip()
+
+        if not endpoint.startswith(
+            (
+                'http://',
+                'https://',
+            )
+        ):
+            raise ValidationError(
+                'Endpoint must start with http:// or https://',
+            )
+
+    def validate_username(
+        self,
+        field: StringField,
+    ) -> None:
+
+        if self.auth_type.data == 'basic' and not field.data:
+            raise ValidationError(
+                'Username is required',
+            )
+
+    def validate_password(
+        self,
+        field: PasswordField,
+    ) -> None:
+
+        if self.auth_type.data == 'basic' and not field.data:
+            raise ValidationError(
+                'Password is required',
+            )
+
+    def validate_bearer_token(
+        self,
+        field: PasswordField,
+    ) -> None:
+
+        if self.auth_type.data == 'bearer' and not field.data:
+            raise ValidationError(
+                'Bearer token is required',
+            )

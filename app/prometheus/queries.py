@@ -1,3 +1,7 @@
+# =====================================================
+# Inventory Metrics
+# =====================================================
+
 CLUSTER_NODE_COUNT = """
 count(kube_node_info)
 """
@@ -9,6 +13,10 @@ count(kube_namespace_labels)
 CLUSTER_POD_COUNT = """
 count(kube_pod_info)
 """
+
+# =====================================================
+# CPU Metrics
+# =====================================================
 
 CLUSTER_CPU_CAPACITY = """
 sum(
@@ -48,6 +56,10 @@ CLUSTER_CPU_UTILIZATION = """
 ) * 100
 """
 
+# =====================================================
+# Memory Metrics
+# =====================================================
+
 CLUSTER_MEMORY_CAPACITY = """
 sum(
     kube_node_status_capacity{
@@ -82,6 +94,10 @@ CLUSTER_MEMORY_UTILIZATION = """
 ) * 100
 """
 
+# =====================================================
+# Storage Metrics
+# =====================================================
+
 CLUSTER_STORAGE_CAPACITY = """
 sum(
     kubelet_volume_stats_capacity_bytes
@@ -91,6 +107,12 @@ sum(
 CLUSTER_STORAGE_USAGE = """
 sum(
     kubelet_volume_stats_used_bytes
+)
+"""
+
+CLUSTER_STORAGE_AVAILABLE = """
+sum(
+    kubelet_volume_stats_available_bytes
 )
 """
 
@@ -105,6 +127,10 @@ CLUSTER_STORAGE_UTILIZATION = """
     )
 ) * 100
 """
+
+# =====================================================
+# Top Consumers
+# =====================================================
 
 TOP_CPU_PODS = """
 topk(
@@ -132,6 +158,10 @@ topk(
 )
 """
 
+# =====================================================
+# Trend Metrics
+# =====================================================
+
 CPU_USAGE_HISTORY = """
 sum(
     rate(
@@ -149,5 +179,11 @@ sum(
         container!="",
         container!="POD"
     }
+)
+"""
+
+STORAGE_USAGE_HISTORY = """
+sum(
+    kubelet_volume_stats_used_bytes
 )
 """

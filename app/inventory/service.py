@@ -55,12 +55,12 @@ def save_cluster_info(
         synchronize_session=False,
     )
 
-    db.session.add(
-        ClusterInventory(
-            cluster_id=cluster.id,
-            kubernetes_version=get_cluster_version(),
-        )
-    )
+    cluster_inventory = ClusterInventory()
+
+    cluster_inventory.cluster_id = cluster.id
+    cluster_inventory.kubernetes_version = get_cluster_version()
+
+    db.session.add(cluster_inventory)
 
 
 def save_nodes(
@@ -100,18 +100,22 @@ def save_nodes(
         ):
             cpu = None
 
-        db.session.add(
-            NodeInventory(
-                cluster_id=cluster.id,
-                node_name=metadata.name,
-                role=get_node_role(node),
-                os_image=status.node_info.os_image,
-                kernel_version=status.node_info.kernel_version,
-                container_runtime=(status.node_info.container_runtime_version),
-                cpu=cpu,
-                memory=capacity.get('memory'),
-            )
-        )
+        node_inventory = NodeInventory()
+
+        node_inventory.cluster_id = cluster.id
+        node_inventory.node_name = metadata.name
+        node_inventory.role = get_node_role(node)
+
+        node_inventory.os_image = status.node_info.os_image
+
+        node_inventory.kernel_version = status.node_info.kernel_version
+
+        node_inventory.container_runtime = status.node_info.container_runtime_version
+
+        node_inventory.cpu = cpu
+        node_inventory.memory = capacity.get('memory')
+
+        db.session.add(node_inventory)
 
 
 def save_namespaces(
@@ -138,13 +142,14 @@ def save_namespaces(
         if metadata is None:
             continue
 
-        db.session.add(
-            NamespaceInventory(
-                cluster_id=cluster.id,
-                namespace=metadata.name,
-                status=(namespace.status.phase if namespace.status else None),
-            )
-        )
+        namespace_inventory = NamespaceInventory()
+
+        namespace_inventory.cluster_id = cluster.id
+        namespace_inventory.namespace = metadata.name
+
+        namespace_inventory.status = namespace.status.phase if namespace.status else None
+
+        db.session.add(namespace_inventory)
 
 
 def save_workloads(
@@ -163,17 +168,20 @@ def save_workloads(
     )
 
     for workload in workloads:
-        db.session.add(
-            WorkloadInventory(
-                cluster_id=cluster.id,
-                namespace=workload['namespace'],
-                name=workload['name'],
-                workload_type=workload['workload_type'],
-                ready=workload['ready'],
-                status=workload['status'],
-                created_at=workload['created_at'],
-            )
-        )
+        workload_inventory = WorkloadInventory()
+
+        workload_inventory.cluster_id = cluster.id
+        workload_inventory.namespace = workload['namespace']
+        workload_inventory.name = workload['name']
+
+        workload_inventory.workload_type = workload['workload_type']
+
+        workload_inventory.ready = workload['ready']
+        workload_inventory.status = workload['status']
+
+        workload_inventory.created_at = workload['created_at']
+
+        db.session.add(workload_inventory)
 
 
 def save_pods(
@@ -192,19 +200,23 @@ def save_pods(
     )
 
     for pod in pods:
-        db.session.add(
-            PodInventory(
-                cluster_id=cluster.id,
-                namespace=pod['namespace'],
-                pod_name=pod['pod_name'],
-                node_name=pod['node_name'],
-                phase=pod['phase'],
-                pod_ip=pod['pod_ip'],
-                ready=pod['ready'],
-                restart_count=pod['restart_count'],
-                created_at=pod['created_at'],
-            )
-        )
+        pod_inventory = PodInventory()
+
+        pod_inventory.cluster_id = cluster.id
+        pod_inventory.namespace = pod['namespace']
+        pod_inventory.pod_name = pod['pod_name']
+
+        pod_inventory.node_name = pod['node_name']
+        pod_inventory.phase = pod['phase']
+        pod_inventory.pod_ip = pod['pod_ip']
+
+        pod_inventory.ready = pod['ready']
+
+        pod_inventory.restart_count = pod['restart_count']
+
+        pod_inventory.created_at = pod['created_at']
+
+        db.session.add(pod_inventory)
 
 
 def save_services(
@@ -223,18 +235,24 @@ def save_services(
     )
 
     for service in services:
-        db.session.add(
-            ServiceInventory(
-                cluster_id=cluster.id,
-                namespace=service['namespace'],
-                service_name=service['service_name'],
-                service_type=service['service_type'],
-                cluster_ip=service['cluster_ip'],
-                external_ip=service['external_ip'],
-                ports=service['ports'],
-                created_at=service['created_at'],
-            )
-        )
+        service_inventory = ServiceInventory()
+
+        service_inventory.cluster_id = cluster.id
+        service_inventory.namespace = service['namespace']
+
+        service_inventory.service_name = service['service_name']
+
+        service_inventory.service_type = service['service_type']
+
+        service_inventory.cluster_ip = service['cluster_ip']
+
+        service_inventory.external_ip = service['external_ip']
+
+        service_inventory.ports = service['ports']
+
+        service_inventory.created_at = service['created_at']
+
+        db.session.add(service_inventory)
 
 
 def save_ingresses(
@@ -253,18 +271,25 @@ def save_ingresses(
     )
 
     for ingress in ingresses:
-        db.session.add(
-            IngressInventory(
-                cluster_id=cluster.id,
-                namespace=ingress['namespace'],
-                ingress_name=ingress['ingress_name'],
-                ingress_class=ingress['ingress_class'],
-                host=ingress['host'],
-                address=ingress['address'],
-                tls_enabled=ingress['tls_enabled'],
-                created_at=ingress['created_at'],
-            )
-        )
+        ingress_inventory = IngressInventory()
+
+        ingress_inventory.cluster_id = cluster.id
+
+        ingress_inventory.namespace = ingress['namespace']
+
+        ingress_inventory.ingress_name = ingress['ingress_name']
+
+        ingress_inventory.ingress_class = ingress['ingress_class']
+
+        ingress_inventory.host = ingress['host']
+
+        ingress_inventory.address = ingress['address']
+
+        ingress_inventory.tls_enabled = ingress['tls_enabled']
+
+        ingress_inventory.created_at = ingress['created_at']
+
+        db.session.add(ingress_inventory)
 
 
 def save_storage_inventory(
@@ -285,18 +310,25 @@ def save_storage_inventory(
     )
 
     for item in items:
-        db.session.add(
-            StorageInventory(
-                cluster_id=cluster.id,
-                namespace=item['namespace'],
-                name=item['name'],
-                storage_type=item['storage_type'],
-                storage_class=item['storage_class'],
-                capacity=item['capacity'],
-                status=item['status'],
-                created_at=item['created_at'],
-            )
-        )
+        storage_inventory = StorageInventory()
+
+        storage_inventory.cluster_id = cluster.id
+
+        storage_inventory.namespace = item['namespace']
+
+        storage_inventory.name = item['name']
+
+        storage_inventory.storage_type = item['storage_type']
+
+        storage_inventory.storage_class = item['storage_class']
+
+        storage_inventory.capacity = item['capacity']
+
+        storage_inventory.status = item['status']
+
+        storage_inventory.created_at = item['created_at']
+
+        db.session.add(storage_inventory)
 
 
 def sync_inventory(

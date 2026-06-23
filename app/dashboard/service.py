@@ -1,5 +1,4 @@
-from app.models.cluster import Cluster
-from app.models.inventory import NodeInventory
+from app.models import Cluster, NodeInventory
 
 
 def get_dashboard_summary() -> dict[str, int]:
