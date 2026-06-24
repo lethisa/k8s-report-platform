@@ -4,6 +4,17 @@ sum(
         resource="cpu"
     }
 )
+-
+sum(
+    kube_node_status_capacity{
+        resource="cpu"
+    }
+    * on(node)
+    group_left(role)
+    kube_node_role{
+        role="control-plane"
+    }
+)
 """
 
 CPU_USAGE = """
@@ -28,11 +39,24 @@ CPU_UTILIZATION = """
         )
     )
 /
+(
     sum(
         kube_node_status_capacity{
             resource="cpu"
         }
     )
+    -
+    sum(
+        kube_node_status_capacity{
+            resource="cpu"
+        }
+        * on(node)
+        group_left(role)
+        kube_node_role{
+            role="control-plane"
+        }
+    )
+)
 ) * 100
 """
 
@@ -40,6 +64,17 @@ MEMORY_CAPACITY = """
 sum(
     kube_node_status_capacity{
         resource="memory"
+    }
+)
+-
+sum(
+    kube_node_status_capacity{
+        resource="memory"
+    }
+    * on(node)
+    group_left(role)
+    kube_node_role{
+        role="control-plane"
     }
 )
 """
@@ -62,11 +97,24 @@ MEMORY_UTILIZATION = """
         }
     )
 /
+(
     sum(
         kube_node_status_capacity{
             resource="memory"
         }
     )
+    -
+    sum(
+        kube_node_status_capacity{
+            resource="memory"
+        }
+        * on(node)
+        group_left(role)
+        kube_node_role{
+            role="control-plane"
+        }
+    )
+)
 ) * 100
 """
 
@@ -96,8 +144,58 @@ STORAGE_UTILIZATION = """
 
 POD_COUNT = """
 count(
-    kube_pod_info
+    kube_pod_status_phase{
+        phase="Running"
+    }
 )
+"""
+
+POD_CAPACITY = """
+sum(
+    kube_node_status_capacity{
+        resource="pods"
+    }
+)
+-
+sum(
+    kube_node_status_capacity{
+        resource="pods"
+    }
+    * on(node)
+    group_left(role)
+    kube_node_role{
+        role="control-plane"
+    }
+)
+"""
+
+POD_UTILIZATION = """
+(
+    count(
+        kube_pod_status_phase{
+            phase="Running"
+        }
+    )
+/
+(
+    sum(
+        kube_node_status_capacity{
+            resource="pods"
+        }
+    )
+    -
+    sum(
+        kube_node_status_capacity{
+            resource="pods"
+        }
+        * on(node)
+        group_left(role)
+        kube_node_role{
+            role="control-plane"
+        }
+    )
+)
+) * 100
 """
 
 
@@ -130,5 +228,35 @@ topk(
             container!="POD"
         }
     )
+)
+"""
+
+KUBERNETES_VERSION = """
+kubernetes_build_info
+"""
+
+TOTAL_NODES = """
+count(
+    kube_node_info
+)
+"""
+
+MASTER_NODES = """
+count(
+    kube_node_role{
+        role="control-plane"
+    }
+)
+"""
+
+WORKER_NODES = """
+count(
+    kube_node_info
+)
+-
+count(
+    kube_node_role{
+        role="control-plane"
+    }
 )
 """

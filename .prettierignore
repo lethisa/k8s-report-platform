@@ -8,4 +8,4 @@ coverage
 *.pyc
 __pycache__
 
-app/templates/**/*.html
+app/templates/analytics/utilization.html

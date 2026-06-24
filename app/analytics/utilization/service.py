@@ -20,7 +20,6 @@ class UtilizationService:
     def _extract_scalar(
         response: dict[str, Any],
     ) -> float:
-
         try:
             result = response['data']['result']
 
@@ -41,7 +40,6 @@ class UtilizationService:
     def _extract_consumers(
         response: dict[str, Any],
     ) -> list[dict[str, str | float]]:
-
         results = response.get(
             'data',
             {},
@@ -88,7 +86,6 @@ class UtilizationService:
     def _extract_series(
         response: dict[str, Any],
     ) -> list[dict[str, float]]:
-
         try:
             results = response['data']['result']
 
@@ -119,7 +116,6 @@ class UtilizationService:
         hours: int = 24,
         step: str = '1h',
     ) -> list[dict[str, float]]:
-
         end = datetime.now(
             UTC,
         )
@@ -143,7 +139,6 @@ class UtilizationService:
         self,
         query: str,
     ) -> float:
-
         response = self.prometheus.instant_query(
             query,
         )
@@ -225,11 +220,78 @@ class UtilizationService:
             )
         )
 
+    def get_pod_capacity(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.POD_CAPACITY,
+            )
+        )
+
+    def get_pod_utilization(
+        self,
+    ) -> float:
+        return self._query_scalar(
+            queries.POD_UTILIZATION,
+        )
+
+    def get_total_nodes(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.TOTAL_NODES,
+            )
+        )
+
+    def get_master_nodes(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.MASTER_NODES,
+            )
+        )
+
+    def get_worker_nodes(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.WORKER_NODES,
+            )
+        )
+
+    def get_kubernetes_version(
+        self,
+    ) -> str:
+        response = self.prometheus.instant_query(
+            queries.KUBERNETES_VERSION,
+        )
+
+        try:
+            result = response['data']['result']
+
+            if not result:
+                return '-'
+
+            return result[0]['metric'].get(
+                'git_version',
+                '-',
+            )
+
+        except (
+            KeyError,
+            IndexError,
+            TypeError,
+        ):
+            return '-'
+
     def get_cpu_trend(
         self,
         hours: int = 24,
     ) -> list[dict[str, float]]:
-
         return self._query_series(
             queries.CPU_UTILIZATION_HISTORY,
             hours,
@@ -239,7 +301,6 @@ class UtilizationService:
         self,
         hours: int = 24,
     ) -> list[dict[str, float]]:
-
         return self._query_series(
             queries.MEMORY_UTILIZATION_HISTORY,
             hours,
@@ -249,7 +310,6 @@ class UtilizationService:
         self,
         hours: int = 24,
     ) -> list[dict[str, float]]:
-
         return self._query_series(
             queries.STORAGE_UTILIZATION_HISTORY,
             hours,
@@ -262,7 +322,6 @@ class UtilizationService:
         str,
         list[dict[str, float]],
     ]:
-
         return {
             'cpu': self.get_cpu_trend(
                 hours,
@@ -278,24 +337,24 @@ class UtilizationService:
     def get_summary(
         self,
     ) -> dict[str, int | float]:
-
         return {
-            'cpu_capacity': (self.get_cpu_capacity()),
-            'cpu_usage': (self.get_cpu_usage()),
-            'cpu_utilization': (self.get_cpu_utilization()),
-            'memory_capacity': (self.get_memory_capacity()),
-            'memory_usage': (self.get_memory_usage()),
-            'memory_utilization': (self.get_memory_utilization()),
-            'storage_capacity': (self.get_storage_capacity()),
-            'storage_usage': (self.get_storage_usage()),
-            'storage_utilization': (self.get_storage_utilization()),
-            'pod_count': (self.get_pod_count()),
+            'cpu_capacity': self.get_cpu_capacity(),
+            'cpu_usage': self.get_cpu_usage(),
+            'cpu_utilization': self.get_cpu_utilization(),
+            'memory_capacity': self.get_memory_capacity(),
+            'memory_usage': self.get_memory_usage(),
+            'memory_utilization': self.get_memory_utilization(),
+            'storage_capacity': self.get_storage_capacity(),
+            'storage_usage': self.get_storage_usage(),
+            'storage_utilization': self.get_storage_utilization(),
+            'pod_count': self.get_pod_count(),
+            'pod_capacity': self.get_pod_capacity(),
+            'pod_utilization': self.get_pod_utilization(),
         }
 
     def get_summary_table(
         self,
     ) -> list[dict[str, str | float]]:
-
         return [
             {
                 'resource': 'CPU',
@@ -315,12 +374,17 @@ class UtilizationService:
                 'usage': self.get_storage_usage(),
                 'utilization': self.get_storage_utilization(),
             },
+            {
+                'resource': 'Pods',
+                'capacity': self.get_pod_capacity(),
+                'usage': self.get_pod_count(),
+                'utilization': self.get_pod_utilization(),
+            },
         ]
 
     def get_top_cpu_consumers(
         self,
     ) -> list[dict[str, str | float]]:
-
         response = self.prometheus.instant_query(
             queries.TOP_CPU_CONSUMERS,
         )
@@ -332,7 +396,6 @@ class UtilizationService:
     def get_top_memory_consumers(
         self,
     ) -> list[dict[str, str | float]]:
-
         response = self.prometheus.instant_query(
             queries.TOP_MEMORY_CONSUMERS,
         )
@@ -340,3 +403,17 @@ class UtilizationService:
         return self._extract_consumers(
             response,
         )
+
+    def get_cluster_info(
+        self,
+        summary: dict[str, int | float],
+    ) -> dict[str, int | float | str]:
+        return {
+            'kubernetes_version': self.get_kubernetes_version(),
+            'total_nodes': self.get_total_nodes(),
+            'worker_nodes': self.get_worker_nodes(),
+            'master_nodes': self.get_master_nodes(),
+            'cpu_capacity': summary['cpu_capacity'],
+            'memory_capacity': summary['memory_capacity'],
+            'pod_capacity': summary['pod_capacity'],
+        }

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, current_app, render_template, request
 from flask_login import login_required
 
 from app.analytics.overview.service import (
@@ -11,9 +11,6 @@ from app.models import Cluster
 from app.prometheus.service import (
     PrometheusService,
 )
-from app.utils.formatters import (
-    bytes_to_human,
-)
 
 analytics_bp = Blueprint(
     'analytics',
@@ -25,7 +22,6 @@ analytics_bp = Blueprint(
 @analytics_bp.route('/')
 @login_required
 def overview() -> str:
-
     analytics = get_analytics_overview()
 
     return render_template(
@@ -37,20 +33,18 @@ def overview() -> str:
 @analytics_bp.route('/utilization')
 @login_required
 def utilization() -> str:
-
     clusters = Cluster.query.order_by(Cluster.name).all()
 
     cluster_id = request.args.get(
         'cluster_id',
-        type=int,
     )
 
     cluster = None
 
     if cluster_id:
-        cluster = Cluster.query.get(
-            cluster_id,
-        )
+        cluster = Cluster.query.filter_by(
+            id=cluster_id,
+        ).first()
 
     if not cluster and clusters:
         cluster = clusters[0]
@@ -65,14 +59,52 @@ def utilization() -> str:
             trends={},
             top_cpu=[],
             top_memory=[],
+            risk_assessment={
+                'cpu': 'Low',
+                'memory': 'Low',
+                'storage': 'Low',
+                'pods': 'Low',
+            },
         )
 
-    summary = {}
+    summary = {
+        'cpu_capacity': 0,
+        'cpu_usage': 0,
+        'cpu_utilization': 0,
+        'memory_capacity': 0,
+        'memory_usage': 0,
+        'memory_utilization': 0,
+        'storage_capacity': 0,
+        'storage_usage': 0,
+        'storage_utilization': 0,
+        'pod_count': 0,
+        'pod_capacity': 0,
+        'pod_utilization': 0,
+    }
+
+    cluster_info = {
+        'kubernetes_version': '-',
+        'total_nodes': 0,
+        'worker_nodes': 0,
+        'master_nodes': 0,
+        'cpu_capacity': 0,
+        'memory_capacity': 0,
+        'pod_capacity': 0,
+    }
+
     summary_table = []
-    trends = {}
+
+    trends = {
+        'cpu': [],
+        'memory': [],
+        'storage': [],
+    }
+
     top_cpu = []
     top_memory = []
+
     error = None
+    prometheus_connected = False
 
     try:
         prometheus = PrometheusService(
@@ -85,32 +117,8 @@ def utilization() -> str:
 
         summary = service.get_summary()
 
-        memory_capacity_human = bytes_to_human(
-            summary.get(
-                'memory_capacity',
-                0,
-            )
-        )
-
-        memory_usage_human = bytes_to_human(
-            summary.get(
-                'memory_usage',
-                0,
-            )
-        )
-
-        storage_capacity_human = bytes_to_human(
-            summary.get(
-                'storage_capacity',
-                0,
-            )
-        )
-
-        storage_usage_human = bytes_to_human(
-            summary.get(
-                'storage_usage',
-                0,
-            )
+        cluster_info = service.get_cluster_info(
+            summary,
         )
 
         summary_table = service.get_summary_table()
@@ -121,8 +129,64 @@ def utilization() -> str:
 
         top_memory = service.get_top_memory_consumers()
 
+        prometheus_connected = True
+
     except Exception as exc:
-        error = str(exc)
+        current_app.logger.exception(
+            exc,
+        )
+
+        error = (
+            'Unable to connect to Prometheus. '
+            'Please verify endpoint, credentials, '
+            'SSL configuration, and network connectivity.'
+        )
+
+    risk_assessment = {
+        'cpu': 'Low',
+        'memory': 'Low',
+        'storage': 'Low',
+        'pods': 'Low',
+    }
+
+    def calculate_risk(
+        utilization: float,
+    ) -> str:
+        if utilization >= 85:
+            return 'High'
+
+        if utilization >= 70:
+            return 'Medium'
+
+        return 'Low'
+
+    risk_assessment['cpu'] = calculate_risk(
+        summary.get(
+            'cpu_utilization',
+            0,
+        )
+    )
+
+    risk_assessment['memory'] = calculate_risk(
+        summary.get(
+            'memory_utilization',
+            0,
+        )
+    )
+
+    risk_assessment['storage'] = calculate_risk(
+        summary.get(
+            'storage_utilization',
+            0,
+        )
+    )
+
+    risk_assessment['pods'] = calculate_risk(
+        summary.get(
+            'pod_utilization',
+            0,
+        )
+    )
 
     return render_template(
         'analytics/utilization.html',
@@ -133,11 +197,10 @@ def utilization() -> str:
         trends=trends,
         top_cpu=top_cpu,
         top_memory=top_memory,
-        memory_capacity_human=memory_capacity_human,
-        memory_usage_human=memory_usage_human,
-        storage_capacity_human=storage_capacity_human,
-        storage_usage_human=storage_usage_human,
         error=error,
+        prometheus_connected=prometheus_connected,
+        cluster_info=cluster_info,
+        risk_assessment=risk_assessment,
     )
 
 
