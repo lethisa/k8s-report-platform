@@ -393,6 +393,8 @@ def forecast():
         )
 
         forecast_summary = forecast_service.get_forecast_summary()
+        forecast_insights = forecast_service.get_insights()
+        projection_data = forecast_service.get_projection_chart_data()
 
         error = None
 
@@ -402,6 +404,15 @@ def forecast():
         )
 
         forecast_summary = {}
+
+        projection_data = {
+            'labels': [],
+            'historical': [],
+            'projection_labels': [],
+            'projected': [],
+        }
+
+        forecast_insights = []
 
         error = (
             'Unable to connect to Prometheus. '
@@ -414,6 +425,8 @@ def forecast():
         clusters=clusters,
         cluster=cluster,
         forecast_summary=forecast_summary,
+        projection_data=projection_data,
+        forecast_insights=forecast_insights,
         error=error,
     )
 

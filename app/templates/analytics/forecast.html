@@ -457,11 +457,72 @@ Forecast
         mt-6
         rounded-2xl
         border
-        border-dashed
-        border-slate-300
+        border-slate-200
         bg-white
-        p-8
-        text-center
+        p-6
+        shadow-sm
+    "
+>
+
+    <div
+        class="
+            flex
+            items-center
+            justify-between
+        "
+    >
+
+        <div>
+
+            <h3
+                class="
+                    text-lg
+                    font-semibold
+                    text-slate-900
+                "
+            >
+                Forecast Projection
+            </h3>
+
+            <p
+                class="
+                    mt-1
+                    text-sm
+                    text-slate-500
+                "
+            >
+               Memory utilization forecast
+based on Prometheus historical metrics.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div
+        class="
+            mt-6
+            h-96
+        "
+    >
+
+        <canvas
+            id="forecastChart"
+        ></canvas>
+
+    </div>
+
+</div>
+
+<div
+    class="
+        mt-6
+        rounded-2xl
+        border
+        border-slate-200
+        bg-white
+        p-6
+        shadow-sm
     "
 >
 
@@ -472,21 +533,248 @@ Forecast
             text-slate-900
         "
     >
-        Forecast Trend Chart
+        Forecast Insights
     </h3>
 
-    <p
+    <div
         class="
-            mt-2
-            text-sm
-            text-slate-500
+            mt-4
+            space-y-3
         "
     >
-        Historical trend analysis, projection chart,
-        capacity exhaustion estimation and forecast horizon
-        will be implemented in Sprint 2.3B.
-    </p>
+
+        {% for item in forecast_insights %}
+
+        <div
+            class="
+                flex
+                items-start
+                gap-3
+            "
+        >
+
+            <i
+                data-lucide="lightbulb"
+                class="
+                    mt-0.5
+                    h-4
+                    w-4
+                    text-amber-500
+                "
+            ></i>
+
+            <span
+                class="
+                    text-sm
+                    text-slate-600
+                "
+            >
+                {{ item }}
+            </span>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+window.addEventListener(
+    'load',
+    () => {
+
+        console.log(
+            'forecast chart loaded'
+        );
+
+        const canvas =
+            document.getElementById(
+                'forecastChart',
+            );
+
+        if (
+            !canvas
+        ) {
+            return;
+        }
+
+        const historical =
+            {{ projection_data.historical|default([], true)|tojson }};
+
+        const projected =
+            {{ projection_data.projected|default([], true)|tojson }};
+
+        const labels =
+            {{ projection_data.labels|default([], true)|tojson }};
+
+        const projectionLabels =
+            {{ projection_data.projection_labels|default([], true)|tojson }};
+
+        if (
+            historical.length === 0
+        ) {
+            return;
+        }
+
+        const chartLabels = [
+
+            ...labels,
+
+            ...projectionLabels,
+        ];
+
+        const historicalSeries = [
+
+            ...historical,
+
+            ...new Array(
+                projectionLabels.length
+            ).fill(
+                null
+            ),
+        ];
+
+        const projectedSeries = [
+
+            ...new Array(
+                historical.length - 1
+            ).fill(
+                null
+            ),
+
+            historical[
+                historical.length - 1
+            ],
+
+            ...projected,
+        ];
+
+        new Chart(
+            canvas,
+            {
+
+                type: 'line',
+
+                data: {
+
+                    labels:
+                        chartLabels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                'Historical',
+
+                            data:
+                                historicalSeries,
+
+                            borderColor:
+                                '#10b981',
+
+                            backgroundColor:
+                                '#10b981',
+
+                            borderWidth:
+                                3,
+
+                            pointRadius:
+                                3,
+
+                            tension:
+                                0.4,
+
+                            fill:
+                                false,
+                        },
+
+                        {
+
+                            label:
+                                'Projection',
+
+                            data:
+                                projectedSeries,
+
+                            borderColor:
+                                '#8b5cf6',
+
+                            backgroundColor:
+                                '#8b5cf6',
+
+                            borderWidth:
+                                3,
+
+                            borderDash:
+                                [8, 4],
+
+                            pointRadius:
+                                3,
+
+                            tension:
+                                0.4,
+
+                            fill:
+                                false,
+                        },
+
+                    ],
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    interaction: {
+
+                        mode:
+                            'index',
+
+                        intersect:
+                            false,
+                    },
+
+                    plugins: {
+
+                        legend: {
+
+                            position:
+                                'top',
+                        },
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            ticks: {
+
+                                callback:
+                                    (
+                                        value
+                                    ) =>
+                                        value + '%',
+                            },
+                        },
+                    },
+                },
+            },
+        );
+    },
+);
+
+</script>
+
 {% endblock %}
+
+
