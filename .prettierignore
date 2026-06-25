@@ -9,5 +9,5 @@ coverage
 __pycache__
 
 app/templates/analytics/utilization.html
-
 app/templates/analytics/capacity.html
+app/templates/analytics/forecast.html

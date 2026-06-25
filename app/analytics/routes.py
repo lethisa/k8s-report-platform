@@ -4,6 +4,9 @@ from flask_login import login_required
 from app.analytics.capacity.service import (
     CapacityService,
 )
+from app.analytics.forecast import (
+    ForecastService,
+)
 from app.analytics.overview.service import (
     get_analytics_overview,
 )
@@ -345,11 +348,73 @@ def capacity():
     )
 
 
-@analytics_bp.route('/forecast')
+@analytics_bp.route(
+    '/forecast',
+)
 @login_required
-def forecast() -> str:
+def forecast():
+    clusters = Cluster.query.order_by(
+        Cluster.name,
+    ).all()
+
+    cluster_id = request.args.get(
+        'cluster_id',
+    )
+
+    cluster = None
+
+    if cluster_id:
+        cluster = Cluster.query.get(
+            cluster_id,
+        )
+
+    if not cluster and clusters:
+        cluster = clusters[0]
+
+    if not cluster:
+        return render_template(
+            'analytics/forecast.html',
+            clusters=[],
+            forecast_summary={},
+            error='No cluster configured',
+        )
+
+    try:
+        prometheus = PrometheusService(
+            cluster,
+        )
+
+        utilization_service = UtilizationService(
+            prometheus,
+        )
+
+        forecast_service = ForecastService(
+            utilization_service,
+        )
+
+        forecast_summary = forecast_service.get_forecast_summary()
+
+        error = None
+
+    except Exception as exc:
+        current_app.logger.exception(
+            exc,
+        )
+
+        forecast_summary = {}
+
+        error = (
+            'Unable to connect to Prometheus. '
+            'Please verify endpoint, credentials, '
+            'SSL configuration, and network connectivity.'
+        )
+
     return render_template(
         'analytics/forecast.html',
+        clusters=clusters,
+        cluster=cluster,
+        forecast_summary=forecast_summary,
+        error=error,
     )
 
 
