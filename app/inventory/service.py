@@ -122,7 +122,6 @@ def save_namespaces(
     cluster: Cluster,
     api: CoreV1Api,
 ) -> None:
-
     NamespaceInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -156,7 +155,6 @@ def save_workloads(
     cluster: Cluster,
     apps_api: AppsV1Api,
 ) -> None:
-
     WorkloadInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -188,7 +186,6 @@ def save_pods(
     cluster: Cluster,
     api: CoreV1Api,
 ) -> None:
-
     PodInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -223,7 +220,6 @@ def save_services(
     cluster: Cluster,
     api: CoreV1Api,
 ) -> None:
-
     ServiceInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -259,7 +255,6 @@ def save_ingresses(
     cluster: Cluster,
     api: NetworkingV1Api,
 ) -> None:
-
     IngressInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -297,7 +292,6 @@ def save_storage_inventory(
     core_api: CoreV1Api,
     storage_api: StorageV1Api,
 ) -> None:
-
     StorageInventory.query.filter_by(
         cluster_id=cluster.id,
     ).delete(
@@ -397,7 +391,6 @@ def sync_inventory(
 def convert_ki_to_gib(
     value: str | None,
 ) -> float:
-
     if not value:
         return 0
 
@@ -425,7 +418,6 @@ def convert_ki_to_gib(
 
 
 def get_inventory_overview():
-
     clusters, inventory_summary = get_cluster_summary()
     for cluster in clusters:
         cluster.workload_count = WorkloadInventory.query.filter_by(cluster_id=cluster.id).count()
@@ -467,7 +459,6 @@ def get_inventory_overview():
 
 
 def get_inventory_health():
-
     clusters = Cluster.query.all()
 
     healthy_clusters = 0
@@ -504,18 +495,28 @@ def get_inventory_health():
 
 
 def get_recent_inventory_activity():
-
-    inventories = ClusterInventory.query.order_by(ClusterInventory.collected_at.desc()).limit(5).all()
+    inventories = (
+        ClusterInventory.query.order_by(
+            ClusterInventory.collected_at.desc(),
+        )
+        .limit(
+            5,
+        )
+        .all()
+    )
 
     activities = []
 
     for inventory in inventories:
-        cluster = Cluster.query.get(inventory.cluster_id)
+        cluster = db.session.get(
+            Cluster,
+            inventory.cluster_id,
+        )
 
         activities.append(
             {
                 'cluster': (cluster.name if cluster else 'Unknown'),
-                'collected_at': (inventory.collected_at),
+                'collected_at': inventory.collected_at,
             }
         )
 
@@ -527,7 +528,6 @@ def get_node_inventory(
     role=None,
     search=None,
 ):
-
     query = db.session.query(
         NodeInventory,
         Cluster.name.label(
@@ -591,7 +591,6 @@ def get_namespace_inventory(
     status=None,
     search=None,
 ):
-
     query = db.session.query(
         NamespaceInventory,
         Cluster.name.label(
@@ -650,7 +649,6 @@ def get_namespace_inventory(
 def format_age(
     created_at,
 ) -> str:
-
     if not created_at:
         return '-'
 
@@ -672,7 +670,6 @@ def get_workload_inventory(
     status=None,
     search=None,
 ):
-
     query = db.session.query(
         WorkloadInventory,
         Cluster.name.label(
@@ -771,7 +768,6 @@ def get_pod_inventory(
     status=None,
     search=None,
 ):
-
     query = db.session.query(
         PodInventory,
         Cluster.name.label(
@@ -874,7 +870,6 @@ def get_service_inventory(
     service_type=None,
     search=None,
 ):
-
     query = db.session.query(
         ServiceInventory,
         Cluster.name.label(
@@ -971,7 +966,6 @@ def get_ingress_inventory(
     ingress_class=None,
     search=None,
 ):
-
     query = db.session.query(
         IngressInventory,
         Cluster.name.label(
@@ -1061,7 +1055,6 @@ def get_storage_inventory_view(
     storage_type=None,
     search=None,
 ):
-
     query = db.session.query(
         StorageInventory,
         Cluster.name.label(
