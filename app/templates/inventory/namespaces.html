@@ -1,114 +1,170 @@
 {% extends "layouts/dashboard.html" %} {% block title %} Namespace Inventory {% endblock %} {% block dashboard_content
 %}
 
-<div class="space-y-6 p-8">
-    <!-- Hero -->
+<div class="space-y-6">
+    <!-- Hero Section -->
 
     <div
         class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="flex items-center gap-4">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                <i data-lucide="folder-tree" class="h-5 w-5"></i>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="folder-tree" class="h-6 w-6"></i>
+                </div>
+
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
+                        Namespace Inventory
+                    </h1>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Discover and explore Kubernetes namespaces across connected clusters.
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <h1 class="text-3xl font-bold">Namespace Inventory</h1>
-
-                <p class="mt-1 text-slate-500">Discover and explore Kubernetes namespaces across connected clusters.</p>
-            </div>
+            <a
+                href="{{ url_for('inventory.overview') }}"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+                <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                Back to Overview
+            </a>
         </div>
     </div>
 
-    <!-- KPI -->
+    <!-- KPI Cards -->
 
     <div class="grid gap-6 md:grid-cols-3">
         <!-- Total Namespaces -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Total Namespaces</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Total Namespaces</span>
 
-                <i data-lucide="folder-tree" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="folder-tree" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_namespaces }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_namespaces }}
+            </div>
 
-            <p class="text-xs text-slate-500">Kubernetes namespaces</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Kubernetes namespaces</p>
         </div>
 
         <!-- Clusters -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Clusters</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Clusters</span>
 
-                <i data-lucide="server" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300"
+                >
+                    <i data-lucide="server" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_clusters }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_clusters }}
+            </div>
 
-            <p class="text-xs text-slate-500">Connected clusters</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Clusters with namespace data</p>
         </div>
 
         <!-- Active -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Active</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Active</span>
 
-                <i data-lucide="badge-check" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-300"
+                >
+                    <i data-lucide="badge-check" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.active_namespaces }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.active_namespaces }}
+            </div>
 
-            <p class="text-xs text-slate-500">Active namespaces</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Active namespaces</p>
         </div>
     </div>
 
-    <!-- Namespace Inventory -->
+    <!-- Namespace Inventory Table Card -->
 
     <div
         class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold">Namespace Inventory</h2>
+        <!-- Card Header -->
 
-            <p class="mt-1 text-sm text-slate-500">Kubernetes namespaces collected from connected clusters.</p>
+        <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="folders" class="h-5 w-5"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Namespace Inventory</h2>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Kubernetes namespaces collected from connected clusters.
+                    </p>
+                </div>
+            </div>
         </div>
 
+        <!-- Filter Bar -->
+
         <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <form method="GET" class="grid gap-4 lg:grid-cols-4">
+            <form method="GET" class="grid gap-4 xl:grid-cols-[1fr_1fr_1.5fr_auto_auto]">
+                <input type="hidden" name="page" value="1" />
+
                 <!-- Cluster -->
 
                 <div>
-                    <label class="mb-2 block text-sm font-medium">Cluster</label>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Cluster</label>
 
-                    <select name="cluster_id" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                    <select
+                        name="cluster_id"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         <option value="">All Clusters</option>
 
                         {% for cluster in clusters %} {% if selected_cluster_id == cluster.id %}
-
                         <option value="{{ cluster.id }}" selected>{{ cluster.name }}</option>
-
                         {% else %}
-
                         <option value="{{ cluster.id }}">{{ cluster.name }}</option>
-
                         {% endif %} {% endfor %}
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-sm font-medium">Status</label>
+                <!-- Status -->
 
-                    <select name="status" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+
+                    <select
+                        name="status"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         {% if not selected_status %}
                         <option value="" selected>All Status</option>
                         {% else %}
@@ -129,78 +185,115 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-sm font-medium">Search Namespace</label>
+                <!-- Search -->
 
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ search }}"
-                        placeholder="Search namespace..."
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2"
-                    />
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Search Namespace
+                    </label>
+
+                    <div class="relative">
+                        <i
+                            data-lucide="search"
+                            class="absolute top-3 left-3 h-4 w-4 text-slate-400 dark:text-slate-500"
+                        ></i>
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Search namespace..."
+                            class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                        />
+                    </div>
                 </div>
 
+                <!-- Per Page -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Per Page</label>
+
+                    <select
+                        name="per_page"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
+                        {% for option in pagination.allowed_per_page %} {% if pagination.per_page == option %}
+                        <option value="{{ option }}" selected>{{ option }}</option>
+                        {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endif %} {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Actions -->
+
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-white">Apply</button>
+                    <button
+                        type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md focus:ring-4 focus:ring-blue-500/20 focus:outline-none dark:hover:bg-blue-500"
+                    >
+                        <i data-lucide="filter" class="h-4 w-4"></i>
+                        Apply
+                    </button>
 
                     <a
                         href="{{ url_for('inventory.namespaces') }}"
-                        class="rounded-xl border border-slate-300 px-4 py-2"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
+                        <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                         Reset
                     </a>
                 </div>
             </form>
         </div>
 
+        <!-- Table -->
+
         <div class="overflow-x-auto">
             <table class="min-w-full text-slate-900 dark:text-slate-100">
                 <thead>
                     <tr
-                        class="bg-slate-50 text-center text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-300"
+                        class="border-b border-slate-200 bg-slate-50 text-center text-xs tracking-wide text-slate-600 uppercase dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-300"
                     >
-                        <th class="px-6 py-3">Cluster</th>
-
-                        <th class="px-6 py-3">Namespace</th>
-
-                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-4 text-left">Cluster</th>
+                        <th class="px-6 py-4 text-left">Namespace</th>
+                        <th class="px-6 py-4 text-center">Status</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for namespace, cluster_name in inventory.namespaces %}
 
-                    <tr class="border-t border-slate-100 text-center dark:border-slate-700">
-                        <td class="px-6 py-4">{{ cluster_name }}</td>
-
-                        <td class="px-6 py-4 font-medium">{{ namespace.namespace }}</td>
+                    <tr
+                        class="border-t border-slate-200 text-sm transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/30"
+                    >
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900 dark:text-white">{{ cluster_name }}</div>
+                        </td>
 
                         <td class="px-6 py-4">
-                            {% if namespace.status == 'Active' %}
+                            <div class="font-medium text-slate-800 dark:text-slate-100">{{ namespace.namespace }}</div>
+                        </td>
 
+                        <td class="px-6 py-4 text-center">
+                            {% if namespace.status == 'Active' %}
                             <span
-                                class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                                class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
                             >
                                 Active
                             </span>
-
                             {% elif namespace.status == 'Terminating' %}
-
                             <span
-                                class="inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700"
+                                class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                             >
                                 Terminating
                             </span>
-
                             {% else %}
-
                             <span
-                                class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+                                class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300"
                             >
                                 {{ namespace.status or 'Unknown' }}
                             </span>
-
                             {% endif %}
                         </td>
                     </tr>
@@ -208,14 +301,101 @@
                     {% else %}
 
                     <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-400">No inventory data found.</td>
+                        <td colspan="3" class="py-16 text-center text-slate-400 dark:text-slate-500">
+                            <div class="flex flex-col items-center gap-3">
+                                <div
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                                >
+                                    <i data-lucide="folder-x" class="h-6 w-6"></i>
+                                </div>
+
+                                <div>
+                                    <div class="font-medium text-slate-700 dark:text-slate-300">
+                                        No namespace inventory found
+                                    </div>
+
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">
+                                        Sync cluster inventory to collect Kubernetes namespace data.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
 
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="border-t border-slate-200 px-6 py-4 text-sm text-slate-500 dark:border-slate-700">
-                Showing {{ inventory.namespaces|length }} namespace(s)
+        </div>
+
+        <!-- Pagination Footer -->
+
+        <div
+            class="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400"
+        >
+            <div>
+                Showing
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.start_item }}</span>
+                -
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.end_item }}</span>
+                of
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.total_items }}</span>
+                namespace(s)
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                {% if pagination.has_prev %}
+                <a
+                    href="{{ url_for(
+                            'inventory.namespaces',
+                            cluster_id=selected_cluster_id,
+                            status=selected_status,
+                            search=search,
+                            page=pagination.prev_page,
+                            per_page=pagination.per_page
+                        ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </span>
+                {% endif %}
+
+                <span
+                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                    Page {{ pagination.page }} / {{ pagination.total_pages }}
+                </span>
+
+                {% if pagination.has_next %}
+                <a
+                    href="{{ url_for(
+                            'inventory.namespaces',
+                            cluster_id=selected_cluster_id,
+                            status=selected_status,
+                            search=search,
+                            page=pagination.next_page,
+                            per_page=pagination.per_page
+                        ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
