@@ -11,7 +11,6 @@ from app.models import Cluster, ClusterInventory, ClusterStatus, NamespaceInvent
 def parse_kubeconfig(
     kubeconfig_content: str,
 ) -> dict:
-
     try:
         data = yaml.safe_load(kubeconfig_content)
 
@@ -108,7 +107,6 @@ def create_cluster(
 
 
 def run_test_cluster(cluster: Cluster) -> dict:
-
     result = test_cluster_connection(cluster.kubeconfig)
 
     cluster.last_check = datetime.now(UTC)
@@ -136,7 +134,6 @@ def update_cluster(
     environment: str,
     description: str | None,
 ) -> Cluster:
-
     existing = Cluster.query.filter(
         Cluster.name == name,
         Cluster.id != cluster.id,
@@ -155,7 +152,21 @@ def update_cluster(
 
 
 def delete_cluster(cluster: Cluster) -> None:
-
     db.session.delete(cluster)
 
     db.session.commit()
+
+
+def build_cluster_context():
+    clusters, inventory_summary = get_cluster_summary()
+
+    connected_clusters = sum(1 for cluster in clusters if getattr(cluster, 'status', '') == 'connected')
+
+    synced_clusters = sum(1 for summary in inventory_summary.values() if summary.get('synced_at') is not None)
+
+    return {
+        'clusters': clusters,
+        'inventory_summary': inventory_summary,
+        'connected_clusters': connected_clusters,
+        'synced_clusters': synced_clusters,
+    }

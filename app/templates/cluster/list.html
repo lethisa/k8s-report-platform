@@ -1,33 +1,61 @@
 {% extends "layouts/dashboard.html" %} {% block title %} Clusters {% endblock %} {% block dashboard_content %}
 
-<div
-    x-data="{
-        deleteModal: false,
-        deleteUrl: '',
-        deleteName: ''
-    }"
-    class="p-8"
->
+<div x-data="{ deleteModal: false, deleteUrl: '', deleteName: '', search: '', envFilter:'all' }" class="p-8">
     <!-- Header -->
 
-    <div class="mb-6 flex items-start justify-between">
-        <div>
-            <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                <i data-lucide="server" class="h-6 w-6"></i>
+    <div
+        class="mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+        <div class="p-6">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                    >
+                        <i data-lucide="server" class="h-7 w-7"></i>
+                    </div>
+
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Cluster Management</h1>
+
+                        <p class="mt-2 text-slate-500 dark:text-slate-400">
+                            Manage Kubernetes clusters, connectivity, inventory synchronization, and Prometheus
+                            integration.
+                        </p>
+
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span
+                                class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                            >
+                                {{ clusters|length }} Clusters
+                            </span>
+
+                            <span
+                                class="inline-flex items-center rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
+                            >
+                                {{ connected_clusters }} Connected
+                            </span>
+
+                            <span
+                                class="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+                            >
+                                {{ synced_clusters }} Synced
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <a
+                        href="{{ url_for('cluster.add_cluster') }}"
+                        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700"
+                    >
+                        <i data-lucide="plus" class="h-4 w-4"></i>
+                        <span>Add Cluster</span>
+                    </a>
+                </div>
             </div>
-
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Clusters</h1>
-
-            <p class="mt-2 text-slate-500 dark:text-slate-400">Manage Kubernetes clusters connected to the platform.</p>
         </div>
-
-        <a
-            href="{{ url_for('cluster.add_cluster') }}"
-            class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700"
-        >
-            <i data-lucide="plus" class="h-4 w-4"></i>
-            <span>Add Cluster</span>
-        </a>
     </div>
 
     <!-- Card -->
@@ -37,19 +65,53 @@
     >
         <!-- Card Header -->
 
-        <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
-            <h2 class="text-lg font-semibold">Cluster Inventory</h2>
+        <div
+            class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 lg:flex-row lg:items-center lg:justify-between"
+        >
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <i data-lucide="database" class="h-5 w-5"></i>
+                </div>
 
-            <p class="mt-1 text-sm text-slate-500">Manage and monitor Kubernetes clusters connected to KubeReport.</p>
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Cluster Inventory</h2>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Overview of registered Kubernetes clusters and operational status.
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Table -->
 
         <div id="cluster-table-container" class="overflow-x-auto">
+            <div
+                class="flex flex-col gap-3 border-b border-slate-200 px-6 py-4 md:flex-row md:items-center md:justify-between"
+            >
+                <div class="relative w-full lg:max-w-lg">
+                    <i data-lucide="search" class="absolute top-3 left-3 h-4 w-4 text-slate-400"></i>
+
+                    <input
+                        x-model="search"
+                        type="text"
+                        placeholder="Search clusters..."
+                        class="w-full rounded-xl border border-slate-300 py-2 pr-3 pl-10 text-sm"
+                    />
+                </div>
+
+                <select x-model="envFilter" class="rounded-xl border border-slate-300 px-4 py-2 text-sm">
+                    <option value="all">All Environments</option>
+                    <option value="prd">Production</option>
+                    <option value="stg">Staging</option>
+                    <option value="dev">Development</option>
+                </select>
+            </div>
+
             <table class="min-w-full">
                 <thead>
                     <tr
-                        class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-400"
+                        class="border-b border-slate-200 bg-slate-50 text-xs tracking-wide text-slate-500 uppercase dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400"
                     >
                         <th class="px-6 py-4 text-left">Name</th>
 
@@ -85,6 +147,13 @@
                                     <div class="font-medium">No Clusters Found</div>
 
                                     <div class="text-sm">Add your first Kubernetes cluster.</div>
+
+                                    <a
+                                        href="{{ url_for('cluster.add_cluster') }}"
+                                        class="mt-4 inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-white"
+                                    >
+                                        Add Cluster
+                                    </a>
                                 </div>
                             </div>
                         </td>

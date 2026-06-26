@@ -55,6 +55,7 @@ class Cluster(db.Model):
     prometheus_config: Mapped['PrometheusConfig'] = relationship(
         back_populates='cluster',
         uselist=False,
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:

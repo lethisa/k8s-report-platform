@@ -18,9 +18,11 @@ class PrometheusConfig(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     cluster_id: Mapped[str] = mapped_column(
-        ForeignKey('clusters.id'),
+        ForeignKey(
+            'clusters.id',
+            ondelete='CASCADE',
+        ),
         nullable=False,
-        unique=True,
     )
 
     endpoint: Mapped[str] = mapped_column(

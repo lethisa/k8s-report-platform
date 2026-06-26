@@ -1,6 +1,19 @@
 <tr
     id="cluster-row-{{ cluster.id }}"
     class="border-t border-slate-200 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40"
+    x-show="
+        (
+            '{{ cluster.name|lower }}'.includes(search.toLowerCase())
+            ||
+            '{{ cluster.environment|lower }}'.includes(search.toLowerCase())
+        )
+        &&
+        (
+            envFilter === 'all'
+            ||
+            '{{ cluster.environment|lower }}' === envFilter
+        )
+    "
 >
     <!-- Name -->
 

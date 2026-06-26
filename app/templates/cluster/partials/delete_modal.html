@@ -7,28 +7,33 @@
     <div
         @click.away="deleteModal = false"
         x-transition
-        class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
     >
         <div class="p-6">
-            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
                 <i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i>
             </div>
 
-            <h3 class="text-lg font-semibold text-slate-900">Delete Cluster</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Delete Cluster</h3>
 
-            <p class="mt-2 text-sm text-slate-600">
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Are you sure you want to delete
                 <span class="font-semibold" x-text="deleteName"></span>
                 ?
             </p>
 
             <p class="mt-1 text-sm text-red-600">This action cannot be undone.</p>
+            <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/40 dark:bg-red-950/20">
+                <p class="text-xs text-red-700 dark:text-red-400">
+                    Deleting a cluster will remove associated inventory records and Prometheus configuration.
+                </p>
+            </div>
         </div>
 
-        <div class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+        <div class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-slate-700">
             <button
                 @click="deleteModal = false"
-                class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50"
+                class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
             >
                 Cancel
             </button>

@@ -2,7 +2,13 @@ from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import login_required
 
 from app.cluster.forms import ClusterCreateForm, ClusterEditForm
-from app.cluster.service import create_cluster, delete_cluster, get_cluster_summary, run_test_cluster, update_cluster
+from app.cluster.service import (
+    build_cluster_context,
+    create_cluster,
+    delete_cluster,
+    run_test_cluster,
+    update_cluster,
+)
 from app.models import Cluster
 
 cluster_bp = Blueprint('cluster', __name__, url_prefix='/clusters')
@@ -11,13 +17,9 @@ cluster_bp = Blueprint('cluster', __name__, url_prefix='/clusters')
 @cluster_bp.route('/')
 @login_required
 def list_clusters():
-
-    clusters, inventory_summary = get_cluster_summary()
-
     return render_template(
         'cluster/list.html',
-        clusters=clusters,
-        inventory_summary=inventory_summary,
+        **build_cluster_context(),
     )
 
 
@@ -27,7 +29,6 @@ def list_clusters():
 )
 @login_required
 def add_cluster():
-
     form = ClusterCreateForm()
 
     if form.validate_on_submit():
@@ -83,7 +84,6 @@ def add_cluster():
 )
 @login_required
 def test_cluster(cluster_id):
-
     cluster = Cluster.query.get_or_404(cluster_id)
 
     result = run_test_cluster(cluster)
@@ -99,12 +99,9 @@ def test_cluster(cluster_id):
             'danger',
         )
 
-    clusters, inventory_summary = get_cluster_summary()
-
     return render_template(
         'cluster/partials/table.html',
-        clusters=clusters,
-        inventory_summary=inventory_summary,
+        **build_cluster_context(),
     )
 
 
@@ -114,7 +111,6 @@ def test_cluster(cluster_id):
 )
 @login_required
 def edit_cluster(cluster_id):
-
     cluster = Cluster.query.get_or_404(cluster_id)
 
     form = ClusterEditForm(obj=cluster)
@@ -160,7 +156,6 @@ def edit_cluster(cluster_id):
 )
 @login_required
 def delete_cluster_route(cluster_id):
-
     cluster = Cluster.query.get_or_404(cluster_id)
 
     delete_cluster(cluster)
