@@ -338,19 +338,21 @@ File:
 tests/auth/test_login.py
 ```
 
+Authentication tests validate login, logout, and route protection behavior.
+
 Current coverage:
 
 | Test Case | Purpose | Status |
 | --- | --- | --- |
-| Login page can be opened | Validate `/auth/login` renders correctly | Done |
-| Login with valid credentials | Validate successful authentication | Done |
-| Login with wrong password | Validate failed authentication | Done |
-| Protected page requires login | Validate login protection | Done |
-| Logout authenticated user | Validate session termination | Planned |
-| Logout without login | Validate logout route protection | Planned |
-| Login with unknown username | Validate failed authentication for unknown user | Planned |
+| Login page can be opened | Validate `/auth/login` renders username and password fields | Done |
+| Login with valid credentials | Validate successful authentication and access to protected cluster page | Done |
+| Login with wrong password | Validate failed authentication for an existing user | Done |
+| Login with unknown username | Validate failed authentication for a non-existing user | Done |
+| Protected page requires login | Validate unauthenticated users cannot access `/clusters/` | Done |
+| Logout authenticated user | Validate authenticated user can log out and loses protected access | Done |
+| Logout without login | Validate logout route remains protected | Done |
 
-The login test keeps the `remember` field enabled:
+The login tests keep the `remember` field enabled:
 
 ```python
 "remember": "y"
@@ -619,7 +621,7 @@ markers =
 | Test database isolation | Ready |
 | Pytest baseline | Ready |
 | Auth login test | Ready |
-| Auth logout test | Planned |
+| Auth logout test | Ready |
 | Cluster service test | Ready |
 | Cluster route test | Ready |
 | Inventory test | Planned |
@@ -634,23 +636,21 @@ markers =
 
 ### Milestone 1: Authentication Baseline
 
+Status: Complete.
+
 Scope:
 
 - Login page test.
 - Successful login test.
-- Failed login test.
+- Failed login test with wrong password.
+- Failed login test with unknown username.
 - Protected route test.
-- Logout tests.
-
-Suggested commit:
-
-```bash
-git commit -m "test(auth): add authentication testing baseline"
-```
-
-Status: Partially complete.
+- Authenticated logout test.
+- Logout route protection test.
 
 ### Milestone 2: Cluster Management Tests
+
+Status: Complete.
 
 Scope:
 
@@ -662,15 +662,9 @@ Scope:
 - Cluster test connection route with mocked Kubernetes client.
 - HTMX partial table response.
 
-Suggested commit:
-
-```bash
-git commit -m "test(cluster): add cluster management tests"
-```
-
-Status: Complete.
-
 ### Milestone 3: Inventory Tests
+
+Status: Planned.
 
 Scope:
 
@@ -683,15 +677,9 @@ Scope:
 - Pod inventory.
 - Services, ingresses, and storage inventory.
 
-Suggested commit:
-
-```bash
-git commit -m "test(inventory): add inventory service tests"
-```
+### Milestone 4: Prometheus Tests
 
 Status: Planned.
-
-### Milestone 4: Prometheus Tests
 
 Scope:
 
@@ -700,14 +688,6 @@ Scope:
 - Prometheus client range query.
 - Connection test behavior.
 - Mocked failure handling.
-
-Suggested commit:
-
-```bash
-git commit -m "test(prometheus): add prometheus service tests"
-```
-
-Status: Planned.
 
 ---
 
