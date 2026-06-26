@@ -749,7 +749,32 @@ def storage():
         'search',
         '',
         type=str,
+    ).strip()
+
+    page = request.args.get(
+        'page',
+        1,
+        type=int,
     )
+
+    per_page = request.args.get(
+        'per_page',
+        25,
+        type=int,
+    )
+
+    allowed_per_page = [
+        10,
+        25,
+        50,
+        100,
+    ]
+
+    if per_page not in allowed_per_page:
+        per_page = 25
+
+    if page < 1:
+        page = 1
 
     inventory = get_storage_inventory_view(
         cluster_id=cluster_id,
@@ -757,6 +782,46 @@ def storage():
         storage_type=storage_type,
         search=search,
     )
+
+    all_storage_items = inventory.get(
+        'storage_items',
+        [],
+    )
+
+    total_items = len(
+        all_storage_items,
+    )
+
+    total_pages = max(
+        (total_items + per_page - 1) // per_page,
+        1,
+    )
+
+    if page > total_pages:
+        page = total_pages
+
+    start_index = (page - 1) * per_page
+
+    end_index = start_index + per_page
+
+    inventory['storage_items'] = all_storage_items[start_index:end_index]
+
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'total_items': total_items,
+        'total_pages': total_pages,
+        'start_item': start_index + 1 if total_items > 0 else 0,
+        'end_item': min(
+            end_index,
+            total_items,
+        ),
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_page': page - 1,
+        'next_page': page + 1,
+        'allowed_per_page': allowed_per_page,
+    }
 
     clusters = Cluster.query.order_by(
         Cluster.name,
@@ -770,4 +835,5 @@ def storage():
         selected_namespace=namespace,
         selected_type=storage_type,
         search=search,
+        pagination=pagination,
     )
