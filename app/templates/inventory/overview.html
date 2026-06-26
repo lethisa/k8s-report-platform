@@ -51,9 +51,13 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Clusters</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Clusters</span>
 
-                <i data-lucide="server" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300"
+                >
+                    <i data-lucide="server" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div
@@ -63,7 +67,7 @@
                 {{ overview.total_clusters }}
             </div>
 
-            <p class="mt-2 text-xs text-slate-500">Connected clusters</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Connected clusters</p>
         </div>
 
         <!-- Nodes -->
@@ -72,9 +76,13 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Nodes</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Nodes</span>
 
-                <i data-lucide="cpu" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-300"
+                >
+                    <i data-lucide="cpu" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div
@@ -84,7 +92,7 @@
                 {{ overview.total_nodes }}
             </div>
 
-            <p class="mt-2 text-xs text-slate-500">Kubernetes nodes</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Kubernetes nodes</p>
         </div>
 
         <!-- Namespaces -->
@@ -93,9 +101,13 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Namespaces</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Namespaces</span>
 
-                <i data-lucide="folder-tree" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300"
+                >
+                    <i data-lucide="folder-tree" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div
@@ -105,7 +117,7 @@
                 {{ overview.total_namespaces }}
             </div>
 
-            <p class="mt-2 text-xs text-slate-500">Discovered namespaces</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Discovered namespaces</p>
         </div>
 
         <!-- Workloads -->
@@ -114,14 +126,18 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Workloads</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Workloads</span>
 
-                <i data-lucide="boxes" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-300"
+                >
+                    <i data-lucide="boxes" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">{{ overview.total_workloads }}</div>
 
-            <p class="mt-2 text-xs text-slate-500">Deployments & StatefulSets</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Deployments & StatefulSets</p>
         </div>
 
         <!-- Pods -->
@@ -130,14 +146,18 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Pods</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Pods</span>
 
-                <i data-lucide="package" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-300"
+                >
+                    <i data-lucide="package" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">{{ overview.total_pods }}</div>
 
-            <p class="mt-2 text-xs text-slate-500">Running pod instances</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Running pod instances</p>
         </div>
 
         <!-- Services -->
@@ -146,13 +166,17 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Services</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Services</span>
 
-                <i data-lucide="network" class="h-5 w-5 text-cyan-500"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-300"
+                >
+                    <i data-lucide="network" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">{{ overview.total_services }}</div>
-            <p class="mt-2 text-xs text-slate-500">Kubernetes services</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Kubernetes services</p>
         </div>
 
         <!-- Ingresses -->
@@ -161,13 +185,17 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Ingresses</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Ingresses</span>
 
-                <i data-lucide="route" class="h-5 w-5 text-orange-500"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-300"
+                >
+                    <i data-lucide="route" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">{{ overview.total_ingresses }}</div>
-            <p class="mt-2 text-xs text-slate-500">Published ingresses</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Published ingresses</p>
         </div>
 
         <!-- Storage -->
@@ -176,31 +204,51 @@
             class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Storage</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Storage</span>
 
-                <i data-lucide="hard-drive" class="h-5 w-5 text-purple-500"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-300"
+                >
+                    <i data-lucide="hard-drive" class="h-5 w-5"></i>
+                </div>
             </div>
 
             <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">{{ overview.total_storage }}</div>
-            <p class="mt-2 text-xs text-slate-500">Storage resources</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Storage resources</p>
         </div>
-        <!-- Last Sync -->
+        <!-- Inventory Total -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md md:col-span-2 xl:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-800"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Inventory Total</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Inventory Total</span>
 
-                <i data-lucide="database" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                >
+                    <i data-lucide="database" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600">
-                {{ overview.total_nodes + overview.total_namespaces + overview.total_workloads + overview.total_pods +
-                overview.total_services + overview.total_ingresses + overview.total_storage }}
-            </div>
+            <div class="mt-4 flex items-end justify-between gap-4">
+                <div>
+                    <div class="text-4xl font-bold tracking-tight text-blue-600">
+                        {{ overview.total_nodes + overview.total_namespaces + overview.total_workloads +
+                        overview.total_pods + overview.total_services + overview.total_ingresses +
+                        overview.total_storage }}
+                    </div>
 
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Total collected inventory resources</p>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Total collected inventory resources</p>
+                </div>
+
+                <div class="hidden text-right text-xs text-slate-500 sm:block dark:text-slate-400">
+                    <div>Across</div>
+                    <div class="mt-1 font-semibold text-slate-700 dark:text-slate-200">
+                        {{ overview.total_clusters }} clusters
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -409,7 +457,7 @@
                                     </span>
                                     {% else %}
                                     <span
-                                        class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                        class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold tracking-wide text-red-700 uppercase dark:bg-red-950 dark:text-red-300"
                                     >
                                         Disconnected
                                     </span>
