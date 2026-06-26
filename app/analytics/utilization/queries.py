@@ -4,17 +4,6 @@ sum(
         resource="cpu"
     }
 )
--
-sum(
-    kube_node_status_capacity{
-        resource="cpu"
-    }
-    * on(node)
-    group_left(role)
-    kube_node_role{
-        role="control-plane"
-    }
-)
 """
 
 CPU_USAGE = """
@@ -39,24 +28,11 @@ CPU_UTILIZATION = """
         )
     )
 /
-(
     sum(
         kube_node_status_capacity{
             resource="cpu"
         }
     )
-    -
-    sum(
-        kube_node_status_capacity{
-            resource="cpu"
-        }
-        * on(node)
-        group_left(role)
-        kube_node_role{
-            role="control-plane"
-        }
-    )
-)
 ) * 100
 """
 
@@ -64,17 +40,6 @@ MEMORY_CAPACITY = """
 sum(
     kube_node_status_capacity{
         resource="memory"
-    }
-)
--
-sum(
-    kube_node_status_capacity{
-        resource="memory"
-    }
-    * on(node)
-    group_left(role)
-    kube_node_role{
-        role="control-plane"
     }
 )
 """
@@ -97,47 +62,65 @@ MEMORY_UTILIZATION = """
         }
     )
 /
-(
     sum(
         kube_node_status_capacity{
             resource="memory"
         }
     )
-    -
-    sum(
-        kube_node_status_capacity{
-            resource="memory"
-        }
-        * on(node)
-        group_left(role)
-        kube_node_role{
-            role="control-plane"
-        }
-    )
-)
 ) * 100
 """
 
 STORAGE_CAPACITY = """
 sum(
-    kubelet_volume_stats_capacity_bytes
+    node_filesystem_size_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs"
+    }
+)
+"""
+
+STORAGE_AVAILABLE = """
+sum(
+    node_filesystem_avail_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs"
+    }
 )
 """
 
 STORAGE_USAGE = """
 sum(
-    kubelet_volume_stats_used_bytes
+    node_filesystem_size_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs"
+    }
+    -
+    node_filesystem_avail_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs"
+    }
 )
 """
 
 STORAGE_UTILIZATION = """
 (
     sum(
-        kubelet_volume_stats_used_bytes
+        node_filesystem_size_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs"
+        }
+        -
+        node_filesystem_avail_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs"
+        }
     )
 /
     sum(
-        kubelet_volume_stats_capacity_bytes
+        node_filesystem_size_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs"
+        }
     )
 ) * 100
 """
@@ -156,17 +139,6 @@ sum(
         resource="pods"
     }
 )
--
-sum(
-    kube_node_status_capacity{
-        resource="pods"
-    }
-    * on(node)
-    group_left(role)
-    kube_node_role{
-        role="control-plane"
-    }
-)
 """
 
 POD_UTILIZATION = """
@@ -177,33 +149,17 @@ POD_UTILIZATION = """
         }
     )
 /
-(
     sum(
         kube_node_status_capacity{
             resource="pods"
         }
     )
-    -
-    sum(
-        kube_node_status_capacity{
-            resource="pods"
-        }
-        * on(node)
-        group_left(role)
-        kube_node_role{
-            role="control-plane"
-        }
-    )
-)
 ) * 100
 """
 
-
 CPU_UTILIZATION_HISTORY = CPU_UTILIZATION
-
 MEMORY_UTILIZATION_HISTORY = MEMORY_UTILIZATION
-
-STORAGE_UTILIZATION_HISTORY = STORAGE_UTILIZATION
+POD_UTILIZATION_HISTORY = POD_UTILIZATION
 
 TOP_CPU_CONSUMERS = """
 topk(
@@ -241,6 +197,24 @@ count(
 )
 """
 
+READY_NODES = """
+count(
+    kube_node_status_condition{
+        condition="Ready",
+        status="true"
+    } == 1
+)
+"""
+
+NOT_READY_NODES = """
+count(
+    kube_node_status_condition{
+        condition="Ready",
+        status!="true"
+    } == 1
+)
+"""
+
 MASTER_NODES = """
 count(
     kube_node_role{
@@ -258,5 +232,279 @@ count(
     kube_node_role{
         role="control-plane"
     }
+)
+"""
+
+NODE_LIST = """
+kube_node_info
+"""
+
+WORKER_NODE_LIST = """
+kube_node_info
+unless on(node)
+kube_node_role{
+    role="control-plane"
+}
+"""
+
+FILESYSTEM_INSTANCE_LIST = """
+node_filesystem_size_bytes{
+    mountpoint="/var",
+    fstype!~"tmpfs|overlay|squashfs"
+}
+"""
+
+CPU_CAPACITY_BY_NODE = """
+sum(
+    kube_node_status_capacity{
+        resource="cpu",
+        node="{node}"
+    }
+)
+"""
+
+CPU_USAGE_BY_NODE = """
+sum(
+    rate(
+        container_cpu_usage_seconds_total{
+            container!="",
+            container!="POD",
+            node="{node}"
+        }[5m]
+    )
+)
+"""
+
+CPU_UTILIZATION_BY_NODE = """
+(
+    sum(
+        rate(
+            container_cpu_usage_seconds_total{
+                container!="",
+                container!="POD",
+                node="{node}"
+            }[5m]
+        )
+    )
+/
+    sum(
+        kube_node_status_capacity{
+            resource="cpu",
+            node="{node}"
+        }
+    )
+) * 100
+"""
+
+MEMORY_CAPACITY_BY_NODE = """
+sum(
+    kube_node_status_capacity{
+        resource="memory",
+        node="{node}"
+    }
+)
+"""
+
+MEMORY_USAGE_BY_NODE = """
+sum(
+    container_memory_working_set_bytes{
+        container!="",
+        container!="POD",
+        node="{node}"
+    }
+)
+"""
+
+MEMORY_UTILIZATION_BY_NODE = """
+(
+    sum(
+        container_memory_working_set_bytes{
+            container!="",
+            container!="POD",
+            node="{node}"
+        }
+    )
+/
+    sum(
+        kube_node_status_capacity{
+            resource="memory",
+            node="{node}"
+        }
+    )
+) * 100
+"""
+
+POD_COUNT_BY_NODE = """
+count(
+    (
+        kube_pod_status_phase{
+            phase="Running"
+        } == 1
+    )
+    * on(namespace,pod)
+    group_left(node)
+    kube_pod_info{
+        node="{node}"
+    }
+)
+"""
+
+POD_CAPACITY_BY_NODE = """
+sum(
+    kube_node_status_capacity{
+        resource="pods",
+        node="{node}"
+    }
+)
+"""
+
+POD_UTILIZATION_BY_NODE = """
+(
+    count(
+        (
+            kube_pod_status_phase{
+                phase="Running"
+            } == 1
+        )
+        * on(namespace,pod)
+        group_left(node)
+        kube_pod_info{
+            node="{node}"
+        }
+    )
+/
+    sum(
+        kube_node_status_capacity{
+            resource="pods",
+            node="{node}"
+        }
+    )
+) * 100
+"""
+
+
+CPU_UTILIZATION_HISTORY_BY_NODE = CPU_UTILIZATION_BY_NODE
+
+MEMORY_UTILIZATION_HISTORY_BY_NODE = MEMORY_UTILIZATION_BY_NODE
+
+POD_UTILIZATION_HISTORY_BY_NODE = POD_UTILIZATION_BY_NODE
+
+STORAGE_CAPACITY_BY_INSTANCE = """
+sum(
+    node_filesystem_size_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs",
+        instance="{instance}"
+    }
+)
+"""
+
+STORAGE_AVAILABLE_BY_INSTANCE = """
+sum(
+    node_filesystem_avail_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs",
+        instance="{instance}"
+    }
+)
+"""
+
+STORAGE_USAGE_BY_INSTANCE = """
+sum(
+    node_filesystem_size_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs",
+        instance="{instance}"
+    }
+    -
+    node_filesystem_avail_bytes{
+        mountpoint="/var",
+        fstype!~"tmpfs|overlay|squashfs",
+        instance="{instance}"
+    }
+)
+"""
+
+STORAGE_UTILIZATION_BY_INSTANCE = """
+(
+    sum(
+        node_filesystem_size_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs",
+            instance="{instance}"
+        }
+        -
+        node_filesystem_avail_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs",
+            instance="{instance}"
+        }
+    )
+/
+    sum(
+        node_filesystem_size_bytes{
+            mountpoint="/var",
+            fstype!~"tmpfs|overlay|squashfs",
+            instance="{instance}"
+        }
+    )
+) * 100
+"""
+
+MEMORY_PRESSURE_NODES = """
+sum(
+    kube_node_status_condition{
+        condition="MemoryPressure",
+        status="true"
+    } == 1
+)
+"""
+
+DISK_PRESSURE_NODES = """
+sum(
+    kube_node_status_condition{
+        condition="DiskPressure",
+        status="true"
+    } == 1
+)
+"""
+
+PID_PRESSURE_NODES = """
+sum(
+    kube_node_status_condition{
+        condition="PIDPressure",
+        status="true"
+    } == 1
+)
+"""
+
+
+MEMORY_PRESSURE_NODES_BY_NODE = """
+sum(
+    kube_node_status_condition{
+        condition="MemoryPressure",
+        status="true",
+        node="{node}"
+    } == 1
+)
+"""
+
+DISK_PRESSURE_NODES_BY_NODE = """
+sum(
+    kube_node_status_condition{
+        condition="DiskPressure",
+        status="true",
+        node="{node}"
+    } == 1
+)
+"""
+
+PID_PRESSURE_NODES_BY_NODE = """
+sum(
+    kube_node_status_condition{
+        condition="PIDPressure",
+        status="true",
+        node="{node}"
+    } == 1
 )
 """

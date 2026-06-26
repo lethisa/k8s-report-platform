@@ -4,9 +4,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.analytics.utilization import queries
-from app.prometheus.service import (
-    PrometheusService,
-)
+from app.prometheus.service import PrometheusService
 
 
 class UtilizationService:
@@ -83,6 +81,33 @@ class UtilizationService:
         return consumers
 
     @staticmethod
+    def _extract_label_values(
+        response: dict[str, Any],
+        label_name: str,
+    ) -> list[str]:
+        results = response.get(
+            'data',
+            {},
+        ).get(
+            'result',
+            [],
+        )
+
+        values = {
+            item.get(
+                'metric',
+                {},
+            ).get(
+                label_name,
+            )
+            for item in results
+        }
+
+        return sorted(
+            value for value in values if value
+        )
+
+    @staticmethod
     def _extract_series(
         response: dict[str, Any],
     ) -> list[dict[str, float]]:
@@ -110,11 +135,53 @@ class UtilizationService:
         ):
             return []
 
+    @staticmethod
+    def _escape_label_value(
+        value: str,
+    ) -> str:
+        return value.replace(
+            '\\',
+            '\\\\',
+        ).replace(
+            '"',
+            '\\"',
+        )
+
+    def _format_node_query(
+        self,
+        query_template: str,
+        node_name: str | None = None,
+    ) -> str:
+        if not node_name:
+            return query_template
+
+        return query_template.replace(
+            '{node}',
+            self._escape_label_value(
+                node_name,
+            ),
+        )
+
+    def _format_instance_query(
+        self,
+        query_template: str,
+        instance: str | None = None,
+    ) -> str:
+        if not instance:
+            return query_template
+
+        return query_template.replace(
+            '{instance}',
+            self._escape_label_value(
+                instance,
+            ),
+        )
+
     def _query_series(
         self,
         query: str,
-        hours: int = 24,
-        step: str = '1h',
+        hours: int = 1,
+        step: str = '5m',
     ) -> list[dict[str, float]]:
         end = datetime.now(
             UTC,
@@ -148,92 +215,225 @@ class UtilizationService:
             2,
         )
 
+    @staticmethod
+    def bytes_to_gib(
+        value: int | float,
+    ) -> float:
+        return round(
+            float(value) / 1024**3,
+            2,
+        )
+
     def get_cpu_capacity(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.CPU_CAPACITY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.CPU_CAPACITY_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.CPU_CAPACITY,
+            query,
         )
 
     def get_cpu_usage(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.CPU_USAGE
+
+        if node_name:
+            query = self._format_node_query(
+                queries.CPU_USAGE_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.CPU_USAGE,
+            query,
         )
 
     def get_cpu_utilization(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.CPU_UTILIZATION
+
+        if node_name:
+            query = self._format_node_query(
+                queries.CPU_UTILIZATION_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.CPU_UTILIZATION,
+            query,
         )
 
     def get_memory_capacity(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.MEMORY_CAPACITY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.MEMORY_CAPACITY_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.MEMORY_CAPACITY,
+            query,
         )
 
     def get_memory_usage(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.MEMORY_USAGE
+
+        if node_name:
+            query = self._format_node_query(
+                queries.MEMORY_USAGE_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.MEMORY_USAGE,
+            query,
         )
 
     def get_memory_utilization(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.MEMORY_UTILIZATION
+
+        if node_name:
+            query = self._format_node_query(
+                queries.MEMORY_UTILIZATION_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.MEMORY_UTILIZATION,
+            query,
         )
 
     def get_storage_capacity(
         self,
+        filesystem_instance: str | None = None,
     ) -> float:
+        query = queries.STORAGE_CAPACITY
+
+        if filesystem_instance:
+            query = self._format_instance_query(
+                queries.STORAGE_CAPACITY_BY_INSTANCE,
+                filesystem_instance,
+            )
+
         return self._query_scalar(
-            queries.STORAGE_CAPACITY,
+            query,
+        )
+
+    def get_storage_available(
+        self,
+        filesystem_instance: str | None = None,
+    ) -> float:
+        query = queries.STORAGE_AVAILABLE
+
+        if filesystem_instance:
+            query = self._format_instance_query(
+                queries.STORAGE_AVAILABLE_BY_INSTANCE,
+                filesystem_instance,
+            )
+
+        return self._query_scalar(
+            query,
         )
 
     def get_storage_usage(
         self,
+        filesystem_instance: str | None = None,
     ) -> float:
+        query = queries.STORAGE_USAGE
+
+        if filesystem_instance:
+            query = self._format_instance_query(
+                queries.STORAGE_USAGE_BY_INSTANCE,
+                filesystem_instance,
+            )
+
         return self._query_scalar(
-            queries.STORAGE_USAGE,
+            query,
         )
 
     def get_storage_utilization(
         self,
+        filesystem_instance: str | None = None,
     ) -> float:
+        query = queries.STORAGE_UTILIZATION
+
+        if filesystem_instance:
+            query = self._format_instance_query(
+                queries.STORAGE_UTILIZATION_BY_INSTANCE,
+                filesystem_instance,
+            )
+
         return self._query_scalar(
-            queries.STORAGE_UTILIZATION,
+            query,
         )
 
     def get_pod_count(
         self,
+        node_name: str | None = None,
     ) -> int:
+        query = queries.POD_COUNT
+
+        if node_name:
+            query = self._format_node_query(
+                queries.POD_COUNT_BY_NODE,
+                node_name,
+            )
+
         return int(
             self._query_scalar(
-                queries.POD_COUNT,
+                query,
             )
         )
 
     def get_pod_capacity(
         self,
+        node_name: str | None = None,
     ) -> int:
+        query = queries.POD_CAPACITY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.POD_CAPACITY_BY_NODE,
+                node_name,
+            )
+
         return int(
             self._query_scalar(
-                queries.POD_CAPACITY,
+                query,
             )
         )
 
     def get_pod_utilization(
         self,
+        node_name: str | None = None,
     ) -> float:
+        query = queries.POD_UTILIZATION
+
+        if node_name:
+            query = self._format_node_query(
+                queries.POD_UTILIZATION_BY_NODE,
+                node_name,
+            )
+
         return self._query_scalar(
-            queries.POD_UTILIZATION,
+            query,
         )
 
     def get_total_nodes(
@@ -242,6 +442,24 @@ class UtilizationService:
         return int(
             self._query_scalar(
                 queries.TOTAL_NODES,
+            )
+        )
+
+    def get_ready_nodes(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.READY_NODES,
+            )
+        )
+
+    def get_not_ready_nodes(
+        self,
+    ) -> int:
+        return int(
+            self._query_scalar(
+                queries.NOT_READY_NODES,
             )
         )
 
@@ -261,6 +479,42 @@ class UtilizationService:
             self._query_scalar(
                 queries.WORKER_NODES,
             )
+        )
+
+    def get_node_names(
+        self,
+    ) -> list[str]:
+        response = self.prometheus.instant_query(
+            queries.NODE_LIST,
+        )
+
+        return self._extract_label_values(
+            response,
+            'node',
+        )
+
+    def get_worker_node_names(
+        self,
+    ) -> list[str]:
+        response = self.prometheus.instant_query(
+            queries.WORKER_NODE_LIST,
+        )
+
+        return self._extract_label_values(
+            response,
+            'node',
+        )
+
+    def get_filesystem_instances(
+        self,
+    ) -> list[str]:
+        response = self.prometheus.instant_query(
+            queries.FILESYSTEM_INSTANCE_LIST,
+        )
+
+        return self._extract_label_values(
+            response,
+            'instance',
         )
 
     def get_kubernetes_version(
@@ -290,53 +544,95 @@ class UtilizationService:
 
     def get_cpu_trend(
         self,
-        hours: int = 24,
+        hours: int = 1,
+        step: str = '5m',
+        node_name: str | None = None,
     ) -> list[dict[str, float]]:
+        query = queries.CPU_UTILIZATION_HISTORY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.CPU_UTILIZATION_HISTORY_BY_NODE,
+                node_name,
+            )
+
         return self._query_series(
-            queries.CPU_UTILIZATION_HISTORY,
+            query,
             hours,
+            step,
         )
 
     def get_memory_trend(
         self,
-        hours: int = 24,
+        hours: int = 1,
+        step: str = '5m',
+        node_name: str | None = None,
     ) -> list[dict[str, float]]:
+        query = queries.MEMORY_UTILIZATION_HISTORY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.MEMORY_UTILIZATION_HISTORY_BY_NODE,
+                node_name,
+            )
+
         return self._query_series(
-            queries.MEMORY_UTILIZATION_HISTORY,
+            query,
             hours,
+            step,
         )
 
-    def get_storage_trend(
+    def get_pod_trend(
         self,
-        hours: int = 24,
+        hours: int = 1,
+        step: str = '5m',
+        node_name: str | None = None,
     ) -> list[dict[str, float]]:
+        query = queries.POD_UTILIZATION_HISTORY
+
+        if node_name:
+            query = self._format_node_query(
+                queries.POD_UTILIZATION_HISTORY_BY_NODE,
+                node_name,
+            )
+
         return self._query_series(
-            queries.STORAGE_UTILIZATION_HISTORY,
+            query,
             hours,
+            step,
         )
 
     def get_trends(
         self,
-        hours: int = 24,
-    ) -> dict[
-        str,
-        list[dict[str, float]],
-    ]:
+        hours: int = 1,
+        step: str = '5m',
+        node_name: str | None = None,
+    ) -> dict[str, list[dict[str, float]]]:
         return {
             'cpu': self.get_cpu_trend(
                 hours,
+                step,
+                node_name,
             ),
             'memory': self.get_memory_trend(
                 hours,
+                step,
+                node_name,
             ),
-            'storage': self.get_storage_trend(
+            'pods': self.get_pod_trend(
                 hours,
+                step,
+                node_name,
             ),
         }
 
     def get_summary(
         self,
     ) -> dict[str, int | float]:
+        storage_capacity = self.get_storage_capacity()
+        storage_usage = self.get_storage_usage()
+        storage_available = self.get_storage_available()
+
         return {
             'cpu_capacity': self.get_cpu_capacity(),
             'cpu_usage': self.get_cpu_usage(),
@@ -344,43 +640,323 @@ class UtilizationService:
             'memory_capacity': self.get_memory_capacity(),
             'memory_usage': self.get_memory_usage(),
             'memory_utilization': self.get_memory_utilization(),
-            'storage_capacity': self.get_storage_capacity(),
-            'storage_usage': self.get_storage_usage(),
+            'storage_capacity': storage_capacity,
+            'storage_usage': storage_usage,
+            'storage_available': storage_available,
             'storage_utilization': self.get_storage_utilization(),
+            'storage_capacity_gib': self.bytes_to_gib(
+                storage_capacity,
+            ),
+            'storage_usage_gib': self.bytes_to_gib(
+                storage_usage,
+            ),
+            'storage_available_gib': self.bytes_to_gib(
+                storage_available,
+            ),
             'pod_count': self.get_pod_count(),
             'pod_capacity': self.get_pod_capacity(),
             'pod_utilization': self.get_pod_utilization(),
         }
 
+    def get_detail_summary(
+        self,
+        node_name: str | None = None,
+        filesystem_instance: str | None = None,
+    ) -> dict[str, int | float | str | None]:
+        storage_capacity = self.get_storage_capacity(
+            filesystem_instance,
+        )
+        storage_usage = self.get_storage_usage(
+            filesystem_instance,
+        )
+        storage_available = self.get_storage_available(
+            filesystem_instance,
+        )
+
+        return {
+            'node_name': node_name,
+            'filesystem_instance': filesystem_instance,
+            'cpu_capacity': self.get_cpu_capacity(
+                node_name,
+            ),
+            'cpu_usage': self.get_cpu_usage(
+                node_name,
+            ),
+            'cpu_utilization': self.get_cpu_utilization(
+                node_name,
+            ),
+            'memory_capacity': self.get_memory_capacity(
+                node_name,
+            ),
+            'memory_usage': self.get_memory_usage(
+                node_name,
+            ),
+            'memory_utilization': self.get_memory_utilization(
+                node_name,
+            ),
+            'storage_capacity': storage_capacity,
+            'storage_usage': storage_usage,
+            'storage_available': storage_available,
+            'storage_utilization': self.get_storage_utilization(
+                filesystem_instance,
+            ),
+            'storage_capacity_gib': self.bytes_to_gib(
+                storage_capacity,
+            ),
+            'storage_usage_gib': self.bytes_to_gib(
+                storage_usage,
+            ),
+            'storage_available_gib': self.bytes_to_gib(
+                storage_available,
+            ),
+            'pod_count': self.get_pod_count(
+                node_name,
+            ),
+            'pod_capacity': self.get_pod_capacity(
+                node_name,
+            ),
+            'pod_utilization': self.get_pod_utilization(
+                node_name,
+            ),
+        }
+
     def get_summary_table(
         self,
+        summary: dict[str, int | float],
     ) -> list[dict[str, str | float]]:
         return [
             {
                 'resource': 'CPU',
-                'capacity': self.get_cpu_capacity(),
-                'usage': self.get_cpu_usage(),
-                'utilization': self.get_cpu_utilization(),
+                'capacity': summary['cpu_capacity'],
+                'usage': summary['cpu_usage'],
+                'utilization': summary['cpu_utilization'],
+                'scope': 'All nodes',
             },
             {
                 'resource': 'Memory',
-                'capacity': self.get_memory_capacity(),
-                'usage': self.get_memory_usage(),
-                'utilization': self.get_memory_utilization(),
+                'capacity': summary['memory_capacity'],
+                'usage': summary['memory_usage'],
+                'utilization': summary['memory_utilization'],
+                'scope': 'All nodes',
             },
             {
-                'resource': 'Storage',
-                'capacity': self.get_storage_capacity(),
-                'usage': self.get_storage_usage(),
-                'utilization': self.get_storage_utilization(),
+                'resource': 'Disk /var',
+                'capacity': summary['storage_capacity'],
+                'usage': summary['storage_usage'],
+                'utilization': summary['storage_utilization'],
+                'scope': 'node_filesystem mountpoint=/var, all scraped instances',
             },
             {
                 'resource': 'Pods',
-                'capacity': self.get_pod_capacity(),
-                'usage': self.get_pod_count(),
-                'utilization': self.get_pod_utilization(),
+                'capacity': summary['pod_capacity'],
+                'usage': summary['pod_count'],
+                'utilization': summary['pod_utilization'],
+                'scope': 'All nodes',
             },
         ]
+
+
+    def get_memory_pressure_nodes(
+        self,
+        node_name: str | None = None,
+    ) -> int:
+        query = queries.MEMORY_PRESSURE_NODES
+
+        if node_name:
+            query = self._format_node_query(
+                queries.MEMORY_PRESSURE_NODES_BY_NODE,
+                node_name,
+            )
+
+        return int(
+            self._query_scalar(
+                query,
+            )
+        )
+
+    def get_disk_pressure_nodes(
+        self,
+        node_name: str | None = None,
+    ) -> int:
+        query = queries.DISK_PRESSURE_NODES
+
+        if node_name:
+            query = self._format_node_query(
+                queries.DISK_PRESSURE_NODES_BY_NODE,
+                node_name,
+            )
+
+        return int(
+            self._query_scalar(
+                query,
+            )
+        )
+
+    def get_pid_pressure_nodes(
+        self,
+        node_name: str | None = None,
+    ) -> int:
+        query = queries.PID_PRESSURE_NODES
+
+        if node_name:
+            query = self._format_node_query(
+                queries.PID_PRESSURE_NODES_BY_NODE,
+                node_name,
+            )
+
+        return int(
+            self._query_scalar(
+                query,
+            )
+        )
+
+    @staticmethod
+    def _risk_from_utilization(
+        utilization: float,
+    ) -> str:
+        if utilization > 90:
+            return 'Critical'
+
+        if utilization >= 75:
+            return 'Warning'
+
+        return 'Normal'
+
+    @staticmethod
+    def _utilization_reason(
+        utilization: float,
+    ) -> str:
+        return f'Utilization {utilization:.2f}%'
+
+    @staticmethod
+    def _pressure_reason(
+        condition: str,
+        pressure_nodes: int,
+        node_name: str | None = None,
+    ) -> str:
+        if node_name:
+            return f'{condition} detected on selected node'
+
+        return f'{condition} detected on {pressure_nodes} node(s)'
+
+    def get_capacity_pressure_risk(
+        self,
+        summary: dict[str, int | float],
+        node_name: str | None = None,
+    ) -> dict[str, dict[str, int | float | str]]:
+        cpu_utilization = float(
+            summary.get(
+                'cpu_utilization',
+                0,
+            )
+        )
+
+        memory_utilization = float(
+            summary.get(
+                'memory_utilization',
+                0,
+            )
+        )
+
+        storage_utilization = float(
+            summary.get(
+                'storage_utilization',
+                0,
+            )
+        )
+
+        pod_utilization = float(
+            summary.get(
+                'pod_utilization',
+                0,
+            )
+        )
+
+        memory_pressure_nodes = self.get_memory_pressure_nodes(
+            node_name,
+        )
+        disk_pressure_nodes = self.get_disk_pressure_nodes(
+            node_name,
+        )
+        pid_pressure_nodes = self.get_pid_pressure_nodes(
+            node_name,
+        )
+
+        memory_status = self._risk_from_utilization(
+            memory_utilization,
+        )
+        memory_reason = self._utilization_reason(
+            memory_utilization,
+        )
+
+        if memory_pressure_nodes > 0:
+            memory_status = 'Critical'
+            memory_reason = self._pressure_reason(
+                'MemoryPressure',
+                memory_pressure_nodes,
+                node_name,
+            )
+
+        storage_status = self._risk_from_utilization(
+            storage_utilization,
+        )
+        storage_reason = self._utilization_reason(
+            storage_utilization,
+        )
+
+        if disk_pressure_nodes > 0:
+            storage_status = 'Critical'
+            storage_reason = self._pressure_reason(
+                'DiskPressure',
+                disk_pressure_nodes,
+                node_name,
+            )
+
+        pod_status = self._risk_from_utilization(
+            pod_utilization,
+        )
+        pod_reason = self._utilization_reason(
+            pod_utilization,
+        )
+
+        if pid_pressure_nodes > 0:
+            pod_status = 'Critical'
+            pod_reason = self._pressure_reason(
+                'PIDPressure',
+                pid_pressure_nodes,
+                node_name,
+            )
+
+        return {
+            'cpu': {
+                'status': self._risk_from_utilization(
+                    cpu_utilization,
+                ),
+                'reason': self._utilization_reason(
+                    cpu_utilization,
+                ),
+                'pressure_nodes': 0,
+                'utilization': cpu_utilization,
+            },
+            'memory': {
+                'status': memory_status,
+                'reason': memory_reason,
+                'pressure_nodes': memory_pressure_nodes,
+                'utilization': memory_utilization,
+            },
+            'storage': {
+                'status': storage_status,
+                'reason': storage_reason,
+                'pressure_nodes': disk_pressure_nodes,
+                'utilization': storage_utilization,
+            },
+            'pods': {
+                'status': pod_status,
+                'reason': pod_reason,
+                'pressure_nodes': pid_pressure_nodes,
+                'utilization': pod_utilization,
+            },
+        }
 
     def get_top_cpu_consumers(
         self,
@@ -411,6 +987,8 @@ class UtilizationService:
         return {
             'kubernetes_version': self.get_kubernetes_version(),
             'total_nodes': self.get_total_nodes(),
+            'ready_nodes': self.get_ready_nodes(),
+            'not_ready_nodes': self.get_not_ready_nodes(),
             'worker_nodes': self.get_worker_nodes(),
             'master_nodes': self.get_master_nodes(),
             'cpu_capacity': summary['cpu_capacity'],

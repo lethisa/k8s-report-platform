@@ -1,22 +1,12 @@
 from flask import Blueprint, current_app, render_template, request
 from flask_login import login_required
 
-from app.analytics.capacity.service import (
-    CapacityService,
-)
-from app.analytics.forecast import (
-    ForecastService,
-)
-from app.analytics.overview.service import (
-    get_analytics_overview,
-)
-from app.analytics.utilization.service import (
-    UtilizationService,
-)
+from app.analytics.capacity.service import CapacityService
+from app.analytics.forecast import ForecastService
+from app.analytics.overview.service import get_analytics_overview
+from app.analytics.utilization.service import UtilizationService
 from app.models import Cluster
-from app.prometheus.service import (
-    PrometheusService,
-)
+from app.prometheus.service import PrometheusService
 
 analytics_bp = Blueprint(
     'analytics',
@@ -39,7 +29,9 @@ def overview() -> str:
 @analytics_bp.route('/utilization')
 @login_required
 def utilization() -> str:
-    clusters = Cluster.query.order_by(Cluster.name).all()
+    clusters = Cluster.query.order_by(
+        Cluster.name,
+    ).all()
 
     cluster_id = request.args.get(
         'cluster_id',
@@ -55,25 +47,56 @@ def utilization() -> str:
     if not cluster and clusters:
         cluster = clusters[0]
 
-    if not cluster:
-        return render_template(
-            'analytics/utilization.html',
-            clusters=[],
-            error='No cluster configured',
-            summary={},
-            summary_table=[],
-            trends={},
-            top_cpu=[],
-            top_memory=[],
-            risk_assessment={
-                'cpu': 'Low',
-                'memory': 'Low',
-                'storage': 'Low',
-                'pods': 'Low',
-            },
-        )
+    allowed_trend_hours = [
+        1,
+        3,
+        6,
+        12,
+        24,
+    ]
 
-    summary = {
+    try:
+        trend_hours = int(
+            request.args.get(
+                'trend_hours',
+                1,
+            )
+        )
+    except ValueError:
+        trend_hours = 1
+
+    if trend_hours not in allowed_trend_hours:
+        trend_hours = 1
+
+    trend_step_map = {
+        1: '5m',
+        3: '10m',
+        6: '15m',
+        12: '30m',
+        24: '1h',
+    }
+
+    trend_step = trend_step_map[trend_hours]
+
+    selected_node = request.args.get(
+        'node',
+        '',
+        type=str,
+    )
+
+    selected_filesystem_instance = request.args.get(
+        'filesystem_instance',
+        '',
+        type=str,
+    )
+
+    selected_trend_node = request.args.get(
+        'trend_node',
+        '',
+        type=str,
+    )
+
+    empty_summary = {
         'cpu_capacity': 0,
         'cpu_usage': 0,
         'cpu_utilization': 0,
@@ -82,15 +105,21 @@ def utilization() -> str:
         'memory_utilization': 0,
         'storage_capacity': 0,
         'storage_usage': 0,
+        'storage_available': 0,
         'storage_utilization': 0,
+        'storage_capacity_gib': 0,
+        'storage_usage_gib': 0,
+        'storage_available_gib': 0,
         'pod_count': 0,
         'pod_capacity': 0,
         'pod_utilization': 0,
     }
 
-    cluster_info = {
+    empty_cluster_info = {
         'kubernetes_version': '-',
         'total_nodes': 0,
+        'ready_nodes': 0,
+        'not_ready_nodes': 0,
         'worker_nodes': 0,
         'master_nodes': 0,
         'cpu_capacity': 0,
@@ -98,16 +127,96 @@ def utilization() -> str:
         'pod_capacity': 0,
     }
 
-    summary_table = []
+    if not cluster:
+        return render_template(
+            'analytics/utilization.html',
+            cluster=None,
+            clusters=[],
+            summary=empty_summary,
+            summary_table=[],
+            detail_summary=empty_summary,
+            trends={},
+            top_cpu=[],
+            top_memory=[],
+            error='No cluster configured',
+            prometheus_connected=False,
+            cluster_info=empty_cluster_info,
+            risk_assessment={
+                'cpu': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'memory': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'storage': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'pods': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+            },
+            detail_risk_assessment={
+                'cpu': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'memory': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'storage': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+                'pods': {
+                    'status': 'Normal',
+                    'reason': 'No utilization data available',
+                    'pressure_nodes': 0,
+                    'utilization': 0,
+                },
+            },
+            trend_hours=trend_hours,
+            allowed_trend_hours=allowed_trend_hours,
+            available_nodes=[],
+            available_worker_nodes=[],
+            available_filesystem_instances=[],
+            selected_node='',
+            selected_filesystem_instance='',
+            selected_trend_node='',
+        )
 
+    summary = empty_summary.copy()
+    cluster_info = empty_cluster_info.copy()
+    summary_table = []
+    detail_summary = empty_summary.copy()
     trends = {
         'cpu': [],
         'memory': [],
         'storage': [],
     }
-
     top_cpu = []
     top_memory = []
+    available_nodes: list[str] = []
+    available_worker_nodes: list[str] = []
+    available_filesystem_instances: list[str] = []
 
     error = None
     prometheus_connected = False
@@ -121,15 +230,41 @@ def utilization() -> str:
             prometheus,
         )
 
+        available_nodes = service.get_node_names()
+        available_worker_nodes = service.get_worker_node_names()
+        available_filesystem_instances = service.get_filesystem_instances()
+
+        if selected_node not in available_nodes:
+            selected_node = ''
+
+        if selected_trend_node not in available_worker_nodes:
+            selected_trend_node = ''
+
+        if selected_filesystem_instance not in available_filesystem_instances:
+            selected_filesystem_instance = ''
+
         summary = service.get_summary()
 
         cluster_info = service.get_cluster_info(
             summary,
         )
 
-        summary_table = service.get_summary_table()
+        summary_table = service.get_summary_table(
+            summary,
+        )
 
-        trends = service.get_trends()
+        detail_summary = service.get_detail_summary(
+            node_name=selected_node or None,
+            filesystem_instance=(
+                selected_filesystem_instance or None
+            ),
+        )
+
+        trends = service.get_trends(
+            hours=trend_hours,
+            step=trend_step,
+            node_name=selected_trend_node or None,
+        )
 
         top_cpu = service.get_top_cpu_consumers()
 
@@ -149,50 +284,48 @@ def utilization() -> str:
         )
 
     risk_assessment = {
-        'cpu': 'Low',
-        'memory': 'Low',
-        'storage': 'Low',
-        'pods': 'Low',
+        'cpu': {
+            'status': 'Normal',
+            'reason': 'No utilization data available',
+            'pressure_nodes': 0,
+            'utilization': 0,
+        },
+        'memory': {
+            'status': 'Normal',
+            'reason': 'No utilization data available',
+            'pressure_nodes': 0,
+            'utilization': 0,
+        },
+        'storage': {
+            'status': 'Normal',
+            'reason': 'No utilization data available',
+            'pressure_nodes': 0,
+            'utilization': 0,
+        },
+        'pods': {
+            'status': 'Normal',
+            'reason': 'No utilization data available',
+            'pressure_nodes': 0,
+            'utilization': 0,
+        },
     }
 
-    def calculate_risk(
-        utilization: float,
-    ) -> str:
-        if utilization >= 85:
-            return 'High'
+    detail_risk_assessment = risk_assessment.copy()
 
-        if utilization >= 70:
-            return 'Medium'
+    if prometheus_connected:
+        try:
+            risk_assessment = service.get_capacity_pressure_risk(
+                summary,
+            )
 
-        return 'Low'
-
-    risk_assessment['cpu'] = calculate_risk(
-        summary.get(
-            'cpu_utilization',
-            0,
-        )
-    )
-
-    risk_assessment['memory'] = calculate_risk(
-        summary.get(
-            'memory_utilization',
-            0,
-        )
-    )
-
-    risk_assessment['storage'] = calculate_risk(
-        summary.get(
-            'storage_utilization',
-            0,
-        )
-    )
-
-    risk_assessment['pods'] = calculate_risk(
-        summary.get(
-            'pod_utilization',
-            0,
-        )
-    )
+            detail_risk_assessment = service.get_capacity_pressure_risk(
+                detail_summary,
+                selected_node or None,
+            )
+        except Exception as exc:
+            current_app.logger.exception(
+                exc,
+            )
 
     return render_template(
         'analytics/utilization.html',
@@ -200,6 +333,7 @@ def utilization() -> str:
         clusters=clusters,
         summary=summary,
         summary_table=summary_table,
+        detail_summary=detail_summary,
         trends=trends,
         top_cpu=top_cpu,
         top_memory=top_memory,
@@ -207,6 +341,15 @@ def utilization() -> str:
         prometheus_connected=prometheus_connected,
         cluster_info=cluster_info,
         risk_assessment=risk_assessment,
+        detail_risk_assessment=detail_risk_assessment,
+        trend_hours=trend_hours,
+        allowed_trend_hours=allowed_trend_hours,
+        available_nodes=available_nodes,
+        available_worker_nodes=available_worker_nodes,
+        available_filesystem_instances=available_filesystem_instances,
+        selected_node=selected_node,
+        selected_filesystem_instance=selected_filesystem_instance,
+        selected_trend_node=selected_trend_node,
     )
 
 
@@ -305,18 +448,28 @@ def capacity():
         )
 
         if headroom < 15:
-            recommendations.append(f'{resource.title()} capacity is critical ' f'({headroom:.1f}% headroom remaining).')
+            recommendations.append(
+                f'{resource.title()} capacity is critical '
+                f'({headroom:.1f}% headroom remaining).'
+            )
 
         elif headroom < 30:
             recommendations.append(
-                f'{resource.title()} capacity is running low ' f'({headroom:.1f}% headroom remaining).'
+                f'{resource.title()} capacity is running low '
+                f'({headroom:.1f}% headroom remaining).'
             )
 
         elif headroom < 50:
-            recommendations.append(f'Monitor {resource} growth trends. ' f'Current headroom is ' f'{headroom:.1f}%.')
+            recommendations.append(
+                f'Monitor {resource} growth trends. '
+                f'Current headroom is '
+                f'{headroom:.1f}%.'
+            )
 
     if not recommendations:
-        recommendations.append('All cluster resources currently have healthy capacity headroom.')
+        recommendations.append(
+            'All cluster resources currently have healthy capacity headroom.'
+        )
 
     return render_template(
         'analytics/capacity.html',
