@@ -1,192 +1,328 @@
 {% extends "layouts/dashboard.html" %} {% block title %} Node Inventory {% endblock %} {% block dashboard_content %}
 
-<div class="space-y-6 p-8">
+<div class="space-y-6">
+    <!-- Hero Section -->
+
     <div
         class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="flex items-center gap-4">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                <i data-lucide="server" class="h-5 w-5"></i>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="server" class="h-6 w-6"></i>
+                </div>
+
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Node Inventory</h1>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Discover and explore Kubernetes nodes across connected clusters.
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <h1 class="text-3xl font-bold">Node Inventory</h1>
-
-                <p class="mt-1 text-slate-500">Discover and explore Kubernetes nodes across connected clusters.</p>
-            </div>
+            <a
+                href="{{ url_for('inventory.overview') }}"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+                <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                Back to Overview
+            </a>
         </div>
     </div>
+
+    <!-- KPI Cards -->
 
     <div class="grid gap-6 md:grid-cols-3">
+        <!-- Total Nodes -->
+
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Total Nodes</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Total Nodes</span>
 
-                <i data-lucide="server" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="server" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_nodes }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_nodes }}
+            </div>
 
-            <p class="text-xs text-slate-500">Kubernetes nodes</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Kubernetes nodes</p>
         </div>
 
+        <!-- Total CPU -->
+
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Total CPU</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Total CPU</span>
 
-                <i data-lucide="cpu" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-300"
+                >
+                    <i data-lucide="cpu" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_cpu }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_cpu }}
+            </div>
 
-            <p class="text-xs text-slate-500">CPU cores</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">CPU cores</p>
         </div>
 
+        <!-- Total Memory -->
+
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Total Memory</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Total Memory</span>
 
-                <i data-lucide="memory-stick" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300"
+                >
+                    <i data-lucide="memory-stick" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_memory }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_memory }}
+            </div>
 
-            <p class="text-xs text-slate-500">GiB</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">GiB memory capacity</p>
         </div>
     </div>
+
+    <!-- Node Inventory Table Card -->
 
     <div
         class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Node Inventory</h2>
+        <!-- Card Header -->
 
-            <p class="mt-1 text-sm text-slate-500">Kubernetes nodes collected from connected clusters.</p>
+        <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="server-cog" class="h-5 w-5"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Node Inventory</h2>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Kubernetes nodes collected from connected clusters.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <form method="GET" class="grid gap-4 lg:grid-cols-4">
-                <div>
-                    <label class="mb-2 block text-sm font-medium">Cluster</label>
+        <!-- Filter Bar -->
 
-                    <select name="cluster_id" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <form method="GET" class="grid gap-4 lg:grid-cols-[1fr_1fr_1.5fr_auto]">
+                <!-- Cluster -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Cluster</label>
+
+                    <select
+                        name="cluster_id"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         <option value="">All Clusters</option>
 
                         {% for cluster in clusters %} {% if selected_cluster_id == cluster.id %}
-
                         <option value="{{ cluster.id }}" selected>{{ cluster.name }}</option>
-
                         {% else %}
-
                         <option value="{{ cluster.id }}">{{ cluster.name }}</option>
-
                         {% endif %} {% endfor %}
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-sm font-medium">Role</label>
+                <!-- Role -->
 
-                    <select name="role" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
+
+                    <select
+                        name="role"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         <option value="">All Roles</option>
 
                         {% if selected_role == 'control-plane' %}
-
                         <option value="control-plane" selected>Control Plane</option>
-
                         {% else %}
-
                         <option value="control-plane">Control Plane</option>
-
                         {% endif %} {% if selected_role == 'worker' %}
-
                         <option value="worker" selected>Worker</option>
-
                         {% else %}
-
                         <option value="worker">Worker</option>
-
                         {% endif %}
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-sm font-medium">Search Node</label>
+                <!-- Search -->
 
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ search }}"
-                        placeholder="Search node..."
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2"
-                    />
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Search Node</label>
+
+                    <div class="relative">
+                        <i
+                            data-lucide="search"
+                            class="absolute top-3 left-3 h-4 w-4 text-slate-400 dark:text-slate-500"
+                        ></i>
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Search node..."
+                            class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                        />
+                    </div>
                 </div>
 
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-white">Apply</button>
+                <!-- Actions -->
 
-                    <a href="{{ url_for('inventory.nodes') }}" class="rounded-xl border border-slate-300 px-4 py-2">
+                <div class="flex items-end gap-2">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md focus:ring-4 focus:ring-blue-500/20 focus:outline-none dark:hover:bg-blue-500"
+                    >
+                        <i data-lucide="filter" class="h-4 w-4"></i>
+                        Apply
+                    </button>
+
+                    <a
+                        href="{{ url_for('inventory.nodes') }}"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    >
+                        <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                         Reset
                     </a>
                 </div>
             </form>
         </div>
 
+        <!-- Table -->
+
         <div class="overflow-x-auto">
             <table class="min-w-full text-slate-900 dark:text-slate-100">
                 <thead>
                     <tr
-                        class="bg-slate-50 text-center text-xs tracking-wide text-slate-600 uppercase dark:bg-slate-900 dark:text-slate-300"
+                        class="border-b border-slate-200 bg-slate-50 text-center text-xs tracking-wide text-slate-600 uppercase dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-300"
                     >
-                        <th class="px-6 py-3">Cluster</th>
-                        <th class="px-6 py-3">Node</th>
-                        <th class="px-6 py-3">Role</th>
-                        <th class="px-6 py-3">CPU</th>
-                        <th class="px-6 py-3">Memory</th>
-                        <th class="px-6 py-3">OS Image</th>
-                        <th class="px-6 py-3">Runtime</th>
+                        <th class="px-6 py-4 text-left">Cluster</th>
+                        <th class="px-6 py-4 text-left">Node</th>
+                        <th class="px-6 py-4 text-center">Role</th>
+                        <th class="px-6 py-4 text-center">CPU</th>
+                        <th class="px-6 py-4 text-center">Memory</th>
+                        <th class="px-6 py-4 text-left">OS Image</th>
+                        <th class="px-6 py-4 text-left">Runtime</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for node in inventory.nodes %}
 
-                    <tr class="border-t border-slate-100 text-center dark:border-slate-700">
-                        <td class="px-6 py-4">{{ node.cluster_name }}</td>
+                    <tr
+                        class="border-t border-slate-200 text-sm transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/30"
+                    >
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900 dark:text-white">{{ node.cluster_name }}</div>
+                        </td>
 
-                        <td class="px-6 py-4">{{ node.node_name }}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-800 dark:text-slate-100">{{ node.node_name }}</div>
+                        </td>
 
-                        <td class="px-6 py-4">{{ node.role }}</td>
+                        <td class="px-6 py-4 text-center">
+                            {% if node.role == 'control-plane' %}
+                            <span
+                                class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
+                            >
+                                Control Plane
+                            </span>
+                            {% elif node.role == 'worker' %}
+                            <span
+                                class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
+                            >
+                                Worker
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                            >
+                                {{ node.role }}
+                            </span>
+                            {% endif %}
+                        </td>
 
-                        <td class="px-6 py-4">{{ node.cpu }}</td>
+                        <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">{{ node.cpu }}</td>
 
-                        <td class="px-6 py-4">{{ node.memory_display }}</td>
+                        <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">
+                            {{ node.memory_display }}
+                        </td>
 
-                        <td class="px-6 py-4">{{ node.os_image }}</td>
+                        <td class="max-w-[320px] px-6 py-4 text-slate-600 dark:text-slate-300">
+                            <div class="truncate" title="{{ node.os_image }}">{{ node.os_image }}</div>
+                        </td>
 
-                        <td class="px-6 py-4">{{ node.runtime_display }}</td>
+                        <td class="max-w-[260px] px-6 py-4 text-slate-600 dark:text-slate-300">
+                            <div class="truncate" title="{{ node.runtime_display }}">{{ node.runtime_display }}</div>
+                        </td>
                     </tr>
 
                     {% else %}
 
                     <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-400">No inventory data found.</td>
+                        <td colspan="7" class="py-16 text-center text-slate-400 dark:text-slate-500">
+                            <div class="flex flex-col items-center gap-3">
+                                <div
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                                >
+                                    <i data-lucide="server-off" class="h-6 w-6"></i>
+                                </div>
+
+                                <div>
+                                    <div class="font-medium text-slate-700 dark:text-slate-300">
+                                        No node inventory found
+                                    </div>
+
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">
+                                        Sync cluster inventory to collect Kubernetes node data.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
 
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="border-t border-slate-200 px-6 py-4 text-sm text-slate-500 dark:border-slate-700">
-                Showing {{ inventory.nodes|length }} node(s)
-            </div>
+        </div>
+
+        <!-- Footer -->
+
+        <div
+            class="border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400"
+        >
+            Showing {{ inventory.nodes|length }} node(s)
         </div>
     </div>
-
-    {% endblock %}
 </div>
+
+{% endblock %}
