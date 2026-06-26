@@ -74,6 +74,21 @@ class NodeInventory(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
+    status: Mapped[str | None] = mapped_column(
+        db.String(50),
+        nullable=True,
+    )
+
+    ephemeral_storage: Mapped[str | None] = mapped_column(
+        db.String(50),
+        nullable=True,
+    )
+
+    ephemeral_storage_allocatable: Mapped[str | None] = mapped_column(
+        db.String(50),
+        nullable=True,
+    )
+
 
 class NamespaceInventory(db.Model):
     __tablename__ = 'namespace_inventory'

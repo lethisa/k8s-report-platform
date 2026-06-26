@@ -70,6 +70,12 @@ def nodes():
         type=str,
     )
 
+    status = request.args.get(
+        'status',
+        '',
+        type=str,
+    )
+
     search = request.args.get(
         'search',
         '',
@@ -104,6 +110,7 @@ def nodes():
     data = get_node_inventory(
         cluster_id=cluster_id,
         role=role,
+        status=status,
         search=search,
     )
 
@@ -157,6 +164,7 @@ def nodes():
         role=role,
         selected_cluster_id=cluster_id,
         selected_role=role,
+        selected_status=status,
         search=search,
         pagination=pagination,
     )

@@ -24,7 +24,7 @@
             </div>
         </div>
         <!-- KPI Cards -->
-        <div class="grid gap-6 md:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             <!-- Total Nodes -->
             <div class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80">
                 <div class="flex items-center justify-between">
@@ -58,6 +58,17 @@
                 <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">{{ inventory.total_memory }}</div>
                 <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">GiB memory capacity</p>
             </div>
+            <!-- Ephemeral Storage -->
+            <div class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Ephemeral Storage</span>
+                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300">
+                        <i data-lucide="hard-drive" class="h-5 w-5"></i>
+                    </div>
+                </div>
+                <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">{{ inventory.total_ephemeral_storage }}</div>
+                <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">GiB node ephemeral storage</p>
+            </div>
         </div>
         <!-- Node Inventory Table Card -->
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -76,7 +87,7 @@
             <!-- Filter Bar -->
             <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
                 <form method="GET"
-                      class="grid gap-4 xl:grid-cols-[1fr_1fr_1.5fr_auto_auto]">
+                      class="grid gap-4 2xl:grid-cols-[1fr_1fr_1fr_1.5fr_auto_auto]">
                     <input type="hidden" name="page" value="1" />
                     <!-- Cluster -->
                     <div>
@@ -108,6 +119,29 @@
                                 <option value="worker" selected>Worker</option>
                             {% else %}
                                 <option value="worker">Worker</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <!-- Status -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+                        <select name="status"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10">
+                            <option value="">All Status</option>
+                            {% if selected_status == 'Ready' %}
+                                <option value="Ready" selected>Ready</option>
+                            {% else %}
+                                <option value="Ready">Ready</option>
+                            {% endif %}
+                            {% if selected_status == 'NotReady' %}
+                                <option value="NotReady" selected>NotReady</option>
+                            {% else %}
+                                <option value="NotReady">NotReady</option>
+                            {% endif %}
+                            {% if selected_status == 'Unknown' %}
+                                <option value="Unknown" selected>Unknown</option>
+                            {% else %}
+                                <option value="Unknown">Unknown</option>
                             {% endif %}
                         </select>
                     </div>
@@ -160,9 +194,11 @@
                         <tr class="border-b border-slate-200 bg-slate-50 text-center text-xs tracking-wide text-slate-600 uppercase dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-300">
                             <th class="px-6 py-4 text-left">Cluster</th>
                             <th class="px-6 py-4 text-left">Node</th>
+                            <th class="px-6 py-4 text-center">Status</th>
                             <th class="px-6 py-4 text-center">Role</th>
                             <th class="px-6 py-4 text-center">CPU</th>
                             <th class="px-6 py-4 text-center">Memory</th>
+                            <th class="px-6 py-4 text-center">Ephemeral Storage</th>
                             <th class="px-6 py-4 text-left">OS Image</th>
                             <th class="px-6 py-4 text-left">Runtime</th>
                         </tr>
@@ -175,6 +211,21 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="font-medium text-slate-800 dark:text-slate-100">{{ node.node_name }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    {% if node.status == 'Ready' %}
+                                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                            Ready
+                                        </span>
+                                    {% elif node.status == 'NotReady' %}
+                                        <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                                            NotReady
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                            {{ node.status }}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     {% if node.role == 'control-plane' %}
@@ -193,6 +244,12 @@
                                 </td>
                                 <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">{{ node.cpu }}</td>
                                 <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">{{ node.memory_display }}</td>
+                                <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">
+                                    <div>{{ node.ephemeral_storage_display }}</div>
+                                    <div class="text-xs text-slate-400 dark:text-slate-500">
+                                        Allocatable {{ node.ephemeral_storage_allocatable_display }}
+                                    </div>
+                                </td>
                                 <td class="max-w-[320px] px-6 py-4 text-slate-600 dark:text-slate-300">
                                     <div class="truncate" title="{{ node.os_image }}">{{ node.os_image }}</div>
                                 </td>
@@ -202,7 +259,7 @@
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="7"
+                                <td colspan="9"
                                     class="py-16 text-center text-slate-400 dark:text-slate-500">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500">
@@ -232,7 +289,7 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     {% if pagination.has_prev %}
-                        {% set prev_url = url_for('inventory.nodes', cluster_id=selected_cluster_id, role=selected_role, search=search, page=pagination.prev_page, per_page=pagination.per_page) %}
+                        {% set prev_url = url_for('inventory.nodes', cluster_id=selected_cluster_id, role=selected_role, status=selected_status, search=search, page=pagination.prev_page, per_page=pagination.per_page) %}
                         <a href="{{ prev_url }}"
                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                             <i data-lucide="chevron-left" class="h-4 w-4"></i>
@@ -248,7 +305,7 @@
                         Page {{ pagination.page }} / {{ pagination.total_pages }}
                     </span>
                     {% if pagination.has_next %}
-                        {% set next_url = url_for('inventory.nodes', cluster_id=selected_cluster_id, role=selected_role, search=search, page=pagination.next_page, per_page=pagination.per_page) %}
+                        {% set next_url = url_for('inventory.nodes', cluster_id=selected_cluster_id, role=selected_role, status=selected_status, search=search, page=pagination.next_page, per_page=pagination.per_page) %}
                         <a href="{{ next_url }}"
                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                             Next

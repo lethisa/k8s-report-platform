@@ -61,6 +61,29 @@ def get_node_role(
     return 'worker'
 
 
+def get_node_ready_status(
+    node: V1Node,
+) -> str:
+    status = node.status
+
+    if status is None:
+        return 'Unknown'
+
+    for condition in status.conditions or []:
+        if condition.type != 'Ready':
+            continue
+
+        if condition.status == 'True':
+            return 'Ready'
+
+        if condition.status == 'False':
+            return 'NotReady'
+
+        return 'Unknown'
+
+    return 'Unknown'
+
+
 def save_cluster_info(
     cluster: Cluster,
 ) -> None:
@@ -105,6 +128,8 @@ def save_nodes(
 
         capacity = status.capacity or {}
 
+        allocatable = status.allocatable or {}
+
         cpu_value = capacity.get('cpu')
 
         try:
@@ -115,11 +140,16 @@ def save_nodes(
         ):
             cpu = None
 
+        ready_status = get_node_ready_status(
+            node,
+        )
+
         node_inventory = NodeInventory()
 
         node_inventory.cluster_id = cluster.id
         node_inventory.node_name = metadata.name
         node_inventory.role = get_node_role(node)
+        node_inventory.status = ready_status
 
         node_inventory.os_image = status.node_info.os_image
 
@@ -129,6 +159,12 @@ def save_nodes(
 
         node_inventory.cpu = cpu
         node_inventory.memory = capacity.get('memory')
+        node_inventory.ephemeral_storage = capacity.get(
+            'ephemeral-storage',
+        )
+        node_inventory.ephemeral_storage_allocatable = allocatable.get(
+            'ephemeral-storage',
+        )
 
         db.session.add(node_inventory)
 
@@ -432,6 +468,60 @@ def convert_ki_to_gib(
         return 0
 
 
+def convert_storage_to_gib(
+    value: str | None,
+) -> float:
+    if not value:
+        return 0
+
+    units = {
+        'Ki': 1024,
+        'Mi': 1024**2,
+        'Gi': 1024**3,
+        'Ti': 1024**4,
+        'K': 1000,
+        'M': 1000**2,
+        'G': 1000**3,
+        'T': 1000**4,
+    }
+
+    try:
+        for suffix, multiplier in units.items():
+            if value.endswith(
+                suffix,
+            ):
+                number = float(
+                    value.removesuffix(
+                        suffix,
+                    )
+                )
+
+                return round(
+                    number * multiplier / 1024**3,
+                    1,
+                )
+
+        return round(
+            float(value) / 1024**3,
+            1,
+        )
+
+    except (
+        ValueError,
+        TypeError,
+    ):
+        return 0
+
+
+def format_gib(
+    value: float,
+) -> str:
+    if value <= 0:
+        return '-'
+
+    return f'{value} GiB'
+
+
 def get_inventory_overview():
     clusters, inventory_summary = get_cluster_summary()
     for cluster in clusters:
@@ -541,6 +631,7 @@ def get_recent_inventory_activity():
 def get_node_inventory(
     cluster_id=None,
     role=None,
+    status=None,
     search=None,
 ):
     query = db.session.query(
@@ -559,6 +650,9 @@ def get_node_inventory(
     if role:
         query = query.filter(NodeInventory.role == role)
 
+    if status:
+        query = query.filter(NodeInventory.status == status)
+
     if search:
         query = query.filter(NodeInventory.node_name.ilike(f'%{search}%'))
 
@@ -574,13 +668,34 @@ def get_node_inventory(
 
         runtime_display = runtime.split('://')[0] if '://' in runtime else runtime
 
+        ephemeral_storage_gib = convert_storage_to_gib(
+            node.ephemeral_storage,
+        )
+
+        ephemeral_storage_allocatable_gib = convert_storage_to_gib(
+            node.ephemeral_storage_allocatable,
+        )
+
+        node_status = node.status or 'Unknown'
+
         nodes_data.append(
             {
                 'cluster_name': cluster_name,
                 'node_name': node.node_name,
                 'role': node.role,
+                'status': node_status,
                 'cpu': node.cpu,
-                'memory_display': (f'{convert_ki_to_gib(node.memory)} GiB'),
+                'memory_display': format_gib(
+                    convert_ki_to_gib(
+                        node.memory,
+                    )
+                ),
+                'ephemeral_storage_display': format_gib(
+                    ephemeral_storage_gib,
+                ),
+                'ephemeral_storage_allocatable_display': format_gib(
+                    ephemeral_storage_allocatable_gib,
+                ),
                 'os_image': node.os_image,
                 'runtime_display': runtime_display,
             }
@@ -593,10 +708,35 @@ def get_node_inventory(
         1,
     )
 
+    total_ephemeral_storage = round(
+        sum(
+            convert_storage_to_gib(
+                node.ephemeral_storage,
+            )
+            for node, _ in nodes
+        ),
+        1,
+    )
+
+    ready_nodes = sum(
+        1
+        for node, _ in nodes
+        if node.status == 'Ready'
+    )
+
+    not_ready_nodes = sum(
+        1
+        for node, _ in nodes
+        if node.status == 'NotReady'
+    )
+
     return {
         'total_nodes': len(nodes),
+        'ready_nodes': ready_nodes,
+        'not_ready_nodes': not_ready_nodes,
         'total_cpu': total_cpu,
         'total_memory': total_memory,
+        'total_ephemeral_storage': total_ephemeral_storage,
         'nodes': nodes_data,
     }
 
