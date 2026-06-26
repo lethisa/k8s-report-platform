@@ -1,93 +1,51 @@
-<aside
-    :class="sidebarOpen ? 'w-64' : 'w-20'"
-    class="flex flex-col border-r border-slate-800 bg-slate-900 text-white transition-all duration-300 dark:bg-slate-950"
->
+<aside :class="sidebarOpen ? 'w-64' : 'w-20'"
+       class="flex flex-col border-r border-slate-800 bg-slate-900 text-white transition-all duration-300 dark:bg-slate-950">
     <!-- Logo -->
-
     <div class="border-b border-slate-800 px-5 py-6">
         <div class="flex items-center gap-3">
             <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600">
                 <i data-lucide="box" class="h-6 w-6"></i>
             </div>
-
             <div x-show="sidebarOpen" x-transition>
                 <h1 class="text-2xl font-bold">KubeReport</h1>
-
                 <p class="text-sm text-slate-400">Capacity Platform</p>
             </div>
         </div>
     </div>
-
     <!-- Navigation -->
-
     <nav class="flex-1 overflow-y-auto p-4">
         <!-- MAIN -->
-
-        <div x-show="sidebarOpen" class="mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            Main
-        </div>
-
+        <div x-show="sidebarOpen"
+             class="mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Main</div>
         <div class="space-y-1">
-            <a
-                href="{{ url_for('dashboard.index') }}"
-                class="{{
-                'bg-blue-600 text-white shadow-lg'
-                if request.endpoint == 'dashboard.index'
-                else 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            }} flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200"
-            >
+            <a href="{{ url_for('dashboard.index') }}"
+               class="{{ 'bg-blue-600 text-white shadow-lg' if request.endpoint == 'dashboard.index' else 'text-slate-300 hover:bg-slate-800 hover:text-white' }} flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200">
                 <i data-lucide="layout-dashboard" class="h-5 w-5 flex-shrink-0"></i>
-
                 <span x-show="sidebarOpen" x-transition>Dashboard</span>
             </a>
-
-            <a
-                href="{{ url_for('cluster.list_clusters') }}"
-                class="{{
-                'bg-blue-600 text-white shadow-lg'
-                if request.endpoint and request.endpoint.startswith('cluster.')
-                else 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            }} flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200"
-            >
+            <a href="{{ url_for('cluster.list_clusters') }}"
+               class="{{ 'bg-blue-600 text-white shadow-lg' if request.endpoint and request.endpoint.startswith('cluster.') else 'text-slate-300 hover:bg-slate-800 hover:text-white' }} flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200">
                 <i data-lucide="server" class="h-5 w-5"></i>
-
                 <span x-show="sidebarOpen" x-transition>Clusters</span>
             </a>
         </div>
-
         <!-- OPERATIONS -->
-
-        <div x-show="sidebarOpen" class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            Operations
-        </div>
-
+        <div x-show="sidebarOpen"
+             class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Operations</div>
         {% include "components/navigation/inventory_menu.html" %}
-
         <!-- ANALYTICS -->
-
-        <div x-show="sidebarOpen" class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            Analytics
-        </div>
-
+        <div x-show="sidebarOpen"
+             class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Analytics</div>
         {% include "components/navigation/analytics_menu.html" %}
-
         <!-- REPORTING -->
-
-        <div x-show="sidebarOpen" class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            Reporting
-        </div>
-
+        <div x-show="sidebarOpen"
+             class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">Reporting</div>
         {% include "components/navigation/reporting_menu.html" %}
-
         <!-- SYSTEM -->
-
-        <div x-show="sidebarOpen" class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            System
-        </div>
-
+        <div x-show="sidebarOpen"
+             class="mt-6 mb-2 px-4 text-xs font-semibold tracking-wider text-slate-500 uppercase">System</div>
         {% include "components/navigation/settings_menu.html" %}
     </nav>
-
     <!-- User Profile -->
     <div class="border-t border-slate-800 p-4">
         <div class="flex items-center gap-3 rounded-xl p-2">

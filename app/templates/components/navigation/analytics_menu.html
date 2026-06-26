@@ -1,106 +1,49 @@
-<div
-    x-data="{
-    analyticsOpen:
-        {{ 'true' if request.endpoint and request.endpoint.startswith('analytics.') else 'false' }}
-}"
-    class="space-y-1"
->
+<div x-data="{ analyticsOpen: {{ 'true' if request.endpoint and request.endpoint.startswith('analytics.') else 'false' }} }"
+     class="space-y-1">
     <!-- Analytics Parent -->
-
-    <a
-        href="{{ url_for('analytics.overview') }}"
-        @click="
-            if(sidebarOpen){
-                analyticsOpen = !analyticsOpen;
-                $event.preventDefault();
-            }
-        "
-        class="flex items-center justify-between rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-    >
+    <a href="{{ url_for('analytics.overview') }}"
+       @click=" if(sidebarOpen){ analyticsOpen = !analyticsOpen; $event.preventDefault(); } "
+       class="flex items-center justify-between rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white">
         <div class="flex items-center gap-3">
             <i data-lucide="chart-column" class="h-5 w-5"></i>
             <span x-show="sidebarOpen">Analytics</span>
         </div>
-
-        <i
-            x-show="sidebarOpen"
-            :class="analyticsOpen ? 'rotate-90' : ''"
-            data-lucide="chevron-right"
-            class="h-4 w-4 transition-transform"
-        ></i>
+        <i x-show="sidebarOpen"
+           :class="analyticsOpen ? 'rotate-90' : ''"
+           data-lucide="chevron-right"
+           class="h-4 w-4 transition-transform"></i>
     </a>
-
     <!-- Analytics Sub Menu -->
-
-    <div x-show="analyticsOpen && sidebarOpen" x-transition class="ml-6 border-l border-slate-700 pl-4">
-        <a
-            href="{{ url_for('analytics.overview') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.overview'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+    <div x-show="analyticsOpen && sidebarOpen"
+         x-transition
+         class="ml-6 border-l border-slate-700 pl-4">
+        <a href="{{ url_for('analytics.overview') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.overview' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="layout-dashboard" class="h-3.5 w-3.5"></i>
             <span>Overview</span>
         </a>
-
-        <a
-            href="{{ url_for('analytics.utilization') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.utilization'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+        <a href="{{ url_for('analytics.utilization') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.utilization' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="activity" class="h-3.5 w-3.5"></i>
             <span>Resource Utilization</span>
         </a>
-
-        <a
-            href="{{ url_for('analytics.capacity') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.capacity'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+        <a href="{{ url_for('analytics.capacity') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.capacity' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="database" class="h-3.5 w-3.5"></i>
             <span>Capacity Analysis</span>
         </a>
-
-        <a
-            href="{{ url_for('analytics.forecast') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.forecast'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+        <a href="{{ url_for('analytics.forecast') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.forecast' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
             <span>Trends & forecast</span>
         </a>
-
-        <a
-            href="{{ url_for('analytics.consumers') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.consumers'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+        <a href="{{ url_for('analytics.consumers') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.consumers' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="users" class="h-3.5 w-3.5"></i>
             <span>Top Consumers</span>
         </a>
-
-        <a
-            href="{{ url_for('analytics.anomalies') }}"
-            class="{{
-                'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400'
-                if request.endpoint == 'analytics.anomalies'
-                else 'text-slate-400 hover:text-white'
-            }} flex items-center gap-2 py-2 pl-3 text-sm"
-        >
+        <a href="{{ url_for('analytics.anomalies') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.anomalies' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="triangle-alert" class="h-3.5 w-3.5"></i>
             <span>Alerts & Anomalies</span>
         </a>

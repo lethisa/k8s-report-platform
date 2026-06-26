@@ -8,6 +8,6 @@ coverage
 *.pyc
 __pycache__
 
-app/templates/analytics/utilization.html
-app/templates/analytics/capacity.html
-app/templates/analytics/forecast.html
+# Flask / Jinja templates are formatted by djLint, not Prettier
+app/templates/**/*.html
+app/**/templates/**/*.html

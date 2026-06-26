@@ -1,31 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-        <link
-            rel="icon"
-            type="image/svg+xml"
-            href="{{ url_for('static', filename='favicon.svg') }}"
-        />
-
+        <link rel="icon"
+              type="image/svg+xml"
+              href="{{ url_for('static', filename='favicon.svg') }}" />
         <title>KubeInsight</title>
-
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='css/output.css') }}"
-            class="h-16 w-16"
-        />
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/output.css') }}"
+              class="h-16 w-16" />
     </head>
-
     <body class="bg-gradient-to-br from-slate-100 via-white to-slate-200">
-        {% block content %} {% endblock %}
-
+        {% block content %}{% endblock %}
         <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons()
-        </script>
+        <script>lucide.createIcons()</script>
     </body>
 </html>

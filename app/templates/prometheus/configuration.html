@@ -1,164 +1,123 @@
-{% extends "layouts/dashboard.html" %} {% block title %} Prometheus Configuration {% endblock %} {% block
-dashboard_content %}
-
-<div class="space-y-6">
-    <!-- Hero Header -->
-
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="flex items-center gap-4">
-            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                <i data-lucide="activity" class="h-7 w-7 text-blue-500"></i>
+{% extends "layouts/dashboard.html" %}
+{% block title %}Prometheus Configuration{% endblock %}
+{% block
+    dashboard_content %}
+    <div class="space-y-6">
+        <!-- Hero Header -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center gap-4">
+                <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
+                    <i data-lucide="activity" class="h-7 w-7 text-blue-500"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Prometheus Configuration</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Configure Prometheus integration for cluster
+                        <span class="font-semibold">{{ cluster.name }}</span>
+                    </p>
+                </div>
             </div>
-
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Prometheus Configuration</h1>
-
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Configure Prometheus integration for cluster
-                    <span class="font-semibold">{{ cluster.name }}</span>
-                </p>
+        </div>
+        <!-- Form Card -->
+        <form method="POST"
+              x-data="{ authType: '{{ form.auth_type.data or 'none' }}' }">
+            {{ form.hidden_tag() }}
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <!-- Header -->
+                <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Connection Settings</h2>
+                </div>
+                <!-- Body -->
+                {% if form.errors %}
+                    <div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="alert-circle" class="mt-0.5 h-5 w-5 text-red-500"></i>
+                            <div>
+                                <h3 class="font-medium text-red-700 dark:text-red-400">Validation Error</h3>
+                                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600 dark:text-red-300">
+                                    {% for field, errors in form.errors.items() %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="space-y-6 p-6">
+                    <!-- Endpoint -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Endpoint</label>
+                        {{ form.endpoint(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2
+                                                focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800
+                                                dark:text-white") }}
+                    </div>
+                    <!-- Authentication -->
+                    <div>
+                        {{ form.auth_type.label(class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300") 
+                        }} {{ form.auth_type(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm
+                         focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white",
+                         **{ "@change": "authType = $event.target.value" }) }}
+                    </div>
+                    <!-- Username -->
+                    <div x-show="authType === 'basic'" x-cloak x-transition class="space-y-6">
+                        <div>
+                            {{ form.username.label(class="mb-2 block text-sm font-medium text-slate-700
+                                                        dark:text-slate-300") }} {{ form.username(class="w-full rounded-xl border border-slate-300
+                             bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
+                             dark:bg-slate-900 dark:text-white") }}
+                        </div>
+                        <!-- Password -->
+                        <div>
+                            {{ form.password.label(class="mb-2 block text-sm font-medium text-slate-700
+                                                        dark:text-slate-300") }} {{ form.password(class="w-full rounded-xl border border-slate-300
+                             bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
+                             dark:bg-slate-900 dark:text-white") }}
+                        </div>
+                    </div>
+                    <!-- Bearer Token -->
+                    <div x-show="authType === 'bearer'" x-cloak x-transition>
+                        <div>
+                            {{ form.bearer_token.label(class="mb-2 block text-sm font-medium text-slate-700
+                                                        dark:text-slate-300") }} {{ form.bearer_token(class="w-full rounded-xl border border-slate-300
+                             bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
+                             dark:bg-slate-900 dark:text-white") }}
+                        </div>
+                    </div>
+                    <!-- Timeout -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Timeout (seconds)</label>
+                        {{ form.timeout(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2
+                                                focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800
+                                                dark:text-white") }}
+                    </div>
+                    <!-- Verify SSL -->
+                    <div class="flex items-center gap-3">
+                        {{ form.verify_ssl() }}
+                        <label class="text-sm text-slate-700 dark:text-slate-300">Verify SSL Certificate</label>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
+                    <button type="button"
+                            id="test-connection-btn"
+                            class="rounded-xl bg-slate-700 px-4 py-2 text-white transition hover:bg-slate-600">
+                        Test Connection
+                    </button>
+                    <button type="submit"
+                            class="rounded-xl bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700">
+                        Save Configuration
+                    </button>
+                </div>
             </div>
+        </form>
+        <!-- Test Result -->
+        <div id="test-result"
+             class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         </div>
     </div>
-
-    <!-- Form Card -->
-
-    <form
-        method="POST"
-        x-data="{
-        authType: '{{ form.auth_type.data or 'none' }}'
-    }"
-    >
-        {{ form.hidden_tag() }}
-
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <!-- Header -->
-
-            <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Connection Settings</h2>
-            </div>
-
-            <!-- Body -->
-
-            {% if form.errors %}
-
-            <div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
-                <div class="flex items-start gap-3">
-                    <i data-lucide="alert-circle" class="mt-0.5 h-5 w-5 text-red-500"></i>
-
-                    <div>
-                        <h3 class="font-medium text-red-700 dark:text-red-400">Validation Error</h3>
-
-                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600 dark:text-red-300">
-                            {% for field, errors in form.errors.items() %} {% for error in errors %}
-                            <li>{{ error }}</li>
-                            {% endfor %} {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            {% endif %}
-
-            <div class="space-y-6 p-6">
-                <!-- Endpoint -->
-
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Endpoint</label>
-
-                    {{ form.endpoint( class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2
-                    focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800
-                    dark:text-white" ) }}
-                </div>
-
-                <!-- Authentication -->
-
-                <div>
-                    {{ form.auth_type.label( class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300" )
-                    }} {{ form.auth_type( class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm
-                    focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white",
-                    **{ "@change": "authType = $event.target.value" } ) }}
-                </div>
-
-                <!-- Username -->
-
-                <div x-show="authType === 'basic'" x-cloak x-transition class="space-y-6">
-                    <div>
-                        {{ form.username.label( class="mb-2 block text-sm font-medium text-slate-700
-                        dark:text-slate-300" ) }} {{ form.username( class="w-full rounded-xl border border-slate-300
-                        bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
-                        dark:bg-slate-900 dark:text-white" ) }}
-                    </div>
-
-                    <!-- Password -->
-
-                    <div>
-                        {{ form.password.label( class="mb-2 block text-sm font-medium text-slate-700
-                        dark:text-slate-300" ) }} {{ form.password( class="w-full rounded-xl border border-slate-300
-                        bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
-                        dark:bg-slate-900 dark:text-white" ) }}
-                    </div>
-                </div>
-
-                <!-- Bearer Token -->
-
-                <div x-show="authType === 'bearer'" x-cloak x-transition>
-                    <div>
-                        {{ form.bearer_token.label( class="mb-2 block text-sm font-medium text-slate-700
-                        dark:text-slate-300" ) }} {{ form.bearer_token( class="w-full rounded-xl border border-slate-300
-                        bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700
-                        dark:bg-slate-900 dark:text-white" ) }}
-                    </div>
-                </div>
-
-                <!-- Timeout -->
-
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Timeout (seconds)
-                    </label>
-
-                    {{ form.timeout( class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2
-                    focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800
-                    dark:text-white" ) }}
-                </div>
-
-                <!-- Verify SSL -->
-
-                <div class="flex items-center gap-3">
-                    {{ form.verify_ssl() }}
-
-                    <label class="text-sm text-slate-700 dark:text-slate-300">Verify SSL Certificate</label>
-                </div>
-            </div>
-
-            <!-- Footer -->
-
-            <div class="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
-                <button
-                    type="button"
-                    id="test-connection-btn"
-                    class="rounded-xl bg-slate-700 px-4 py-2 text-white transition hover:bg-slate-600"
-                >
-                    Test Connection
-                </button>
-
-                <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700">
-                    Save Configuration
-                </button>
-            </div>
-        </div>
-    </form>
-
-    <!-- Test Result -->
-
-    <div
-        id="test-result"
-        class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    ></div>
-</div>
-
-<script>
+    <script>
     document.getElementById('test-connection-btn').addEventListener('click', async () => {
         const resultDiv = document.getElementById('test-result')
 
@@ -204,6 +163,5 @@ dashboard_content %}
         `
         }
     })
-</script>
-
+    </script>
 {% endblock %}

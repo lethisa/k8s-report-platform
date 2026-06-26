@@ -1,588 +1,113 @@
 {% extends "layouts/dashboard.html" %}
-
 {% block title %}
-Forecast
+    Forecast
 {% endblock %}
-
 {% block dashboard_content %}
-
-<div
-    class="
-        mb-6
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        p-6
-        shadow-sm
-    "
->
-    <div
-        class="
-            flex
-            flex-col
-            gap-4
-            lg:flex-row
-            lg:items-center
-            lg:justify-between
-        "
-    >
-
-        <div class="flex items-start gap-4">
-
-            <div
-                class="
-                    flex
-                    h-12
-                    w-12
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-violet-100
-                "
-            >
-                <i
-                    data-lucide="trending-up"
-                    class="
-                        h-6
-                        w-6
-                        text-violet-600
-                    "
-                ></i>
+    <div class=" mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+        <div class=" flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between ">
+            <div class="flex items-start gap-4">
+                <div class=" flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 ">
+                    <i data-lucide="trending-up" class=" h-6 w-6 text-violet-600 "></i>
+                </div>
+                <div>
+                    <h1 class=" text-3xl font-bold text-slate-900 ">Forecast Analysis</h1>
+                    <p class=" mt-1 text-sm text-slate-500 ">
+                        Forecast future resource utilization,
+                        growth trends and capacity exhaustion.
+                    </p>
+                </div>
             </div>
-
+            <div class=" flex items-center gap-3 ">
+                <span class=" rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700 ">Predictive Analytics</span>
+                <form method="GET" action="{{ url_for('analytics.forecast') }}">
+                    <select name="cluster_id"
+                            onchange="this.form.submit()"
+                            class=" rounded-xl border border-slate-300 px-4 py-2 text-sm ">
+                        {% for item in clusters %}
+                            <option value="{{ item.id }}"
+                                    {% if cluster and cluster.id == item.id %} selected {% endif %}>
+                                {{ item.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% if error %}
+        <div class=" mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 ">
+            <div class=" flex items-start gap-3 ">
+                <i data-lucide="alert-circle" class=" h-5 w-5 text-red-600 "></i>
+                <div>
+                    <div class=" font-medium text-red-800 ">Forecast Data Unavailable</div>
+                    <div class=" mt-1 text-sm text-red-700 ">{{ error }}</div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class=" grid gap-6 md:grid-cols-2 xl:grid-cols-4 ">
+        <div class=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+            <div class=" text-sm text-slate-500 ">Current Utilization</div>
+            <div class=" mt-2 text-4xl font-bold ">{{ forecast_summary.current_utilization|default(0) }}%</div>
+        </div>
+        <div class=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+            <div class=" text-sm text-slate-500 ">Projected 30 Days</div>
+            <div class=" mt-2 text-4xl font-bold ">{{ forecast_summary.forecast_30d|default(0) }}%</div>
+        </div>
+        <div class=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+            <div class=" text-sm text-slate-500 ">Projected 60 Days</div>
+            <div class=" mt-2 text-4xl font-bold ">{{ forecast_summary.forecast_60d|default(0) }}%</div>
+        </div>
+        <div class=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+            <div class=" text-sm text-slate-500 ">Projected 90 Days</div>
+            <div class=" mt-2 text-4xl font-bold ">{{ forecast_summary.forecast_90d|default(0) }}%</div>
+        </div>
+    </div>
+    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+        <h3 class=" text-lg font-semibold text-slate-900 ">Forecast Summary</h3>
+        <p class=" mt-1 text-sm text-slate-500 ">Forecast model configuration and projection window.</p>
+        <div class=" mt-6 grid gap-4 md:grid-cols-3 ">
             <div>
-
-                <h1
-                    class="
-                        text-3xl
-                        font-bold
-                        text-slate-900
-                    "
-                >
-                    Forecast Analysis
-                </h1>
-
-                <p
-                    class="
-                        mt-1
-                        text-sm
-                        text-slate-500
-                    "
-                >
-                    Forecast future resource utilization,
-                    growth trends and capacity exhaustion.
+                <div class=" text-sm text-slate-500 ">Growth Rate</div>
+                <div class=" mt-2 text-3xl font-bold ">{{ forecast_summary.growth_rate|default(0) }}%</div>
+            </div>
+            <div>
+                <div class=" text-sm text-slate-500 ">Forecast Horizon</div>
+                <div class=" mt-2 text-3xl font-bold ">90 Days</div>
+            </div>
+            <div>
+                <div class=" text-sm text-slate-500 ">Forecast Model</div>
+                <div class=" mt-2 text-3xl font-bold ">Linear</div>
+            </div>
+        </div>
+    </div>
+    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+        <div class=" flex items-center justify-between ">
+            <div>
+                <h3 class=" text-lg font-semibold text-slate-900 ">Forecast Projection</h3>
+                <p class=" mt-1 text-sm text-slate-500 ">
+                    Memory utilization forecast
+                    based on Prometheus historical metrics.
                 </p>
-
             </div>
-
         </div>
-
-        <div
-            class="
-                flex
-                items-center
-                gap-3
-            "
-        >
-
-            <span
-                class="
-                    rounded-full
-                    bg-violet-100
-                    px-3
-                    py-1
-                    text-xs
-                    font-medium
-                    text-violet-700
-                "
-            >
-                Predictive Analytics
-            </span>
-
-            <form
-                method="GET"
-                action="{{ url_for('analytics.forecast') }}"
-            >
-
-                <select
-                    name="cluster_id"
-                    onchange="this.form.submit()"
-                    class="
-                        rounded-xl
-                        border
-                        border-slate-300
-                        px-4
-                        py-2
-                        text-sm
-                    "
-                >
-
-                    {% for item in clusters %}
-
-                    <option
-                        value="{{ item.id }}"
-                        {% if cluster and cluster.id == item.id %}
-                        selected
-                        {% endif %}
-                    >
-                        {{ item.name }}
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </form>
-
+        <div class=" mt-6 h-96 ">
+            <canvas id="forecastChart"></canvas>
         </div>
-
     </div>
-</div>
-
-{% if error %}
-
-<div
-    class="
-        mb-6
-        rounded-2xl
-        border
-        border-red-200
-        bg-red-50
-        p-4
-    "
->
-
-    <div
-        class="
-            flex
-            items-start
-            gap-3
-        "
-    >
-
-        <i
-            data-lucide="alert-circle"
-            class="
-                h-5
-                w-5
-                text-red-600
-            "
-        ></i>
-
-        <div>
-
-            <div
-                class="
-                    font-medium
-                    text-red-800
-                "
-            >
-                Forecast Data Unavailable
-            </div>
-
-            <div
-                class="
-                    mt-1
-                    text-sm
-                    text-red-700
-                "
-            >
-                {{ error }}
-            </div>
-
+    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
+        <h3 class=" text-lg font-semibold text-slate-900 ">Forecast Insights</h3>
+        <div class=" mt-4 space-y-3 ">
+            {% for item in forecast_insights %}
+                <div class=" flex items-start gap-3 ">
+                    <i data-lucide="lightbulb" class=" mt-0.5 h-4 w-4 text-amber-500 "></i>
+                    <span class=" text-sm text-slate-600 ">{{ item }}</span>
+                </div>
+            {% endfor %}
         </div>
-
     </div>
-
-</div>
-
-{% endif %}
-
-<div
-    class="
-        grid
-        gap-6
-        md:grid-cols-2
-        xl:grid-cols-4
-    "
->
-
-    <div
-        class="
-            rounded-2xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-            shadow-sm
-        "
-    >
-
-        <div
-            class="
-                text-sm
-                text-slate-500
-            "
-        >
-            Current Utilization
-        </div>
-
-        <div
-            class="
-                mt-2
-                text-4xl
-                font-bold
-            "
-        >
-            {{ forecast_summary.current_utilization|default(0) }}%
-        </div>
-
-    </div>
-
-    <div
-        class="
-            rounded-2xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-            shadow-sm
-        "
-    >
-
-        <div
-            class="
-                text-sm
-                text-slate-500
-            "
-        >
-            Projected 30 Days
-        </div>
-
-        <div
-            class="
-                mt-2
-                text-4xl
-                font-bold
-            "
-        >
-            {{ forecast_summary.forecast_30d|default(0) }}%
-        </div>
-
-    </div>
-
-    <div
-        class="
-            rounded-2xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-            shadow-sm
-        "
-    >
-
-        <div
-            class="
-                text-sm
-                text-slate-500
-            "
-        >
-            Projected 60 Days
-        </div>
-
-        <div
-            class="
-                mt-2
-                text-4xl
-                font-bold
-            "
-        >
-            {{ forecast_summary.forecast_60d|default(0) }}%
-        </div>
-
-    </div>
-
-    <div
-        class="
-            rounded-2xl
-            border
-            border-slate-200
-            bg-white
-            p-6
-            shadow-sm
-        "
-    >
-
-        <div
-            class="
-                text-sm
-                text-slate-500
-            "
-        >
-            Projected 90 Days
-        </div>
-
-        <div
-            class="
-                mt-2
-                text-4xl
-                font-bold
-            "
-        >
-            {{ forecast_summary.forecast_90d|default(0) }}%
-        </div>
-
-    </div>
-
-</div>
-
-<div
-    class="
-        mt-6
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        p-6
-        shadow-sm
-    "
->
-
-    <h3
-        class="
-            text-lg
-            font-semibold
-            text-slate-900
-        "
-    >
-        Forecast Summary
-    </h3>
-
-    <p
-        class="
-            mt-1
-            text-sm
-            text-slate-500
-        "
-    >
-        Forecast model configuration and projection window.
-    </p>
-
-    <div
-        class="
-            mt-6
-            grid
-            gap-4
-            md:grid-cols-3
-        "
-    >
-
-        <div>
-
-            <div
-                class="
-                    text-sm
-                    text-slate-500
-                "
-            >
-                Growth Rate
-            </div>
-
-            <div
-                class="
-                    mt-2
-                    text-3xl
-                    font-bold
-                "
-            >
-                {{ forecast_summary.growth_rate|default(0) }}%
-            </div>
-
-        </div>
-
-        <div>
-
-            <div
-                class="
-                    text-sm
-                    text-slate-500
-                "
-            >
-                Forecast Horizon
-            </div>
-
-            <div
-                class="
-                    mt-2
-                    text-3xl
-                    font-bold
-                "
-            >
-                90 Days
-            </div>
-
-        </div>
-
-        <div>
-
-            <div
-                class="
-                    text-sm
-                    text-slate-500
-                "
-            >
-                Forecast Model
-            </div>
-
-            <div
-                class="
-                    mt-2
-                    text-3xl
-                    font-bold
-                "
-            >
-                Linear
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div
-    class="
-        mt-6
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        p-6
-        shadow-sm
-    "
->
-
-    <div
-        class="
-            flex
-            items-center
-            justify-between
-        "
-    >
-
-        <div>
-
-            <h3
-                class="
-                    text-lg
-                    font-semibold
-                    text-slate-900
-                "
-            >
-                Forecast Projection
-            </h3>
-
-            <p
-                class="
-                    mt-1
-                    text-sm
-                    text-slate-500
-                "
-            >
-               Memory utilization forecast
-based on Prometheus historical metrics.
-            </p>
-
-        </div>
-
-    </div>
-
-    <div
-        class="
-            mt-6
-            h-96
-        "
-    >
-
-        <canvas
-            id="forecastChart"
-        ></canvas>
-
-    </div>
-
-</div>
-
-<div
-    class="
-        mt-6
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        p-6
-        shadow-sm
-    "
->
-
-    <h3
-        class="
-            text-lg
-            font-semibold
-            text-slate-900
-        "
-    >
-        Forecast Insights
-    </h3>
-
-    <div
-        class="
-            mt-4
-            space-y-3
-        "
-    >
-
-        {% for item in forecast_insights %}
-
-        <div
-            class="
-                flex
-                items-start
-                gap-3
-            "
-        >
-
-            <i
-                data-lucide="lightbulb"
-                class="
-                    mt-0.5
-                    h-4
-                    w-4
-                    text-amber-500
-                "
-            ></i>
-
-            <span
-                class="
-                    text-sm
-                    text-slate-600
-                "
-            >
-                {{ item }}
-            </span>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
 
 window.addEventListener(
     'load',
@@ -773,8 +298,5 @@ window.addEventListener(
     },
 );
 
-</script>
-
+    </script>
 {% endblock %}
-
-

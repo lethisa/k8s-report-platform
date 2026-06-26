@@ -1,94 +1,61 @@
-{% extends "layouts/dashboard.html" %} {% block title %} Clusters {% endblock %} {% block dashboard_content %}
-
-<div x-data="{ deleteModal: false, deleteUrl: '', deleteName: '', search: '', envFilter:'all' }" class="space-y-6">
-    <!-- Header -->
-
-    <div
-        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
-    >
-        <div class="p-6">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="flex items-start gap-4">
-                    <div
-                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
-                    >
-                        <i data-lucide="server" class="h-7 w-7"></i>
-                    </div>
-
-                    <div>
-                        <h1 class="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
-                            Cluster Management
-                        </h1>
-
-                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                            Manage Kubernetes clusters, connectivity, inventory synchronization, and Prometheus
-                            integration.
-                        </p>
-
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <span
-                                class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                            >
-                                {{ clusters|length }} Clusters
-                            </span>
-
-                            <span
-                                class="inline-flex items-center rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
-                            >
-                                {{ connected_clusters }} Connected
-                            </span>
-
-                            <span
-                                class="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-                            >
-                                {{ synced_clusters }} Synced
-                            </span>
+{% extends "layouts/dashboard.html" %}
+{% block title %}Clusters{% endblock %}
+{% block dashboard_content %}
+    <div x-data="{ deleteModal: false, deleteUrl: '', deleteName: '', search: '', envFilter:'all' }"
+         class="space-y-6">
+        <!-- Header -->
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="p-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                            <i data-lucide="server" class="h-7 w-7"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Cluster Management</h1>
+                            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                                Manage Kubernetes clusters, connectivity, inventory synchronization, and Prometheus
+                                integration.
+                            </p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                    {{ clusters|length }} Clusters
+                                </span>
+                                <span class="inline-flex items-center rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300">
+                                    {{ connected_clusters }} Connected
+                                </span>
+                                <span class="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                                    {{ synced_clusters }} Synced
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <a
-                    href="{{ url_for('cluster.add_cluster') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md focus:ring-4 focus:ring-blue-500/20 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-500"
-                >
-                    <i data-lucide="plus" class="h-4 w-4"></i>
-                    <span>Add Cluster</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cluster Inventory Card -->
-
-    <div
-        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
-    >
-        <!-- Card Header -->
-
-        <div
-            class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 lg:flex-row lg:items-center lg:justify-between dark:border-slate-700"
-        >
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
-                >
-                    <i data-lucide="database" class="h-5 w-5"></i>
-                </div>
-
-                <div>
-                    <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Cluster Inventory</h2>
-
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Overview of registered Kubernetes clusters and operational status.
-                    </p>
+                    <a href="{{ url_for('cluster.add_cluster') }}"
+                       class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md focus:ring-4 focus:ring-blue-500/20 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-500">
+                        <i data-lucide="plus" class="h-4 w-4"></i>
+                        <span>Add Cluster</span>
+                    </a>
                 </div>
             </div>
         </div>
-
-        {% include "cluster/partials/table.html" %}
+        <!-- Cluster Inventory Card -->
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <!-- Card Header -->
+            <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 lg:flex-row lg:items-center lg:justify-between dark:border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                        <i data-lucide="database" class="h-5 w-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Cluster Inventory</h2>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Overview of registered Kubernetes clusters and operational status.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% include "cluster/partials/table.html" %}
+        </div>
+        {% include "cluster/partials/delete_modal.html" %}
     </div>
-
-    {% include "cluster/partials/delete_modal.html" %}
-</div>
-
 {% endblock %}
