@@ -131,7 +131,9 @@
         <!-- Filter Bar -->
 
         <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <form method="GET" class="grid gap-4 lg:grid-cols-[1fr_1fr_1.5fr_auto]">
+            <form method="GET" class="grid gap-4 xl:grid-cols-[1fr_1fr_1.5fr_auto_auto]">
+                <input type="hidden" name="page" value="1" />
+
                 <!-- Cluster -->
 
                 <div>
@@ -193,6 +195,23 @@
                             class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
                         />
                     </div>
+                </div>
+
+                <!-- Per Page -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Per Page</label>
+
+                    <select
+                        name="per_page"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
+                        {% for option in pagination.allowed_per_page %} {% if pagination.per_page == option %}
+                        <option value="{{ option }}" selected>{{ option }}</option>
+                        {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endif %} {% endfor %}
+                    </select>
                 </div>
 
                 <!-- Actions -->
@@ -315,12 +334,76 @@
             </table>
         </div>
 
-        <!-- Footer -->
+        <!-- Pagination Footer -->
 
         <div
-            class="border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400"
+            class="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400"
         >
-            Showing {{ inventory.nodes|length }} node(s)
+            <div>
+                Showing
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.start_item }}</span>
+                -
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.end_item }}</span>
+                of
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.total_items }}</span>
+                node(s)
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                {% if pagination.has_prev %}
+                <a
+                    href="{{ url_for(
+                    'inventory.nodes',
+                    cluster_id=selected_cluster_id,
+                    role=selected_role,
+                    search=search,
+                    page=pagination.prev_page,
+                    per_page=pagination.per_page
+                ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </span>
+                {% endif %}
+
+                <span
+                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                    Page {{ pagination.page }} / {{ pagination.total_pages }}
+                </span>
+
+                {% if pagination.has_next %}
+                <a
+                    href="{{ url_for(
+                    'inventory.nodes',
+                    cluster_id=selected_cluster_id,
+                    role=selected_role,
+                    search=search,
+                    page=pagination.next_page,
+                    per_page=pagination.per_page
+                ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </span>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

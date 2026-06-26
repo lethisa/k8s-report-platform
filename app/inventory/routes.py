@@ -24,7 +24,6 @@ inventory_bp = Blueprint(
 
 @inventory_bp.post('/<string:cluster_id>/sync')
 def sync(cluster_id: str):
-
     cluster = Cluster.query.get_or_404(cluster_id)
 
     sync_inventory(cluster)
@@ -41,7 +40,6 @@ def sync(cluster_id: str):
 @inventory_bp.route('/')
 @login_required
 def overview():
-
     overview = get_inventory_overview()
 
     return render_template(
@@ -53,7 +51,6 @@ def overview():
 @inventory_bp.route('/nodes')
 @login_required
 def nodes():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -70,13 +67,78 @@ def nodes():
         'search',
         '',
         type=str,
+    ).strip()
+
+    page = request.args.get(
+        'page',
+        1,
+        type=int,
     )
+
+    per_page = request.args.get(
+        'per_page',
+        25,
+        type=int,
+    )
+
+    allowed_per_page = [
+        10,
+        25,
+        50,
+        100,
+    ]
+
+    if per_page not in allowed_per_page:
+        per_page = 25
+
+    if page < 1:
+        page = 1
 
     data = get_node_inventory(
         cluster_id=cluster_id,
         role=role,
         search=search,
     )
+
+    all_nodes = data.get(
+        'nodes',
+        [],
+    )
+
+    total_items = len(
+        all_nodes,
+    )
+
+    total_pages = max(
+        (total_items + per_page - 1) // per_page,
+        1,
+    )
+
+    if page > total_pages:
+        page = total_pages
+
+    start_index = (page - 1) * per_page
+
+    end_index = start_index + per_page
+
+    data['nodes'] = all_nodes[start_index:end_index]
+
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'total_items': total_items,
+        'total_pages': total_pages,
+        'start_item': start_index + 1 if total_items > 0 else 0,
+        'end_item': min(
+            end_index,
+            total_items,
+        ),
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_page': page - 1,
+        'next_page': page + 1,
+        'allowed_per_page': allowed_per_page,
+    }
 
     clusters = Cluster.query.order_by(
         Cluster.name,
@@ -91,13 +153,13 @@ def nodes():
         selected_cluster_id=cluster_id,
         selected_role=role,
         search=search,
+        pagination=pagination,
     )
 
 
 @inventory_bp.route('/namespaces')
 @login_required
 def namespaces():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -139,7 +201,6 @@ def namespaces():
 @inventory_bp.route('/workloads')
 @login_required
 def workloads():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -189,7 +250,6 @@ def workloads():
 @inventory_bp.route('/pods')
 @login_required
 def pods():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -239,7 +299,6 @@ def pods():
 @inventory_bp.route('/services')
 @login_required
 def services():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -289,7 +348,6 @@ def services():
 @inventory_bp.route('/ingresses')
 @login_required
 def ingresses():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
@@ -339,7 +397,6 @@ def ingresses():
 @inventory_bp.route('/storage')
 @login_required
 def storage():
-
     cluster_id = request.args.get(
         'cluster_id',
         '',
