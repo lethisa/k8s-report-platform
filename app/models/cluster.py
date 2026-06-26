@@ -9,7 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.extensions import db
 
 if TYPE_CHECKING:
-    from app.models.pod import Pod
     from app.models.prometheus import PrometheusConfig
 
 
@@ -23,12 +22,6 @@ class Cluster(db.Model):
     __tablename__ = 'clusters'
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-
-    pods: Mapped[list['Pod']] = relationship(
-        back_populates='cluster',
-        cascade='all, delete-orphan',
-        lazy='select',
-    )
 
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 

@@ -1,5 +1,5 @@
 {% extends "layouts/dashboard.html" %}
-{% block title %}Clusters{% endblock %}
+{% block title %}Clusters{% endblock title %}
 {% block dashboard_content %}
     <div x-data="{ deleteModal: false, deleteUrl: '', deleteName: '', search: '', envFilter:'all' }"
          class="space-y-6">
@@ -58,4 +58,4 @@
         </div>
         {% include "cluster/partials/delete_modal.html" %}
     </div>
-{% endblock %}
+{% endblock dashboard_content %}

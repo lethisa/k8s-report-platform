@@ -1,7 +1,7 @@
 <div x-show="deleteModal"
      x-transition.opacity
      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4 backdrop-blur-sm"
-     style="display: none">
+     x-cloak>
     <div @click.away="deleteModal = false"
          x-transition
          class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">

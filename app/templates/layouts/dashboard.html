@@ -6,7 +6,7 @@
         <link rel="icon"
               type="image/svg+xml"
               href="{{ url_for('static', filename='favicon.svg') }}" />
-        <title>{% block title %} KubeReport {% endblock %}</title>
+        <title>{% block title %} KubeReport {% endblock title %}</title>
         <script>
             ;(function () {
                 const theme = localStorage.getItem('theme')
@@ -35,7 +35,8 @@
                 {% include "components/navigation/navbar.html" %}
                 <main class="flex-1 overflow-y-auto bg-slate-50 transition-colors duration-300 dark:bg-slate-900">
                     <div class="p-6 lg:p-8">
-                        {% block dashboard_content %}{% endblock %}
+                        {% block dashboard_content %}
+                        {% endblock dashboard_content %}
                     </div>
                 </main>
             </div>

@@ -1,5 +1,5 @@
 {% extends "layouts/dashboard.html" %}
-{% block title %}Resource Utilization{% endblock %}
+{% block title %}Resource Utilization{% endblock title %}
 {% block dashboard_content
     %}
     <div class="space-y-6">
@@ -36,7 +36,7 @@
                             class=" rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 ">
                         {% for item in clusters %}
                             <option value="{{ item.id }}"
-                                    {% if cluster and item.id == cluster.id %} selected="selected" {% endif %}>
+                                    {% if cluster and item.id == cluster.id %}selected="selected"{% endif %}>
                                 {{ item.name }}
                             </option>
                         {% endfor %}
@@ -494,7 +494,6 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-
 document.addEventListener(
     'DOMContentLoaded',
     () => {
@@ -674,4 +673,4 @@ document.addEventListener(
 );
 
     </script>
-{% endblock %}
+{% endblock dashboard_content %}

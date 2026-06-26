@@ -1103,7 +1103,9 @@ def get_storage_inventory_view(
     ).distinct()
 
     if cluster_id:
-        namespace_query = namespace_query.filter(StorageInventory.cluster_id == cluster_id)
+        namespace_query = namespace_query.filter(
+            StorageInventory.cluster_id == cluster_id,
+        )
 
     namespaces = sorted([ns for (ns,) in namespace_query.all() if ns])
 
@@ -1120,6 +1122,9 @@ def get_storage_inventory_view(
     }
 
     for item, cluster_name in items:
+        if item.storage_type in storage_types:
+            storage_types[item.storage_type] += 1
+
         if item.storage_type == 'StorageClass':
             storage_classes += 1
 
@@ -1129,10 +1134,21 @@ def get_storage_inventory_view(
         elif item.storage_type == 'PersistentVolumeClaim':
             persistent_volume_claims += 1
 
+        namespace_display = item.namespace
+
+        if item.storage_type in [
+            'StorageClass',
+            'PersistentVolume',
+        ]:
+            namespace_display = 'Cluster-wide'
+
+        elif not namespace_display:
+            namespace_display = '-'
+
         data.append(
             {
                 'cluster_name': cluster_name,
-                'namespace': item.namespace or '-',
+                'namespace': namespace_display,
                 'name': item.name,
                 'type': item.storage_type,
                 'storage_class': (item.storage_class or '-'),

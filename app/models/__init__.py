@@ -9,7 +9,6 @@ from app.models.inventory import (
     StorageInventory,
     WorkloadInventory,
 )
-from app.models.pod import Pod
 from app.models.prometheus import PrometheusConfig
 from app.models.user import User
 
@@ -26,5 +25,4 @@ __all__ = [
     'NamespaceInventory',
     'NodeInventory',
     'PrometheusConfig',
-    'Pod',
 ]

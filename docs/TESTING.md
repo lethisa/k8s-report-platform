@@ -24,6 +24,9 @@ KubeReport tests must follow these principles:
 8. Integration tests will be added separately when the core modules are stable.
 9. Route files should stay thin. Database queries and business logic belong in service files.
 10. Inventory behavior must be tested separately from Cluster Management behavior.
+11. Tests should avoid brittle HTML whitespace assertions.
+12. Test mocks must follow the same public interface used by production code.
+13. Test-only fake objects may use `typing.cast()` to satisfy strict type checking while keeping production code strongly typed.
 
 ---
 
@@ -236,9 +239,16 @@ tests/
 ├── conftest.py
 ├── auth/
 │   └── test_login.py
-└── cluster/
-    ├── test_cluster_service.py
-    └── test_cluster_routes.py
+├── cluster/
+│   ├── test_cluster_service.py
+│   └── test_cluster_routes.py
+└── inventory/
+    ├── test_inventory_routes.py
+    ├── test_inventory_pagination.py
+    ├── test_inventory_services.py
+    ├── test_inventory_save_functions.py
+    ├── test_inventory_sync.py
+    └── test_inventory_sync_route.py
 ```
 
 Planned structure:
@@ -253,8 +263,12 @@ tests/
 │   ├── test_cluster_routes.py
 │   └── test_cluster_delete.py
 ├── inventory/
-│   ├── test_inventory_service.py
-│   └── test_inventory_routes.py
+│   ├── test_inventory_routes.py
+│   ├── test_inventory_pagination.py
+│   ├── test_inventory_services.py
+│   ├── test_inventory_save_functions.py
+│   ├── test_inventory_sync.py
+│   └── test_inventory_sync_route.py
 ├── prometheus/
 │   ├── test_prometheus_client.py
 │   ├── test_prometheus_service.py
@@ -287,7 +301,7 @@ Responsibilities:
 - Provide reusable test users.
 - Provide an authenticated client fixture.
 - Provide reusable kubeconfig test data.
-- Provide a cluster factory for Cluster Management tests.
+- Provide a cluster factory for Cluster Management and Inventory tests.
 
 The test application fixture must include a database safety guard.
 
@@ -302,6 +316,23 @@ def _assert_test_database(database_uri: str) -> None:
 ```
 
 This guard prevents destructive operations such as `db.drop_all()` from running against a non-test database.
+
+### Application Context in Service Tests
+
+Service tests that access `db.session`, `Model.query`, or service functions that query models must activate the Flask application context.
+
+Recommended file-level fixture:
+
+```python
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _use_app_context(app):
+    pass
+```
+
+This keeps service tests clean without adding `app` to every test function signature.
 
 ---
 
@@ -350,7 +381,7 @@ Current coverage:
 | Login with unknown username | Validate failed authentication for a non-existing user | Done |
 | Protected page requires login | Validate unauthenticated users cannot access `/clusters/` | Done |
 | Logout authenticated user | Validate authenticated user can log out and loses protected access | Done |
-| Logout without login | Validate logout route remains protected | Done |
+| Logout without login | Validate logout route behavior for unauthenticated request | Done |
 
 The login tests keep the `remember` field enabled:
 
@@ -396,7 +427,7 @@ Out of scope for Cluster Management tests:
 - Storage inventory.
 - Kubernetes version collected from inventory.
 
-Those items will be covered in the Inventory test suite.
+Those items are covered in the Inventory test suite.
 
 Current coverage:
 
@@ -458,9 +489,249 @@ def _get_cluster_or_404(cluster_id: str) -> Cluster:
 
 This keeps the route responsible for HTTP behavior and the service responsible for data access.
 
-### SQLAlchemy 2 Style
+---
 
-Tests should avoid legacy query APIs.
+## Inventory Test Baseline
+
+Inventory tests validate the Inventory module separately from Cluster Management.
+
+Inventory tests are grouped by responsibility:
+
+```text
+tests/inventory/test_inventory_routes.py
+tests/inventory/test_inventory_pagination.py
+tests/inventory/test_inventory_services.py
+tests/inventory/test_inventory_save_functions.py
+tests/inventory/test_inventory_sync.py
+tests/inventory/test_inventory_sync_route.py
+```
+
+Current coverage:
+
+| Area | Test Case | Status |
+| --- | --- | --- |
+| Route | Inventory pages require login | Done |
+| Route | Authenticated user can open Inventory Overview | Done |
+| Route | Authenticated user can open Nodes page | Done |
+| Route | Authenticated user can open Namespaces page | Done |
+| Route | Authenticated user can open Workloads page | Done |
+| Route | Authenticated user can open Pods page | Done |
+| Route | Authenticated user can open Services page | Done |
+| Route | Authenticated user can open Ingresses page | Done |
+| Route | Authenticated user can open Storage page | Done |
+| Route | Paginated pages show Per Page filter | Done |
+| Route | Paginated pages show default pagination state | Done |
+| Pagination | Default `per_page=25` shows first page | Done |
+| Pagination | `page=2` opens second page | Done |
+| Pagination | Invalid `per_page` falls back to `25` | Done |
+| Pagination | Page number greater than total pages falls back to last page | Done |
+| Pagination | Page number less than one falls back to first page | Done |
+| Service | `convert_ki_to_gib()` conversion behavior | Done |
+| Service | `format_age()` empty, hour, and day behavior | Done |
+| Service | `get_node_inventory()` summary and filters | Done |
+| Service | `get_namespace_inventory()` summary and filters | Done |
+| Service | `get_workload_inventory()` summary and filters | Done |
+| Service | `get_pod_inventory()` summary and filters | Done |
+| Service | `get_service_inventory()` summary and filters | Done |
+| Service | `get_ingress_inventory()` summary and filters | Done |
+| Service | `get_storage_inventory_view()` summary and filters | Done |
+| Service | `get_inventory_overview()` total counts and health state | Done |
+| Save Function | `save_cluster_info()` creates and replaces `ClusterInventory` | Done |
+| Save Function | `save_nodes()` creates and replaces `NodeInventory` | Done |
+| Save Function | `save_namespaces()` creates and replaces `NamespaceInventory` | Done |
+| Save Function | `save_workloads()` creates `WorkloadInventory` | Done |
+| Save Function | `save_pods()` creates `PodInventory` | Done |
+| Save Function | `save_services()` creates `ServiceInventory` | Done |
+| Save Function | `save_ingresses()` creates `IngressInventory` | Done |
+| Save Function | `save_storage_inventory()` creates and replaces `StorageInventory` | Done |
+| Sync | `sync_inventory()` creates Kubernetes client and API clients | Done |
+| Sync | `sync_inventory()` calls all save functions | Done |
+| Sync | `sync_inventory()` commits when successful | Done |
+| Sync | `sync_inventory()` rolls back when a save function fails | Done |
+| Sync | `sync_inventory()` passes cluster kubeconfig to Kubernetes client | Done |
+| Sync Route | `POST /inventory/<cluster_id>/sync` requires login | Done |
+| Sync Route | Authenticated sync route calls `sync_inventory()` | Done |
+| Sync Route | Sync route returns 404 when cluster does not exist | Done |
+| Sync Route | Sync route propagates sync errors during testing | Done |
+
+### Inventory Route Test Notes
+
+Inventory route smoke tests focus on HTTP behavior and page rendering.
+
+Expected protected routes:
+
+```text
+/inventory/
+/inventory/nodes
+/inventory/namespaces
+/inventory/workloads
+/inventory/pods
+/inventory/services
+/inventory/ingresses
+/inventory/storage
+```
+
+Authenticated page tests should assert stable page identifiers such as:
+
+```text
+Inventory Overview
+Node Inventory
+Namespace Inventory
+Workload Inventory
+Pod Inventory
+Service Inventory
+Ingress Inventory
+Storage Inventory
+```
+
+### Inventory Pagination Test Notes
+
+Pagination tests should avoid strict multiline HTML assertions.
+
+Avoid:
+
+```python
+assert b'of\n                <span class="...">\n                    30\n                </span>' in response.data
+```
+
+Prefer stable assertions:
+
+```python
+assert b"Page 1 / 2" in response.data
+assert b"Showing" in response.data
+assert b"30" in response.data
+```
+
+Reason:
+
+- Tailwind templates often contain long class attributes.
+- Jinja output may include formatting whitespace.
+- Exact multiline whitespace assertions are fragile and fail even when the UI is correct.
+
+### Inventory Service Test Notes
+
+Inventory service tests seed database rows directly and call service functions.
+
+This validates the transformation from database models into dictionaries used by templates.
+
+Examples:
+
+```python
+data = get_node_inventory()
+
+assert data["total_nodes"] == 1
+assert data["total_cpu"] == 4
+assert data["nodes"][0]["runtime_display"] == "containerd"
+```
+
+### Inventory Save Function Test Notes
+
+Save function tests mock collector functions and validate database persistence.
+
+Examples of mocked collector functions:
+
+```python
+monkeypatch.setattr(
+    "app.inventory.service.get_nodes",
+    lambda api: [
+        fake_node,
+    ],
+)
+```
+
+The `save_*` functions do not commit individually. Tests should call:
+
+```python
+db.session.commit()
+```
+
+after invoking a save function.
+
+This matches the production flow where `sync_inventory()` performs one commit after all save functions complete.
+
+### Inventory Sync Test Notes
+
+`sync_inventory()` is tested as an orchestration function.
+
+The Kubernetes client must be mocked.
+
+The fake Kubernetes client must match the production interface:
+
+```python
+class FakeKubernetesClient:
+    def core_api(self):
+        ...
+
+    def apps_api(self):
+        ...
+
+    def networking_api(self):
+        ...
+
+    def storage_api(self):
+        ...
+```
+
+Do not use `get_core_api()`, `get_apps_api()`, `get_networking_api()`, or `get_storage_api()` unless the production client actually exposes those names.
+
+### Inventory Sync Route Security
+
+The sync route must be protected by login.
+
+Expected route implementation:
+
+```python
+@inventory_bp.post("/<string:cluster_id>/sync")
+@login_required
+def sync(cluster_id: str):
+    ...
+```
+
+This protects the HTMX sync endpoint the same way as normal inventory pages.
+
+---
+
+## Type Checking Rules for Tests
+
+Strict type checking should remain useful in tests.
+
+When a fake object is passed to a production function that expects Kubernetes client types, use `typing.cast()` in the test.
+
+Example:
+
+```python
+from types import SimpleNamespace
+from typing import cast
+
+from kubernetes.client import CoreV1Api
+
+
+def _core_api() -> CoreV1Api:
+    return cast(
+        CoreV1Api,
+        SimpleNamespace(),
+    )
+```
+
+Recommended mapping:
+
+| Function | Expected API Type |
+| --- | --- |
+| `save_nodes()` | `CoreV1Api` |
+| `save_namespaces()` | `CoreV1Api` |
+| `save_workloads()` | `AppsV1Api` |
+| `save_pods()` | `CoreV1Api` |
+| `save_services()` | `CoreV1Api` |
+| `save_ingresses()` | `NetworkingV1Api` |
+| `save_storage_inventory()` | `CoreV1Api` and `StorageV1Api` |
+
+Production service function type hints should not be weakened to `Any` just to satisfy tests.
+
+---
+
+## SQLAlchemy 2 Style
+
+Tests and application code should avoid legacy query APIs where possible.
 
 Avoid:
 
@@ -475,6 +746,15 @@ db.session.get(Cluster, cluster.id)
 ```
 
 This avoids SQLAlchemy `LegacyAPIWarning` and keeps the project aligned with SQLAlchemy 2 style.
+
+Known corrected pattern:
+
+```python
+cluster = db.session.get(
+    Cluster,
+    inventory.cluster_id,
+)
+```
 
 ---
 
@@ -517,10 +797,22 @@ Run the cluster tests:
 python -m pytest tests/cluster -v
 ```
 
-Run authentication and cluster tests:
+Run the inventory tests:
 
 ```powershell
-python -m pytest tests/auth tests/cluster -v
+python -m pytest tests/inventory -v
+```
+
+Run a specific inventory test file:
+
+```powershell
+python -m pytest tests/inventory/test_inventory_sync_route.py -v
+```
+
+Run authentication, cluster, and inventory tests:
+
+```powershell
+python -m pytest tests/auth tests/cluster tests/inventory -v
 ```
 
 Run all tests:
@@ -541,6 +833,12 @@ Run a specific test:
 python -m pytest tests/cluster/test_cluster_routes.py::test_test_connection_route_updates_cluster_status_and_returns_table_partial -v
 ```
 
+Run tests and fail on SQLAlchemy legacy warnings:
+
+```powershell
+python -m pytest tests/inventory/test_inventory_services.py -v -W error::sqlalchemy.exc.LegacyAPIWarning
+```
+
 ---
 
 ## Test Categories
@@ -558,6 +856,8 @@ Examples:
 - `parse_kubeconfig()`
 - `create_cluster()`
 - `update_cluster()`
+- `convert_ki_to_gib()`
+- `format_age()`
 - Prometheus query builder logic.
 - Analytics calculation logic.
 
@@ -580,6 +880,23 @@ Examples:
 - `/clusters/<id>/edit`
 - `/clusters/<id>/delete`
 - `/clusters/<id>/test`
+- `/inventory/`
+- `/inventory/nodes`
+- `/inventory/<id>/sync`
+
+### Database-Backed Service Tests
+
+Purpose:
+
+- Validate service logic that reads from or writes to the test database.
+- Keep database isolated through the testing fixture.
+- Avoid live external systems.
+
+Examples:
+
+- Inventory summary service.
+- Inventory save functions.
+- Cluster creation/update service.
 
 ### Integration Tests
 
@@ -624,7 +941,12 @@ markers =
 | Auth logout test | Ready |
 | Cluster service test | Ready |
 | Cluster route test | Ready |
-| Inventory test | Planned |
+| Inventory route test | Ready |
+| Inventory pagination test | Ready |
+| Inventory service test | Ready |
+| Inventory save function test | Ready |
+| Inventory sync test | Ready |
+| Inventory sync route test | Ready |
 | Prometheus test | Planned |
 | Analytics test | Planned |
 | Reports test | Planned |
@@ -646,7 +968,7 @@ Scope:
 - Failed login test with unknown username.
 - Protected route test.
 - Authenticated logout test.
-- Logout route protection test.
+- Logout route behavior test.
 
 ### Milestone 2: Cluster Management Tests
 
@@ -664,18 +986,25 @@ Scope:
 
 ### Milestone 3: Inventory Tests
 
-Status: Planned.
+Status: Complete for current Sprint 1/Sprint 2 baseline.
 
-Scope:
+Scope completed:
 
-- Inventory sync service.
-- Inventory summary.
-- ClusterInventory version and synced timestamp.
-- Node inventory.
-- Namespace inventory.
-- Workload inventory.
-- Pod inventory.
-- Services, ingresses, and storage inventory.
+- Inventory route smoke tests.
+- Inventory pagination tests.
+- Inventory service aggregation tests.
+- Inventory save function tests.
+- Inventory sync orchestration tests.
+- Inventory sync route tests.
+- Login protection for sync endpoint.
+
+Future Inventory test improvements:
+
+- Dedicated filter combination tests for every inventory page.
+- Empty-state rendering tests.
+- HTMX response tests for sync table partial details.
+- Integration test using a controlled fake Kubernetes data source.
+- Regression tests for template query parameters such as namespace, status, type, class, and per-page selections.
 
 ### Milestone 4: Prometheus Tests
 
@@ -688,6 +1017,32 @@ Scope:
 - Prometheus client range query.
 - Connection test behavior.
 - Mocked failure handling.
+- Authentication mode behavior for none/basic/bearer.
+- SSL verification option behavior.
+
+### Milestone 5: Analytics Tests
+
+Status: Planned.
+
+Scope:
+
+- Utilization service with mocked Prometheus responses.
+- Capacity analysis calculations.
+- Top consumer ranking.
+- Trends and forecasting helper logic.
+- Prometheus unreachable fallback behavior.
+
+### Milestone 6: Reports Tests
+
+Status: Planned.
+
+Scope:
+
+- Report service data preparation.
+- Generated report persistence.
+- PDF/report rendering path.
+- Report route protection.
+- Error handling for missing data.
 
 ---
 
@@ -703,5 +1058,6 @@ This document must be updated whenever:
 - CI test execution changes.
 - Database setup or migration strategy changes.
 - A test warning is intentionally ignored or deferred.
+- A route security behavior is changed because of test findings.
 
 The document should remain the single source of truth for KubeReport testing practices.

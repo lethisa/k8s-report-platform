@@ -1,5 +1,5 @@
 {% extends "layouts/dashboard.html" %}
-{% block title %}Namespace Inventory{% endblock %}
+{% block title %}Namespace Inventory{% endblock title %}
 {% block dashboard_content
     %}
     <div class="space-y-6">
@@ -238,7 +238,8 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     {% if pagination.has_prev %}
-                        <a href="{{ url_for('inventory.namespaces', cluster_id=selected_cluster_id, status=selected_status, search=search, page=pagination.prev_page, per_page=pagination.per_page) }}"
+                        {% set prev_url = url_for('inventory.namespaces', cluster_id=selected_cluster_id, status=selected_status, search=search, page=pagination.prev_page, per_page=pagination.per_page) %}
+                        <a href="{{ prev_url }}"
                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                             <i data-lucide="chevron-left" class="h-4 w-4"></i>
                             Previous
@@ -253,7 +254,8 @@
                         Page {{ pagination.page }} / {{ pagination.total_pages }}
                     </span>
                     {% if pagination.has_next %}
-                        <a href="{{ url_for('inventory.namespaces', cluster_id=selected_cluster_id, status=selected_status, search=search, page=pagination.next_page, per_page=pagination.per_page) }}"
+                        {% set next_url = url_for('inventory.namespaces', cluster_id=selected_cluster_id, status=selected_status, search=search, page=pagination.next_page, per_page=pagination.per_page) %}
+                        <a href="{{ next_url }}"
                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                             Next
                             <i data-lucide="chevron-right" class="h-4 w-4"></i>
@@ -268,4 +270,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock dashboard_content %}

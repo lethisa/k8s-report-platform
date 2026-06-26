@@ -19,10 +19,11 @@
     <body class="bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 dark:text-white">
         <div class="flex min-h-screen">
             <div class="flex min-w-0 flex-1 flex-col">
-                {% include 'partials/topbar.html' %}
+                {% include "partials/topbar.html" %}
                 <main class="flex-1 overflow-y-auto">
                     <div class="p-6 lg:p-8">
-                        {% block content %}{% endblock %}
+                        {% block content %}
+                        {% endblock content %}
                     </div>
                 </main>
             </div>
