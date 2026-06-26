@@ -1,2 +1,8 @@
-__pycache__
+# TESTING
+
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
 *.pyc
+__pycache__/

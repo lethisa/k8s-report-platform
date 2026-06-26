@@ -26,8 +26,11 @@ class Pod(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    cluster_id: Mapped[int] = mapped_column(
-        ForeignKey('clusters.id'),
+    cluster_id: Mapped[str] = mapped_column(
+        ForeignKey(
+            'clusters.id',
+            ondelete='CASCADE',
+        ),
         nullable=False,
         index=True,
     )

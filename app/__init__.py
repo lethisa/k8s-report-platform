@@ -16,22 +16,20 @@ from app.reports import reports_bp
 from app.settings import bp as settings_bp
 
 
-def create_app():
-
+def create_app(config_name: str | None = None):
     # Create Flask application instance
     app = Flask(__name__)
 
     # Context processor to inject global variables into templates
     @app.context_processor
     def inject_globals():
-
         return {
             'app_version': app.config['APP_VERSION'],
             'current_year': datetime.now().year,
         }
 
     # Load configuration based on APP_ENV environment variable
-    env = os.getenv('APP_ENV', 'development')
+    env = config_name or os.getenv('APP_ENV', 'development')
 
     if env not in CONFIG_MAP:
         raise ValueError(f'Invalid APP_ENV: {env}. Must be one of: {", ".join(CONFIG_MAP.keys())}')
