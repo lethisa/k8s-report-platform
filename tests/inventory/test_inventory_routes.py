@@ -164,3 +164,19 @@ def test_inventory_paginated_pages_show_default_pagination_state(
 
     assert response.status_code == 200
     assert expected_text in response.data
+
+
+def test_node_inventory_page_shows_status_filter_and_storage_column(
+    authenticated_client,
+):
+    response = authenticated_client.get(
+        '/inventory/nodes',
+    )
+
+    assert response.status_code == 200
+    assert b'Status' in response.data
+    assert b'Ephemeral Storage' in response.data
+    assert b'All Status' in response.data
+    assert b'Ready' in response.data
+    assert b'NotReady' in response.data
+    assert b'Unknown' in response.data

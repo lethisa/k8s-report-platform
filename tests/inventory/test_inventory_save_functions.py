@@ -84,6 +84,9 @@ def _fake_node(
     role_label: str | None = None,
     cpu: str = '4',
     memory: str = '8388608Ki',
+    ready_status: str = 'True',
+    ephemeral_storage: str = '104857600Ki',
+    ephemeral_storage_allocatable: str = '94371840Ki',
 ):
     labels = {}
 
@@ -104,7 +107,17 @@ def _fake_node(
             capacity={
                 'cpu': cpu,
                 'memory': memory,
+                'ephemeral-storage': ephemeral_storage,
             },
+            allocatable={
+                'ephemeral-storage': ephemeral_storage_allocatable,
+            },
+            conditions=[
+                SimpleNamespace(
+                    type='Ready',
+                    status=ready_status,
+                ),
+            ],
         ),
     )
 
@@ -192,12 +205,18 @@ def test_save_nodes_creates_node_inventory(
                 role_label=None,
                 cpu='4',
                 memory='8388608Ki',
+                ready_status='True',
+                ephemeral_storage='104857600Ki',
+                ephemeral_storage_allocatable='94371840Ki',
             ),
             _fake_node(
                 name='control-plane-01',
                 role_label='control-plane',
                 cpu='2',
                 memory='4194304Ki',
+                ready_status='False',
+                ephemeral_storage='52428800Ki',
+                ephemeral_storage_allocatable='47185920Ki',
             ),
         ],
     )
@@ -226,13 +245,51 @@ def test_save_nodes_creates_node_inventory(
     worker = next(node for node in nodes if node.node_name == 'worker-01')
 
     assert worker.role == 'worker'
+    assert worker.status == 'Ready'
     assert worker.cpu == 4
     assert worker.memory == '8388608Ki'
+    assert worker.ephemeral_storage == '104857600Ki'
+    assert worker.ephemeral_storage_allocatable == '94371840Ki'
     assert worker.os_image == 'Ubuntu 22.04'
     assert worker.container_runtime == 'containerd://1.7.0'
 
     assert control_plane.role == 'control-plane'
+    assert control_plane.status == 'NotReady'
     assert control_plane.cpu == 2
+    assert control_plane.ephemeral_storage == '52428800Ki'
+    assert control_plane.ephemeral_storage_allocatable == '47185920Ki'
+
+
+def test_save_nodes_handles_unknown_ready_condition(
+    cluster_factory,
+    monkeypatch,
+):
+    cluster = cluster_factory()
+
+    monkeypatch.setattr(
+        'app.inventory.service.get_nodes',
+        lambda api: [
+            _fake_node(
+                name='worker-unknown',
+                ready_status='Unknown',
+            ),
+        ],
+    )
+
+    save_nodes(
+        cluster,
+        api=_core_api(),
+    )
+
+    db.session.commit()
+
+    node = NodeInventory.query.filter_by(
+        cluster_id=cluster.id,
+        node_name='worker-unknown',
+    ).first()
+
+    assert node is not None
+    assert node.status == 'Unknown'
 
 
 def test_save_nodes_handles_invalid_cpu_as_none(
@@ -278,8 +335,11 @@ def test_save_nodes_replaces_existing_node_inventory(
     existing.cluster_id = cluster.id
     existing.node_name = 'old-node'
     existing.role = 'worker'
+    existing.status = 'Ready'
     existing.cpu = 1
     existing.memory = '1048576Ki'
+    existing.ephemeral_storage = '10485760Ki'
+    existing.ephemeral_storage_allocatable = '9437184Ki'
 
     db.session.add(existing)
     db.session.commit()

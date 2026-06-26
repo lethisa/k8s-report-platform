@@ -7,11 +7,13 @@ import pytest
 from app.extensions import db
 from app.inventory.service import (
     convert_ki_to_gib,
+    convert_storage_to_gib,
     format_age,
     get_ingress_inventory,
     get_inventory_overview,
     get_namespace_inventory,
     get_node_inventory,
+    get_node_ready_status,
     get_pod_inventory,
     get_service_inventory,
     get_storage_inventory_view,
@@ -43,19 +45,25 @@ def _seed_node(
     *,
     node_name: str = 'worker-01',
     role: str = 'worker',
+    status: str = 'Ready',
     cpu: int = 4,
     memory: str = '8388608Ki',
+    ephemeral_storage: str = '104857600Ki',
+    ephemeral_storage_allocatable: str = '94371840Ki',
 ) -> NodeInventory:
     node = NodeInventory()
 
     node.cluster_id = cluster_id
     node.node_name = node_name
     node.role = role
+    node.status = status
     node.os_image = 'Ubuntu 22.04'
     node.kernel_version = '6.1.0'
     node.container_runtime = 'containerd://1.7.0'
     node.cpu = cpu
     node.memory = memory
+    node.ephemeral_storage = ephemeral_storage
+    node.ephemeral_storage_allocatable = ephemeral_storage_allocatable
 
     db.session.add(node)
     db.session.commit()
@@ -234,6 +242,89 @@ def test_convert_ki_to_gib():
     assert convert_ki_to_gib('invalidKi') == 0
 
 
+def test_convert_storage_to_gib():
+    assert convert_storage_to_gib('1048576Ki') == 1.0
+    assert convert_storage_to_gib('1024Mi') == 1.0
+    assert convert_storage_to_gib('10Gi') == 10.0
+    assert convert_storage_to_gib('1Ti') == 1024.0
+    assert convert_storage_to_gib(str(1024**3)) == 1.0
+    assert convert_storage_to_gib(None) == 0
+    assert convert_storage_to_gib('') == 0
+    assert convert_storage_to_gib('invalid') == 0
+
+
+def test_get_node_ready_status_returns_ready():
+    node = type(
+        'Node',
+        (),
+        {
+            'status': type(
+                'Status',
+                (),
+                {
+                    'conditions': [
+                        type(
+                            'Condition',
+                            (),
+                            {
+                                'type': 'Ready',
+                                'status': 'True',
+                            },
+                        )(),
+                    ],
+                },
+            )(),
+        },
+    )()
+
+    assert get_node_ready_status(node) == 'Ready'
+
+
+def test_get_node_ready_status_returns_not_ready():
+    node = type(
+        'Node',
+        (),
+        {
+            'status': type(
+                'Status',
+                (),
+                {
+                    'conditions': [
+                        type(
+                            'Condition',
+                            (),
+                            {
+                                'type': 'Ready',
+                                'status': 'False',
+                            },
+                        )(),
+                    ],
+                },
+            )(),
+        },
+    )()
+
+    assert get_node_ready_status(node) == 'NotReady'
+
+
+def test_get_node_ready_status_returns_unknown_when_missing_condition():
+    node = type(
+        'Node',
+        (),
+        {
+            'status': type(
+                'Status',
+                (),
+                {
+                    'conditions': [],
+                },
+            )(),
+        },
+    )()
+
+    assert get_node_ready_status(node) == 'Unknown'
+
+
 def test_format_age_returns_dash_for_empty_value():
     assert format_age(None) == '-'
 
@@ -257,19 +348,28 @@ def test_get_node_inventory_returns_summary(cluster_factory):
         cluster.id,
         node_name='worker-01',
         role='worker',
+        status='Ready',
         cpu=4,
         memory='8388608Ki',
+        ephemeral_storage='104857600Ki',
+        ephemeral_storage_allocatable='94371840Ki',
     )
 
     data = get_node_inventory()
 
     assert data['total_nodes'] == 1
+    assert data['ready_nodes'] == 1
+    assert data['not_ready_nodes'] == 0
     assert data['total_cpu'] == 4
     assert data['total_memory'] == 8.0
+    assert data['total_ephemeral_storage'] == 100.0
     assert data['nodes'][0]['cluster_name'] == cluster.name
     assert data['nodes'][0]['node_name'] == 'worker-01'
+    assert data['nodes'][0]['status'] == 'Ready'
     assert data['nodes'][0]['role'] == 'worker'
     assert data['nodes'][0]['memory_display'] == '8.0 GiB'
+    assert data['nodes'][0]['ephemeral_storage_display'] == '100.0 GiB'
+    assert data['nodes'][0]['ephemeral_storage_allocatable_display'] == '90.0 GiB'
     assert data['nodes'][0]['runtime_display'] == 'containerd'
 
 
@@ -294,6 +394,32 @@ def test_get_node_inventory_can_filter_by_role(cluster_factory):
 
     assert data['total_nodes'] == 1
     assert data['nodes'][0]['node_name'] == 'worker-01'
+
+
+def test_get_node_inventory_can_filter_by_status(cluster_factory):
+    cluster = cluster_factory()
+
+    _seed_node(
+        cluster.id,
+        node_name='worker-ready',
+        status='Ready',
+    )
+
+    _seed_node(
+        cluster.id,
+        node_name='worker-not-ready',
+        status='NotReady',
+    )
+
+    data = get_node_inventory(
+        status='NotReady',
+    )
+
+    assert data['total_nodes'] == 1
+    assert data['ready_nodes'] == 0
+    assert data['not_ready_nodes'] == 1
+    assert data['nodes'][0]['node_name'] == 'worker-not-ready'
+    assert data['nodes'][0]['status'] == 'NotReady'
 
 
 def test_get_node_inventory_can_filter_by_search(cluster_factory):

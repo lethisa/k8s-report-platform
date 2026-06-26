@@ -23,11 +23,14 @@ def _create_nodes(cluster_id: str, total: int = 30) -> None:
         node.cluster_id = cluster_id
         node.node_name = f'node-{index:02d}'
         node.role = 'worker'
+        node.status = 'Ready'
         node.os_image = 'Ubuntu 22.04'
         node.kernel_version = '6.1.0'
         node.container_runtime = 'containerd://1.7.0'
         node.cpu = 4
         node.memory = '8388608Ki'
+        node.ephemeral_storage = '104857600Ki'
+        node.ephemeral_storage_allocatable = '94371840Ki'
 
         db.session.add(node)
 
@@ -425,3 +428,23 @@ def test_inventory_pagination_page_less_than_one_falls_back_to_first_page(
 
     assert response.status_code == 200
     assert b'Page 1 / 2' in response.data
+
+
+def test_node_pagination_preserves_status_filter(
+    authenticated_client,
+    cluster_factory,
+):
+    cluster = cluster_factory()
+
+    _create_nodes(
+        cluster.id,
+        30,
+    )
+
+    response = authenticated_client.get(
+        '/inventory/nodes?status=Ready&page=2',
+    )
+
+    assert response.status_code == 200
+    assert b'Page 2 / 2' in response.data
+    assert b'status=Ready' in response.data
