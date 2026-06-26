@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, abort, render_template, request
 from flask_login import login_required
 
 from app.cluster.service import get_cluster_summary
 from app.inventory.service import (
+    get_cluster_by_id,
     get_ingress_inventory,
+    get_inventory_clusters,
     get_inventory_overview,
     get_namespace_inventory,
     get_node_inventory,
@@ -13,7 +15,6 @@ from app.inventory.service import (
     get_workload_inventory,
     sync_inventory,
 )
-from app.models.cluster import Cluster
 
 inventory_bp = Blueprint(
     'inventory',
@@ -25,7 +26,12 @@ inventory_bp = Blueprint(
 @inventory_bp.post('/<string:cluster_id>/sync')
 @login_required
 def sync(cluster_id: str):
-    cluster = Cluster.query.get_or_404(cluster_id)
+    cluster = get_cluster_by_id(
+        cluster_id,
+    )
+
+    if cluster is None:
+        abort(404)
 
     sync_inventory(cluster)
 
@@ -141,9 +147,7 @@ def nodes():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/nodes.html',
@@ -250,9 +254,7 @@ def namespaces():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/namespaces.html',
@@ -364,9 +366,7 @@ def workloads():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/workloads.html',
@@ -479,9 +479,7 @@ def pods():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/pods.html',
@@ -594,9 +592,7 @@ def services():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/services.html',
@@ -709,9 +705,7 @@ def ingresses():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/ingresses.html',
@@ -824,9 +818,7 @@ def storage():
         'allowed_per_page': allowed_per_page,
     }
 
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
+    clusters = get_inventory_clusters()
 
     return render_template(
         'inventory/storage.html',

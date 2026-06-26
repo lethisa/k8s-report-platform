@@ -29,6 +29,21 @@ from app.models import (
 )
 
 
+def get_cluster_by_id(
+    cluster_id: str,
+) -> Cluster | None:
+    return db.session.get(
+        Cluster,
+        cluster_id,
+    )
+
+
+def get_inventory_clusters() -> list[Cluster]:
+    return Cluster.query.order_by(
+        Cluster.name,
+    ).all()
+
+
 def get_node_role(
     node: V1Node,
 ) -> str:
