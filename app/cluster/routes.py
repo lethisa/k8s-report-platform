@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask_login import login_required
 
 from app.cluster.forms import ClusterCreateForm, ClusterEditForm
@@ -6,6 +6,7 @@ from app.cluster.service import (
     build_cluster_context,
     create_cluster,
     delete_cluster,
+    get_cluster_by_id,
     run_test_cluster,
     update_cluster,
 )
@@ -21,6 +22,15 @@ def list_clusters():
         'cluster/list.html',
         **build_cluster_context(),
     )
+
+
+def _get_cluster_or_404(cluster_id: str) -> Cluster:
+    cluster = get_cluster_by_id(cluster_id)
+
+    if cluster is None:
+        abort(404)
+
+    return cluster
 
 
 @cluster_bp.route(
@@ -84,8 +94,7 @@ def add_cluster():
 )
 @login_required
 def test_cluster(cluster_id):
-    cluster = Cluster.query.get_or_404(cluster_id)
-
+    cluster = _get_cluster_or_404(cluster_id)
     result = run_test_cluster(cluster)
 
     if result['success']:
@@ -111,7 +120,7 @@ def test_cluster(cluster_id):
 )
 @login_required
 def edit_cluster(cluster_id):
-    cluster = Cluster.query.get_or_404(cluster_id)
+    cluster = _get_cluster_or_404(cluster_id)
 
     form = ClusterEditForm(obj=cluster)
 
@@ -156,7 +165,7 @@ def edit_cluster(cluster_id):
 )
 @login_required
 def delete_cluster_route(cluster_id):
-    cluster = Cluster.query.get_or_404(cluster_id)
+    cluster = _get_cluster_or_404(cluster_id)
 
     delete_cluster(cluster)
 

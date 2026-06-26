@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app import create_app
+from app.cluster.service import create_cluster
 from app.extensions import db
 from app.models import User
 
@@ -69,3 +70,42 @@ def authenticated_client(client, test_user):
     assert response.status_code == 200
 
     return client
+
+
+@pytest.fixture()
+def valid_kubeconfig() -> str:
+    return """
+apiVersion: v1
+kind: Config
+clusters:
+- name: docker-desktop
+  cluster:
+    server: https://127.0.0.1:6443
+contexts:
+- name: docker-desktop
+  context:
+    cluster: docker-desktop
+    user: docker-desktop
+current-context: docker-desktop
+users:
+- name: docker-desktop
+  user:
+    token: test-token
+"""
+
+
+@pytest.fixture()
+def cluster_factory(valid_kubeconfig):
+    def _create_cluster(
+        name: str = 'docker-desktop',
+        environment: str = 'dev',
+        description: str | None = 'Test Kubernetes cluster',
+    ):
+        return create_cluster(
+            name=name,
+            environment=environment,
+            description=description,
+            kubeconfig=valid_kubeconfig,
+        )
+
+    return _create_cluster

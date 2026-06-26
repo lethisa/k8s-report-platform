@@ -8,38 +8,38 @@ from app.kubernetes.service import test_cluster_connection
 from app.models import Cluster, ClusterInventory, ClusterStatus, NamespaceInventory
 
 
-def parse_kubeconfig(
-    kubeconfig_content: str,
-) -> dict:
+def parse_kubeconfig(kubeconfig: str) -> dict[str, str]:
     try:
-        data = yaml.safe_load(kubeconfig_content)
+        parsed_config = yaml.safe_load(kubeconfig)
+    except yaml.YAMLError as exc:
+        raise ValueError('Invalid kubeconfig format') from exc
 
-        clusters = data.get('clusters', [])
+    if not isinstance(parsed_config, dict):
+        raise ValueError('Invalid kubeconfig format')
 
-        if not clusters:
-            return {
-                'valid': False,
-                'server': None,
-            }
+    clusters = parsed_config.get('clusters')
 
-        server = clusters[0].get('cluster', {}).get('server')
+    if not isinstance(clusters, list) or len(clusters) == 0:
+        raise ValueError('Kubeconfig does not contain any cluster definition')
 
-        if not server:
-            return {
-                'valid': False,
-                'server': None,
-            }
+    first_cluster = clusters[0]
 
-        return {
-            'valid': True,
-            'server': server,
-        }
+    if not isinstance(first_cluster, dict):
+        raise ValueError('Invalid kubeconfig cluster definition')
 
-    except yaml.YAMLError:
-        return {
-            'valid': False,
-            'server': None,
-        }
+    cluster_data = first_cluster.get('cluster')
+
+    if not isinstance(cluster_data, dict):
+        raise ValueError('Invalid kubeconfig cluster data')
+
+    server = cluster_data.get('server')
+
+    if not isinstance(server, str) or not server.strip():
+        raise ValueError('Kubeconfig cluster server is missing')
+
+    return {
+        'server': server.strip(),
+    }
 
 
 def get_cluster_summary():
@@ -76,6 +76,10 @@ def get_cluster_summary():
     return clusters, inventory_summary
 
 
+def get_cluster_by_id(cluster_id: str) -> Cluster | None:
+    return db.session.get(Cluster, cluster_id)
+
+
 def create_cluster(
     name: str,
     environment: str,
@@ -88,9 +92,6 @@ def create_cluster(
         raise ValueError('Cluster name already exists')
 
     result = parse_kubeconfig(kubeconfig)
-
-    if not result['valid']:
-        raise ValueError('Invalid kubeconfig file')
 
     cluster = Cluster()
 
