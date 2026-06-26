@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from app import create_app
@@ -5,9 +7,17 @@ from app.extensions import db
 from app.models import User
 
 
+def _assert_test_database(database_uri: str) -> None:
+    if 'test' not in database_uri.lower():
+        raise RuntimeError('Refusing to run tests because database URI does not look like a test database.')
+
+
 @pytest.fixture()
 def app():
     app = create_app('testing')
+
+    database_uri = app.config['SQLALCHEMY_DATABASE_URI']
+    _assert_test_database(database_uri)
 
     with app.app_context():
         db.drop_all()
@@ -31,11 +41,11 @@ def runner(app):
 
 @pytest.fixture()
 def test_user(app):
-    user = User(
-        username='tester',
-        email='tester@example.com',
-        role='admin',
-    )
+    user = User()
+
+    user.username = 'tester'
+    user.email = 'tester@example.com'
+    user.role = 'admin'
     user.set_password('password')
 
     db.session.add(user)
