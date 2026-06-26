@@ -1,127 +1,189 @@
 {% extends "layouts/dashboard.html" %} {% block title %} Workload Inventory {% endblock %} {% block dashboard_content %}
 
-<div class="space-y-6 p-8">
-    <!-- Hero -->
+<div class="space-y-6">
+    <!-- Hero Section -->
 
     <div
         class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="flex items-center gap-4">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                <i data-lucide="boxes" class="h-5 w-5"></i>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="boxes" class="h-6 w-6"></i>
+                </div>
+
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Workload Inventory</h1>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Discover and explore Kubernetes workloads across connected clusters.
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <h1 class="text-3xl font-bold">Workload Inventory</h1>
-
-                <p class="mt-1 text-slate-500">Discover and explore Kubernetes workloads across connected clusters.</p>
-            </div>
+            <a
+                href="{{ url_for('inventory.overview') }}"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+                <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                Back to Overview
+            </a>
         </div>
     </div>
 
-    <!-- KPI -->
+    <!-- KPI Cards -->
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <!-- Total Workloads -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Total Workloads</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Total Workloads</span>
 
-                <i data-lucide="boxes" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="boxes" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.total_workloads }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.total_workloads }}
+            </div>
 
-            <p class="text-xs text-slate-500">Kubernetes workloads</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Kubernetes workloads</p>
         </div>
 
         <!-- Deployments -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">Deployments</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Deployments</span>
 
-                <i data-lucide="rocket" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-300"
+                >
+                    <i data-lucide="rocket" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.deployments }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.deployments }}
+            </div>
 
-            <p class="text-xs text-slate-500">Deployment workloads</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Deployment workloads</p>
         </div>
 
         <!-- StatefulSets -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">StatefulSets</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">StatefulSets</span>
 
-                <i data-lucide="database" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300"
+                >
+                    <i data-lucide="database" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.statefulsets }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.statefulsets }}
+            </div>
 
-            <p class="text-xs text-slate-500">Stateful workloads</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Stateful workloads</p>
         </div>
 
         <!-- DaemonSets -->
 
         <div
-            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            class="flex min-h-[120px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:bg-slate-800/80"
         >
             <div class="flex items-center justify-between">
-                <span class="text-sm text-slate-500">DaemonSets</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">DaemonSets</span>
 
-                <i data-lucide="network" class="h-5 w-5 text-slate-400"></i>
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300"
+                >
+                    <i data-lucide="network" class="h-5 w-5"></i>
+                </div>
             </div>
 
-            <div class="text-4xl font-bold text-blue-600">{{ inventory.daemonsets }}</div>
+            <div class="mt-4 text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {{ inventory.daemonsets }}
+            </div>
 
-            <p class="text-xs text-slate-500">Node-wide workloads</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Node-wide workloads</p>
         </div>
     </div>
 
-    <!-- Table -->
+    <!-- Workload Inventory Table Card -->
 
     <div
         class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
-        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Workload Inventory</h2>
+        <!-- Card Header -->
 
-            <p class="mt-1 text-sm text-slate-500">Kubernetes workloads collected from connected clusters.</p>
+        <div class="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                >
+                    <i data-lucide="layout-grid" class="h-5 w-5"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Workload Inventory</h2>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Kubernetes workloads collected from connected clusters.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <form method="GET" class="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_2fr_auto]">
-                <div>
-                    <label class="mb-2 block text-xs font-medium text-slate-500">Cluster</label>
+        <!-- Filter Bar -->
 
-                    <select name="cluster_id" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+        <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+            <form method="GET" class="grid gap-4 2xl:grid-cols-[1fr_1fr_1fr_1.5fr_auto_auto]">
+                <input type="hidden" name="page" value="1" />
+
+                <!-- Cluster -->
+
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Cluster</label>
+
+                    <select
+                        name="cluster_id"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         <option value="">All Clusters</option>
 
                         {% for cluster in clusters %} {% if selected_cluster_id == cluster.id %}
-
                         <option value="{{ cluster.id }}" selected>{{ cluster.name }}</option>
-
                         {% else %}
-
                         <option value="{{ cluster.id }}">{{ cluster.name }}</option>
-
                         {% endif %} {% endfor %}
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-xs font-medium text-slate-500">Type</label>
+                <!-- Type -->
 
-                    <select name="type" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Type</label>
+
+                    <select
+                        name="type"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         {% if not selected_type %}
                         <option value="" selected>All Types</option>
                         {% else %}
@@ -142,163 +204,292 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-xs font-medium text-slate-500">Status</label>
+                <!-- Status -->
 
-                    <select name="status" class="w-full rounded-xl border border-slate-300 px-3 py-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+
+                    <select
+                        name="status"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
                         {% if not selected_status %}
                         <option value="" selected>All Status</option>
                         {% else %}
                         <option value="">All Status</option>
                         {% endif %} {% for status_name in inventory.status_counts.keys() %} {% if selected_status ==
                         status_name %}
-
                         <option value="{{ status_name }}" selected>{{ status_name }}</option>
-
                         {% else %}
-
                         <option value="{{ status_name }}">{{ status_name }}</option>
-
                         {% endif %} {% endfor %}
                     </select>
                 </div>
 
-                <div>
-                    <label class="mb-2 block text-xs font-medium text-slate-500">Search</label>
+                <!-- Search -->
 
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ search }}"
-                        placeholder="Search workload..."
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2"
-                    />
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Search Workload
+                    </label>
+
+                    <div class="relative">
+                        <i
+                            data-lucide="search"
+                            class="absolute top-3 left-3 h-4 w-4 text-slate-400 dark:text-slate-500"
+                        ></i>
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Search workload..."
+                            class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                        />
+                    </div>
                 </div>
 
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-white">Apply</button>
+                <!-- Per Page -->
 
-                    <a href="{{ url_for('inventory.workloads') }}" class="rounded-xl border border-slate-300 px-4 py-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Per Page</label>
+
+                    <select
+                        name="per_page"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10"
+                    >
+                        {% for option in pagination.allowed_per_page %} {% if pagination.per_page == option %}
+                        <option value="{{ option }}" selected>{{ option }}</option>
+                        {% else %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endif %} {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Actions -->
+
+                <div class="flex items-end gap-2">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md focus:ring-4 focus:ring-blue-500/20 focus:outline-none dark:hover:bg-blue-500"
+                    >
+                        <i data-lucide="filter" class="h-4 w-4"></i>
+                        Apply
+                    </button>
+
+                    <a
+                        href="{{ url_for('inventory.workloads') }}"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    >
+                        <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                         Reset
                     </a>
                 </div>
             </form>
         </div>
 
+        <!-- Table -->
+
         <div class="overflow-x-auto">
             <table class="min-w-full text-slate-900 dark:text-slate-100">
                 <thead>
                     <tr
-                        class="bg-slate-50 text-center text-xs tracking-wide text-slate-500 uppercase dark:bg-slate-900 dark:text-slate-300"
+                        class="border-b border-slate-200 bg-slate-50 text-center text-xs tracking-wide text-slate-600 uppercase dark:border-slate-700 dark:bg-slate-700/40 dark:text-slate-300"
                     >
-                        <th class="px-6 py-3">Cluster</th>
-                        <th class="px-6 py-3">Namespace</th>
-                        <th class="px-6 py-3">Name</th>
-                        <th class="px-6 py-3">Type</th>
-                        <th class="px-6 py-3">Ready</th>
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Age</th>
+                        <th class="px-6 py-4 text-left">Cluster</th>
+                        <th class="px-6 py-4 text-left">Namespace</th>
+                        <th class="px-6 py-4 text-left">Name</th>
+                        <th class="px-6 py-4 text-center">Type</th>
+                        <th class="px-6 py-4 text-center">Ready</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-center">Age</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for workload in inventory.workloads %}
 
-                    <tr class="border-t border-slate-100 text-center dark:border-slate-700">
-                        <td class="px-6 py-4">{{ workload.cluster_name }}</td>
-
-                        <td class="px-6 py-4">{{ workload.namespace }}</td>
-
-                        <td class="px-6 py-4 font-medium">{{ workload.name }}</td>
+                    <tr
+                        class="border-t border-slate-200 text-sm transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/30"
+                    >
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900 dark:text-white">{{ workload.cluster_name }}</div>
+                        </td>
 
                         <td class="px-6 py-4">
-                            {% if workload.type == 'Deployment' %}
+                            <div class="font-medium text-slate-700 dark:text-slate-300">{{ workload.namespace }}</div>
+                        </td>
 
+                        <td class="max-w-[320px] px-6 py-4">
+                            <div
+                                class="truncate font-medium text-slate-800 dark:text-slate-100"
+                                title="{{ workload.name }}"
+                            >
+                                {{ workload.name }}
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 text-center">
+                            {% if workload.type == 'Deployment' %}
                             <span
-                                class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                                class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
                             >
                                 Deployment
                             </span>
-
                             {% elif workload.type == 'StatefulSet' %}
-
                             <span
-                                class="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700"
+                                class="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
                             >
                                 StatefulSet
                             </span>
-
                             {% elif workload.type == 'DaemonSet' %}
-
                             <span
-                                class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700"
+                                class="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-500/10 dark:text-orange-300"
                             >
                                 DaemonSet
                             </span>
-
                             {% else %}
-
                             <span
-                                class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+                                class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300"
                             >
                                 {{ workload.type }}
                             </span>
-
                             {% endif %}
                         </td>
 
-                        <td class="px-6 py-4">{{ workload.ready }}</td>
+                        <td class="px-6 py-4 text-center text-slate-600 dark:text-slate-300">{{ workload.ready }}</td>
 
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 text-center">
                             {% if workload.status == 'Running' %}
-
                             <span
-                                class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                                class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
                             >
                                 Running
                             </span>
-
                             {% elif workload.status == 'Progressing' %}
-
                             <span
-                                class="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700"
+                                class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
                             >
                                 Progressing
                             </span>
-
                             {% elif workload.status == 'Failed' %}
-
                             <span
-                                class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300"
                             >
                                 Failed
                             </span>
-
                             {% else %}
-
                             <span
-                                class="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700"
+                                class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                             >
                                 {{ workload.status }}
                             </span>
-
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4">{{ workload.age }}</td>
+
+                        <td class="px-6 py-4 text-center text-slate-500 dark:text-slate-400">{{ workload.age }}</td>
                     </tr>
 
                     {% else %}
 
                     <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-400">No inventory data found.</td>
+                        <td colspan="7" class="py-16 text-center text-slate-400 dark:text-slate-500">
+                            <div class="flex flex-col items-center gap-3">
+                                <div
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                                >
+                                    <i data-lucide="boxes" class="h-6 w-6"></i>
+                                </div>
+
+                                <div>
+                                    <div class="font-medium text-slate-700 dark:text-slate-300">
+                                        No workload inventory found
+                                    </div>
+
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">
+                                        Sync cluster inventory to collect Kubernetes workload data.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
 
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
 
-            <div class="border-t border-slate-200 px-6 py-4 text-sm text-slate-500 dark:border-slate-700">
-                Showing {{ inventory.workloads|length }} workload(s)
+        <!-- Pagination Footer -->
+
+        <div
+            class="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400"
+        >
+            <div>
+                Showing
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.start_item }}</span>
+                -
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.end_item }}</span>
+                of
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ pagination.total_items }}</span>
+                workload(s)
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                {% if pagination.has_prev %}
+                <a
+                    href="{{ url_for(
+                            'inventory.workloads',
+                            cluster_id=selected_cluster_id,
+                            type=selected_type,
+                            status=selected_status,
+                            search=search,
+                            page=pagination.prev_page,
+                            per_page=pagination.per_page
+                        ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    Previous
+                </span>
+                {% endif %}
+
+                <span
+                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                    Page {{ pagination.page }} / {{ pagination.total_pages }}
+                </span>
+
+                {% if pagination.has_next %}
+                <a
+                    href="{{ url_for(
+                            'inventory.workloads',
+                            cluster_id=selected_cluster_id,
+                            type=selected_type,
+                            status=selected_status,
+                            search=search,
+                            page=pagination.next_page,
+                            per_page=pagination.per_page
+                        ) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </a>
+                {% else %}
+                <span
+                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600"
+                >
+                    Next
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
