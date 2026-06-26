@@ -23,6 +23,7 @@ inventory_bp = Blueprint(
 
 
 @inventory_bp.post('/<string:cluster_id>/sync')
+@login_required
 def sync(cluster_id: str):
     cluster = Cluster.query.get_or_404(cluster_id)
 
