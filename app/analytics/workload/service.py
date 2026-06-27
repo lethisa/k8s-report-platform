@@ -9,7 +9,6 @@ from typing import Any
 from app.analytics.capacity import queries
 from app.analytics.capacity.service import (
     ALLOWED_PER_PAGE_VALUES,
-    CapacityService,
     get_empty_capacity_payload,
     get_per_page_arg,
     get_positive_int_arg,
@@ -183,9 +182,6 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         utilization_service: UtilizationService,
     ) -> None:
         self.utilization_service = utilization_service
-        self.capacity_service = CapacityService(
-            utilization_service,
-        )
 
     def get_all_namespace_options(
         self,
@@ -1556,10 +1552,145 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         tenant_quota_rows: list[dict[str, Any]],
         workload_mapping_rows: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        return self.capacity_service.get_governance_findings(
-            tenant_quota_rows=tenant_quota_rows,
-            workload_mapping_rows=workload_mapping_rows,
+        no_quota_count = len(
+            [
+                row
+                for row in tenant_quota_rows
+                if row.get(
+                    'quota_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                == 'Missing'
+            ]
         )
+
+        missing_request_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if row.get(
+                    'resource_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                in [
+                    'Missing Request',
+                    'BestEffort',
+                ]
+            ]
+        )
+
+        missing_limit_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if row.get(
+                    'resource_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                in [
+                    'Missing Limit',
+                    'BestEffort',
+                ]
+            ]
+        )
+
+        best_effort_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if row.get(
+                    'qos',
+                    {},
+                ).get(
+                    'label',
+                )
+                == 'BestEffort'
+            ]
+        )
+
+        over_requested_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if 'reduce'
+                in str(
+                    row.get(
+                        'recommendation',
+                        '',
+                    )
+                ).lower()
+            ]
+        )
+
+        findings: list[dict[str, Any]] = []
+
+        if no_quota_count:
+            findings.append(
+                {
+                    'label': f'{no_quota_count} namespaces without ResourceQuota',
+                    'severity': 'warning',
+                    'icon': 'triangle-alert',
+                    'filter': 'missing-quota',
+                }
+            )
+
+        if missing_request_count:
+            findings.append(
+                {
+                    'label': f'{missing_request_count} workloads missing requests',
+                    'severity': 'warning',
+                    'icon': 'triangle-alert',
+                    'filter': 'missing-request',
+                }
+            )
+
+        if missing_limit_count:
+            findings.append(
+                {
+                    'label': f'{missing_limit_count} workloads missing limits',
+                    'severity': 'warning',
+                    'icon': 'triangle-alert',
+                    'filter': 'missing-limit',
+                }
+            )
+
+        if best_effort_count:
+            findings.append(
+                {
+                    'label': f'{best_effort_count} BestEffort workloads',
+                    'severity': 'warning',
+                    'icon': 'info',
+                    'filter': 'best-effort',
+                }
+            )
+
+        if over_requested_count:
+            findings.append(
+                {
+                    'label': f'{over_requested_count} workloads over-requested',
+                    'severity': 'critical',
+                    'icon': 'circle-alert',
+                    'filter': 'over-requested',
+                }
+            )
+
+        if not findings:
+            findings.append(
+                {
+                    'label': 'No critical governance findings detected',
+                    'severity': 'healthy',
+                    'icon': 'check-circle',
+                    'filter': '',
+                }
+            )
+
+        return findings
 
     def get_recommendation_cards(
         self,
@@ -1567,11 +1698,133 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         tenant_quota_rows: list[dict[str, Any]],
         workload_mapping_rows: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        return self.capacity_service.get_recommendation_cards(
-            capacity_summary=capacity_summary,
-            tenant_quota_rows=tenant_quota_rows,
-            workload_mapping_rows=workload_mapping_rows,
+        low_headroom = [
+            resource
+            for resource, item in capacity_summary.items()
+            if resource
+            in [
+                'cpu',
+                'memory',
+                'pods',
+            ]
+            and self.to_float(
+                item.get(
+                    'headroom',
+                    0,
+                )
+            )
+            < 30
+        ]
+
+        no_quota_count = len(
+            [
+                row
+                for row in tenant_quota_rows
+                if row.get(
+                    'quota_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                == 'Missing'
+            ]
         )
+
+        reduce_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if 'reduce'
+                in str(
+                    row.get(
+                        'recommendation',
+                        '',
+                    )
+                ).lower()
+            ]
+        )
+
+        missing_request_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if row.get(
+                    'resource_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                in [
+                    'Missing Request',
+                    'BestEffort',
+                ]
+            ]
+        )
+
+        missing_limit_count = len(
+            [
+                row
+                for row in workload_mapping_rows
+                if row.get(
+                    'resource_status',
+                    {},
+                ).get(
+                    'label',
+                )
+                in [
+                    'Missing Limit',
+                    'BestEffort',
+                ]
+            ]
+        )
+
+        capacity_description = (
+            'Monitor headroom trend and plan capacity expansion ' 'before sustained usage reaches warning threshold.'
+        )
+
+        if low_headroom:
+            capacity_description = (
+                'Low headroom detected on '
+                f"{', '.join(low_headroom)}. "
+                'Prioritize capacity planning for these resources.'
+            )
+
+        return [
+            {
+                'title': 'Right-size Resource Requests',
+                'description': (
+                    f'{reduce_count} workloads have potential over-requested '
+                    'resources. Review request values against actual usage.'
+                ),
+                'icon': 'activity',
+                'icon_class': 'bg-emerald-100 text-emerald-600',
+            },
+            {
+                'title': 'Strengthen Governance',
+                'description': (
+                    f'{missing_request_count} workloads missing requests, '
+                    f'{missing_limit_count} workloads missing limits, and '
+                    f'{no_quota_count} namespaces without ResourceQuota need attention.'
+                ),
+                'icon': 'shield-alert',
+                'icon_class': 'bg-orange-100 text-orange-600',
+            },
+            {
+                'title': 'Optimize Limit Quota Allocation',
+                'description': (
+                    'Review tenant ResourceQuota allocation and compare '
+                    'configured workload limits against actual runtime usage.'
+                ),
+                'icon': 'sliders-horizontal',
+                'icon_class': 'bg-blue-100 text-blue-600',
+            },
+            {
+                'title': 'Monitor Capacity Growth',
+                'description': capacity_description,
+                'icon': 'trending-up',
+                'icon_class': 'bg-violet-100 text-violet-600',
+            },
+        ]
 
 
 def get_workload_analysis_context(
