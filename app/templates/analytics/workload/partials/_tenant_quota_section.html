@@ -1,4 +1,5 @@
 <section id="tenant-quota-analysis"
+         x-data="{ openQuotaDetail: null }"
          class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
     <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -15,11 +16,22 @@
             </div>
 
             <form method="GET"
-                  action="{{ url_for('analytics.workload') }}"
-                  class="grid gap-2 md:grid-cols-2 xl:grid-cols-[220px_170px_150px_80px]">
-                <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
+                  action="{{ url_for('analytics.workload_tenant_quota') }}"
+                  hx-get="{{ url_for('analytics.workload_tenant_quota') }}"
+                  hx-target="#tenant-quota-analysis"
+                  hx-swap="outerHTML"
+                  hx-indicator="#tenant-quota-loading"
+                  hx-trigger="submit, change delay:250ms, keyup changed delay:500ms"
+                  class="grid gap-2 md:grid-cols-2 xl:grid-cols-[220px_160px_140px]">
+                <input type="hidden"
+                       name="cluster_id"
+                       value="{{ cluster.id if cluster else '' }}" />
                 <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
                 <input type="hidden" name="time_range" value="{{ selected_time_range }}" />
+                <input type="hidden" name="quota_page" value="1" />
+                <input type="hidden"
+                       name="quota_per_page"
+                       value="{{ tenant_quota_summary.pagination.per_page }}" />
 
                 <input type="text"
                        name="tenant_search"
@@ -48,12 +60,15 @@
                         </option>
                     {% endfor %}
                 </select>
-
-                <button type="submit"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
-                    RUN
-                </button>
             </form>
+        </div>
+
+        <div id="tenant-quota-loading"
+             class="htmx-indicator mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+            <div class="flex items-center gap-2">
+                <i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i>
+                <span>Loading tenant quota data...</span>
+            </div>
         </div>
     </div>
 
@@ -92,19 +107,27 @@
                         <th class="px-4 py-3">Missing Keys</th>
                         <th class="px-4 py-3">Risk</th>
                         <th class="px-4 py-3">Recommendation</th>
+                        <th class="px-4 py-3 text-right">Detail</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     {% for row in tenant_quota_summary.rows %}
                         <tr class="text-slate-700 dark:text-slate-200">
                             <td class="px-4 py-3 font-semibold">
-                                {{ row.namespace }}
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                                        <i data-lucide="folder-tree" class="h-4 w-4"></i>
+                                    </div>
+                                    <span>{{ row.namespace }}</span>
+                                </div>
                             </td>
+
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.quota_status.class }}">
                                     {{ row.quota_status.label }}
                                 </span>
                             </td>
+
                             <td class="px-4 py-3">
                                 <div class="flex min-w-40 items-center gap-3">
                                     <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -116,6 +139,7 @@
                                     </span>
                                 </div>
                             </td>
+
                             <td class="px-4 py-3">
                                 <div class="flex min-w-40 items-center gap-3">
                                     <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -127,6 +151,7 @@
                                     </span>
                                 </div>
                             </td>
+
                             <td class="px-4 py-3">
                                 {% if row.missing_key_labels %}
                                     <div class="flex flex-wrap gap-1">
@@ -140,18 +165,123 @@
                                     <span class="text-slate-400">-</span>
                                 {% endif %}
                             </td>
+
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
                                     {{ row.risk.label }}
                                 </span>
                             </td>
+
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
                                 {{ row.recommendation }}
+                            </td>
+
+                            <td class="px-4 py-3 text-right">
+                                <button type="button"
+                                        class="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                        @click="openQuotaDetail = openQuotaDetail === '{{ row.namespace }}' ? null : '{{ row.namespace }}'">
+                                    <i data-lucide="chevrons-up-down" class="h-3.5 w-3.5"></i>
+                                    View More
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr x-show="openQuotaDetail === '{{ row.namespace }}'"
+                            x-cloak
+                            class="bg-slate-50/80 dark:bg-slate-950/40">
+                            <td colspan="8" class="px-4 py-4">
+                                <div class="grid gap-4 lg:grid-cols-3">
+                                    <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                                        <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                            <i data-lucide="cpu" class="h-4 w-4 text-blue-500"></i>
+                                            CPU Quota Detail
+                                        </div>
+
+                                        <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                            <div class="flex justify-between gap-3">
+                                                <span>Quota Limit</span>
+                                                <span class="font-semibold">{{ row.cpu_quota }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Requested</span>
+                                                <span class="font-semibold">{{ row.cpu_requested }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Limited</span>
+                                                <span class="font-semibold">{{ row.cpu_limited }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Actual Usage</span>
+                                                <span class="font-semibold">{{ row.cpu_actual }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                                        <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                            <i data-lucide="memory-stick" class="h-4 w-4 text-emerald-500"></i>
+                                            Memory Quota Detail
+                                        </div>
+
+                                        <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                            <div class="flex justify-between gap-3">
+                                                <span>Quota Limit</span>
+                                                <span class="font-semibold">{{ row.memory_quota }} GiB</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Requested</span>
+                                                <span class="font-semibold">{{ row.memory_requested }} GiB</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Limited</span>
+                                                <span class="font-semibold">{{ row.memory_limited }} GiB</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Actual Usage</span>
+                                                <span class="font-semibold">{{ row.memory_actual }} GiB</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                                        <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                            <i data-lucide="box" class="h-4 w-4 text-violet-500"></i>
+                                            Pods & Missing Keys
+                                        </div>
+
+                                        <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                            <div class="flex justify-between gap-3">
+                                                <span>Actual Pods</span>
+                                                <span class="font-semibold">{{ row.workloads }}</span>
+                                            </div>
+
+                                            {% if row.missing_key_labels %}
+                                                <div class="pt-2">
+                                                    <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                        Missing Keys
+                                                    </div>
+                                                    <div class="flex flex-wrap gap-1">
+                                                        {% for item in row.missing_key_labels %}
+                                                            <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                                                {{ item }}
+                                                            </span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                                    ResourceQuota keys are complete.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                            <td colspan="8"
+                                class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                                 No tenant quota data available.
                             </td>
                         </tr>
@@ -161,52 +291,91 @@
         </div>
 
         {% set quota_pagination = tenant_quota_summary.pagination %}
-        {% if quota_pagination.total_pages and quota_pagination.total_pages > 1 %}
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div class="text-sm text-slate-500 dark:text-slate-400">
                     Showing {{ quota_pagination.start_item }}-{{ quota_pagination.end_item }}
                     of {{ quota_pagination.total_items }} namespaces
                 </div>
 
-                <div class="flex items-center gap-2">
-                    {% set quota_prev_url = url_for(
-                        'analytics.workload',
-                        cluster_id=cluster.id if cluster else '',
-                        namespace=selected_namespace,
-                        time_range=selected_time_range,
-                        tenant_search=selected_tenant_search,
-                        tenant_quota_status=selected_tenant_quota_status,
-                        tenant_risk=selected_tenant_risk,
-                        quota_page=quota_pagination.previous_page,
-                        quota_per_page=quota_pagination.per_page
-                    ) %}
-                    {% set quota_next_url = url_for(
-                        'analytics.workload',
-                        cluster_id=cluster.id if cluster else '',
-                        namespace=selected_namespace,
-                        time_range=selected_time_range,
-                        tenant_search=selected_tenant_search,
-                        tenant_quota_status=selected_tenant_quota_status,
-                        tenant_risk=selected_tenant_risk,
-                        quota_page=quota_pagination.next_page,
-                        quota_per_page=quota_pagination.per_page
-                    ) %}
+                <form method="GET"
+                      action="{{ url_for('analytics.workload_tenant_quota') }}"
+                      hx-get="{{ url_for('analytics.workload_tenant_quota') }}"
+                      hx-target="#tenant-quota-analysis"
+                      hx-swap="outerHTML"
+                      hx-indicator="#tenant-quota-loading"
+                      hx-trigger="change"
+                      class="flex items-center gap-2">
+                    <input type="hidden"
+                           name="cluster_id"
+                           value="{{ cluster.id if cluster else '' }}" />
+                    <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
+                    <input type="hidden" name="time_range" value="{{ selected_time_range }}" />
+                    <input type="hidden" name="tenant_search" value="{{ selected_tenant_search }}" />
+                    <input type="hidden"
+                           name="tenant_quota_status"
+                           value="{{ selected_tenant_quota_status }}" />
+                    <input type="hidden" name="tenant_risk" value="{{ selected_tenant_risk }}" />
+                    <input type="hidden" name="quota_page" value="1" />
 
-                    <a href="{{ quota_prev_url }}"
-                       class="{% if quota_pagination.has_previous %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
-                        Previous
-                    </a>
-
-                    <span class="text-sm text-slate-500 dark:text-slate-400">
-                        Page {{ quota_pagination.page }} of {{ quota_pagination.total_pages }}
-                    </span>
-
-                    <a href="{{ quota_next_url }}"
-                       class="{% if quota_pagination.has_next %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
-                        Next
-                    </a>
-                </div>
+                    <select name="quota_per_page"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                        {% for value in allowed_per_page_values %}
+                            <option value="{{ value }}"
+                                    {% if quota_pagination.per_page == value %}selected{% endif %}>
+                                {{ value }} / page
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
-        {% endif %}
+
+            <div class="flex items-center gap-2">
+                {% set quota_prev_url = url_for(
+                    'analytics.workload_tenant_quota',
+                    cluster_id=cluster.id if cluster else '',
+                    namespace=selected_namespace,
+                    time_range=selected_time_range,
+                    tenant_search=selected_tenant_search,
+                    tenant_quota_status=selected_tenant_quota_status,
+                    tenant_risk=selected_tenant_risk,
+                    quota_page=quota_pagination.previous_page,
+                    quota_per_page=quota_pagination.per_page
+                ) %}
+                {% set quota_next_url = url_for(
+                    'analytics.workload_tenant_quota',
+                    cluster_id=cluster.id if cluster else '',
+                    namespace=selected_namespace,
+                    time_range=selected_time_range,
+                    tenant_search=selected_tenant_search,
+                    tenant_quota_status=selected_tenant_quota_status,
+                    tenant_risk=selected_tenant_risk,
+                    quota_page=quota_pagination.next_page,
+                    quota_per_page=quota_pagination.per_page
+                ) %}
+
+                <a href="{{ quota_prev_url }}"
+                   hx-get="{{ quota_prev_url }}"
+                   hx-target="#tenant-quota-analysis"
+                   hx-swap="outerHTML"
+                   hx-indicator="#tenant-quota-loading"
+                   class="{% if quota_pagination.has_previous %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                    Previous
+                </a>
+
+                <span class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                    Page {{ quota_pagination.page }} of {{ quota_pagination.total_pages }}
+                </span>
+
+                <a href="{{ quota_next_url }}"
+                   hx-get="{{ quota_next_url }}"
+                   hx-target="#tenant-quota-analysis"
+                   hx-swap="outerHTML"
+                   hx-indicator="#tenant-quota-loading"
+                   class="{% if quota_pagination.has_next %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                    Next
+                </a>
+            </div>
+        </div>
     </div>
 </section>
