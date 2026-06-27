@@ -189,7 +189,41 @@ class WorkloadAnalysisService(AnalyticsBaseService):
     def get_all_namespace_options(
         self,
     ) -> list[str]:
-        return self.capacity_service.get_all_namespace_options()
+        active_namespaces = self.get_prometheus_vector_map(
+            query=queries.NAMESPACE_ACTIVE_QUERY,
+            label='namespace',
+        )
+
+        quota_hard = self.get_resource_quota_map(
+            query=queries.TENANT_QUOTA_HARD_QUERY,
+        )
+
+        quota_used = self.get_resource_quota_map(
+            query=queries.TENANT_QUOTA_USED_QUERY,
+        )
+
+        runtime_namespaces = self.get_prometheus_vector_map(
+            query=queries.TENANT_POD_ACTUAL_QUERY,
+            label='namespace',
+        )
+
+        namespaces = set(
+            active_namespaces.keys(),
+        )
+
+        namespaces.update(
+            quota_hard.keys(),
+        )
+
+        namespaces.update(
+            quota_used.keys(),
+        )
+
+        namespaces.update(
+            runtime_namespaces.keys(),
+        )
+
+        return sorted(namespace for namespace in namespaces if namespace)
 
     def get_tenant_quota_summary(
         self,
