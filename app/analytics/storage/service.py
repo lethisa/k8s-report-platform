@@ -15,6 +15,7 @@ from app.analytics.common.context import build_analysis_utilization_context
 from app.analytics.common.params import (
     ALLOWED_PER_PAGE_VALUES,
     ALLOWED_TIME_RANGE_VALUES,
+    get_allowed_time_ranges,
     get_per_page_arg,
     get_positive_int_arg,
     get_query_value,
@@ -22,27 +23,6 @@ from app.analytics.common.params import (
 )
 from app.analytics.common.payloads import get_empty_storage_payload
 from app.analytics.utilization.service import UtilizationService
-
-
-def get_allowed_time_ranges() -> list[dict[str, str]]:
-    return [
-        {
-            'label': 'Last 1 Hour',
-            'value': '1h',
-        },
-        {
-            'label': 'Last 6 Hours',
-            'value': '6h',
-        },
-        {
-            'label': 'Last 24 Hours',
-            'value': '24h',
-        },
-        {
-            'label': 'Last 7 Days',
-            'value': '7d',
-        },
-    ]
 
 
 def get_selected_storage_tab(

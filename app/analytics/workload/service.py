@@ -17,6 +17,7 @@ from app.analytics.common.base_service import (
 from app.analytics.common.context import build_analysis_utilization_context
 from app.analytics.common.params import (
     ALLOWED_PER_PAGE_VALUES,
+    get_allowed_time_ranges,
     get_per_page_arg,
     get_positive_int_arg,
     get_query_value,
@@ -32,27 +33,6 @@ REQUIRED_QUOTA_KEYS = [
     'limits.memory',
     'pods',
 ]
-
-
-def get_allowed_time_ranges() -> list[dict[str, str]]:
-    return [
-        {
-            'label': 'Last 1 Hour',
-            'value': '1h',
-        },
-        {
-            'label': 'Last 6 Hours',
-            'value': '6h',
-        },
-        {
-            'label': 'Last 24 Hours',
-            'value': '24h',
-        },
-        {
-            'label': 'Last 7 Days',
-            'value': '7d',
-        },
-    ]
 
 
 def filter_tenant_quota_rows(
@@ -1095,16 +1075,16 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                 'class': 'bg-red-100 text-red-700',
             }
 
-        if quota_usage_percent >= 75:
-            return {
-                'label': 'High',
-                'class': 'bg-orange-100 text-orange-700',
-            }
-
         if quota_usage_percent >= 75 and actual_usage_percent < 40:
             return {
                 'label': 'Medium',
                 'class': 'bg-amber-100 text-amber-700',
+            }
+
+        if quota_usage_percent >= 75:
+            return {
+                'label': 'High',
+                'class': 'bg-orange-100 text-orange-700',
             }
 
         if quota_status == 'Partial':
@@ -1137,11 +1117,11 @@ class WorkloadAnalysisService(AnalyticsBaseService):
 
             return 'Review allocation or increase quota'
 
-        if quota_usage_percent >= 75:
-            return 'Monitor quota and review allocation'
-
         if quota_usage_percent >= 75 and actual_usage_percent < 40:
             return 'Right-size requests and limits'
+
+        if quota_usage_percent >= 75:
+            return 'Monitor quota and review allocation'
 
         return 'Quota looks healthy'
 

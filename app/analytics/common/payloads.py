@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.analytics.common.params import ALLOWED_PER_PAGE_VALUES
+from app.analytics.common.params import (
+    ALLOWED_PER_PAGE_VALUES,
+    get_allowed_time_ranges,
+)
 
 
 def get_empty_pagination() -> dict[str, Any]:
@@ -149,24 +152,7 @@ def get_empty_capacity_payload(
         'kpi_cards': [],
         'selected_namespace': selected_namespace,
         'selected_time_range': selected_time_range,
-        'allowed_time_ranges': [
-            {
-                'label': 'Last 1 Hour',
-                'value': '1h',
-            },
-            {
-                'label': 'Last 6 Hours',
-                'value': '6h',
-            },
-            {
-                'label': 'Last 24 Hours',
-                'value': '24h',
-            },
-            {
-                'label': 'Last 7 Days',
-                'value': '7d',
-            },
-        ],
+        'allowed_time_ranges': get_allowed_time_ranges(),
     }
 
 
