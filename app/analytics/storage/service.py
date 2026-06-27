@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from app.analytics.capacity import queries
 from app.analytics.common.base_service import (
     AnalyticsBaseService,
     raw_percent,
@@ -22,6 +21,7 @@ from app.analytics.common.params import (
     get_selected_time_range,
 )
 from app.analytics.common.payloads import get_empty_storage_payload
+from app.analytics.storage import queries
 from app.analytics.utilization.service import UtilizationService
 
 
