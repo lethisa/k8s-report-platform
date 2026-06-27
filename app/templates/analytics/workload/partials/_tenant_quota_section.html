@@ -1,0 +1,212 @@
+<section id="tenant-quota-analysis"
+         class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
+                        Tenant Quota Analysis
+                    </h2>
+                    <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
+                </div>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Review namespace ResourceQuota coverage, allocation, usage, and governance risk.
+                </p>
+            </div>
+
+            <form method="GET"
+                  action="{{ url_for('analytics.workload_analysis') }}"
+                  class="grid gap-2 md:grid-cols-2 xl:grid-cols-[220px_170px_150px_80px]">
+                <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
+                <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
+                <input type="hidden" name="time_range" value="{{ selected_time_range }}" />
+
+                <input type="text"
+                       name="tenant_search"
+                       value="{{ selected_tenant_search }}"
+                       placeholder="Search namespace"
+                       class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200" />
+
+                <select name="tenant_quota_status"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All Quota</option>
+                    {% for status in quota_status_options %}
+                        <option value="{{ status }}"
+                                {% if selected_tenant_quota_status == status %}selected{% endif %}>
+                            {{ status }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="tenant_risk"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All Risk</option>
+                    {% for risk in tenant_risk_options %}
+                        <option value="{{ risk }}"
+                                {% if selected_tenant_risk == risk %}selected{% endif %}>
+                            {{ risk }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
+                    RUN
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="space-y-6 p-6">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {% for card in tenant_quota_summary.summary_cards %}
+                <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl {{ card.icon_class }}">
+                            <i data-lucide="{{ card.icon }}" class="h-5 w-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                {{ card.label }}
+                            </div>
+                            <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                                {{ card.value }}
+                            </div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">
+                                {{ card.caption }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                <thead>
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        <th class="px-4 py-3">Namespace</th>
+                        <th class="px-4 py-3">Quota Status</th>
+                        <th class="px-4 py-3">Quota Usage</th>
+                        <th class="px-4 py-3">Actual Usage</th>
+                        <th class="px-4 py-3">Missing Keys</th>
+                        <th class="px-4 py-3">Risk</th>
+                        <th class="px-4 py-3">Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for row in tenant_quota_summary.rows %}
+                        <tr class="text-slate-700 dark:text-slate-200">
+                            <td class="px-4 py-3 font-semibold">
+                                {{ row.namespace }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.quota_status.class }}">
+                                    {{ row.quota_status.label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex min-w-40 items-center gap-3">
+                                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                        <div class="workload-progress h-2 rounded-full bg-blue-500"
+                                             data-progress="{{ row.quota_usage_percent }}"></div>
+                                    </div>
+                                    <span class="w-12 text-right text-xs font-semibold">
+                                        {{ row.quota_usage_percent }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex min-w-40 items-center gap-3">
+                                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                        <div class="workload-progress h-2 rounded-full bg-emerald-500"
+                                             data-progress="{{ row.actual_usage_percent }}"></div>
+                                    </div>
+                                    <span class="w-12 text-right text-xs font-semibold">
+                                        {{ row.actual_usage_percent }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if row.missing_key_labels %}
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for item in row.missing_key_labels %}
+                                            <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                                {{ item }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
+                                    {{ row.risk.label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+                                {{ row.recommendation }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                                No tenant quota data available.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% set quota_pagination = tenant_quota_summary.pagination %}
+        {% if quota_pagination.total_pages and quota_pagination.total_pages > 1 %}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    Showing {{ quota_pagination.start_item }}-{{ quota_pagination.end_item }}
+                    of {{ quota_pagination.total_items }} namespaces
+                </div>
+
+                <div class="flex items-center gap-2">
+                    {% set quota_prev_url = url_for(
+                        'analytics.workload_analysis',
+                        cluster_id=cluster.id if cluster else '',
+                        namespace=selected_namespace,
+                        time_range=selected_time_range,
+                        tenant_search=selected_tenant_search,
+                        tenant_quota_status=selected_tenant_quota_status,
+                        tenant_risk=selected_tenant_risk,
+                        quota_page=quota_pagination.previous_page,
+                        quota_per_page=quota_pagination.per_page
+                    ) %}
+                    {% set quota_next_url = url_for(
+                        'analytics.workload_analysis',
+                        cluster_id=cluster.id if cluster else '',
+                        namespace=selected_namespace,
+                        time_range=selected_time_range,
+                        tenant_search=selected_tenant_search,
+                        tenant_quota_status=selected_tenant_quota_status,
+                        tenant_risk=selected_tenant_risk,
+                        quota_page=quota_pagination.next_page,
+                        quota_per_page=quota_pagination.per_page
+                    ) %}
+
+                    <a href="{{ quota_prev_url }}"
+                       class="{% if quota_pagination.has_previous %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                        Previous
+                    </a>
+
+                    <span class="text-sm text-slate-500 dark:text-slate-400">
+                        Page {{ quota_pagination.page }} of {{ quota_pagination.total_pages }}
+                    </span>
+
+                    <a href="{{ quota_next_url }}"
+                       class="{% if quota_pagination.has_next %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                        Next
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>

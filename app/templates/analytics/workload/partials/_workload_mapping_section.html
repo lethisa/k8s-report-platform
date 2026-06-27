@@ -1,0 +1,215 @@
+<section id="workload-resource-mapping"
+         class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
+                        Workload Resource Mapping
+                    </h2>
+                    <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
+                </div>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Map workload requests, limits, actual usage, peak usage, QoS class, and right-sizing risk.
+                </p>
+            </div>
+
+            <form method="GET"
+                  action="{{ url_for('analytics.workload_analysis') }}"
+                  class="grid gap-2 md:grid-cols-2 xl:grid-cols-[220px_150px_170px_140px_130px_80px]">
+                <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
+                <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
+                <input type="hidden" name="time_range" value="{{ selected_time_range }}" />
+
+                <input type="text"
+                       name="workload_search"
+                       value="{{ selected_workload_search }}"
+                       placeholder="Search workload or namespace"
+                       class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200" />
+
+                <select name="workload_type"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All Type</option>
+                    {% for item in workload_mapping_payload.workload_type_options %}
+                        <option value="{{ item }}"
+                                {% if selected_workload_type == item %}selected{% endif %}>
+                            {{ item }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="workload_resource_status"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All Resources</option>
+                    {% for item in workload_mapping_payload.resource_status_options %}
+                        <option value="{{ item }}"
+                                {% if selected_workload_resource_status == item %}selected{% endif %}>
+                            {{ item }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="workload_qos"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All QoS</option>
+                    {% for item in workload_mapping_payload.qos_options %}
+                        <option value="{{ item }}"
+                                {% if selected_workload_qos == item %}selected{% endif %}>
+                            {{ item }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="workload_risk"
+                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="">All Risk</option>
+                    {% for item in workload_mapping_payload.risk_options %}
+                        <option value="{{ item }}"
+                                {% if selected_workload_risk == item %}selected{% endif %}>
+                            {{ item }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
+                    RUN
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                <thead>
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        <th class="px-4 py-3">Workload</th>
+                        <th class="px-4 py-3">Namespace</th>
+                        <th class="px-4 py-3">Type</th>
+                        <th class="px-4 py-3">Replicas</th>
+                        <th class="px-4 py-3">Resource Status</th>
+                        <th class="px-4 py-3">QoS</th>
+                        <th class="px-4 py-3">CPU</th>
+                        <th class="px-4 py-3">Memory</th>
+                        <th class="px-4 py-3">Efficiency</th>
+                        <th class="px-4 py-3">Risk</th>
+                        <th class="px-4 py-3">Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for row in workload_mapping_payload.rows %}
+                        <tr class="align-top text-slate-700 dark:text-slate-200">
+                            <td class="px-4 py-3 font-semibold">
+                                {{ row.workload }}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ row.namespace }}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ row.type }}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ row.replicas }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.resource_status.class }}">
+                                    {{ row.resource_status.label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.qos.class }}">
+                                    {{ row.qos.label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 min-w-64">
+                                {{ row.cpu_summary }}
+                            </td>
+                            <td class="px-4 py-3 min-w-64">
+                                {{ row.memory_summary }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex min-w-36 items-center gap-3">
+                                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                        <div class="workload-progress h-2 rounded-full bg-blue-500"
+                                             data-progress="{{ row.efficiency }}"></div>
+                                    </div>
+                                    <span class="w-12 text-right text-xs font-semibold">
+                                        {{ row.efficiency }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
+                                    {{ row.risk.label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+                                {{ row.recommendation }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="11" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                                No workload mapping data available.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% set workload_pagination = workload_mapping_payload.pagination %}
+        {% if workload_pagination.total_pages and workload_pagination.total_pages > 1 %}
+            <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    Showing {{ workload_pagination.start_item }}-{{ workload_pagination.end_item }}
+                    of {{ workload_pagination.total_items }} workloads
+                </div>
+
+                <div class="flex items-center gap-2">
+                    {% set workload_prev_url = url_for(
+                        'analytics.workload_analysis',
+                        cluster_id=cluster.id if cluster else '',
+                        namespace=selected_namespace,
+                        time_range=selected_time_range,
+                        workload_search=selected_workload_search,
+                        workload_type=selected_workload_type,
+                        workload_resource_status=selected_workload_resource_status,
+                        workload_qos=selected_workload_qos,
+                        workload_risk=selected_workload_risk,
+                        workload_page=workload_pagination.previous_page,
+                        workload_per_page=workload_pagination.per_page
+                    ) %}
+                    {% set workload_next_url = url_for(
+                        'analytics.workload_analysis',
+                        cluster_id=cluster.id if cluster else '',
+                        namespace=selected_namespace,
+                        time_range=selected_time_range,
+                        workload_search=selected_workload_search,
+                        workload_type=selected_workload_type,
+                        workload_resource_status=selected_workload_resource_status,
+                        workload_qos=selected_workload_qos,
+                        workload_risk=selected_workload_risk,
+                        workload_page=workload_pagination.next_page,
+                        workload_per_page=workload_pagination.per_page
+                    ) %}
+
+                    <a href="{{ workload_prev_url }}"
+                       class="{% if workload_pagination.has_previous %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                        Previous
+                    </a>
+
+                    <span class="text-sm text-slate-500 dark:text-slate-400">
+                        Page {{ workload_pagination.page }} of {{ workload_pagination.total_pages }}
+                    </span>
+
+                    <a href="{{ workload_next_url }}"
+                       class="{% if workload_pagination.has_next %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
+                        Next
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
