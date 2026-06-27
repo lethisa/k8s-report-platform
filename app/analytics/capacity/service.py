@@ -99,7 +99,12 @@ def get_capacity_page_context(
             time_range=selected_time_range,
         )
 
-        prometheus_connected = True
+        prometheus_connected = bool(
+            prometheus_status.get(
+                'connected',
+                False,
+            )
+        )
 
     except Exception as exc:
         current_app.logger.exception(

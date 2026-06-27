@@ -508,3 +508,6 @@ sum(
     } == 1
 )
 """
+PROMETHEUS_HEALTH = """
+vector(1)
+"""

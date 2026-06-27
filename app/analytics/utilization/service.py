@@ -1,10 +1,34 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from time import perf_counter
 from typing import Any
 
 from app.analytics.utilization import queries
+from app.models import Cluster
 from app.prometheus.service import PrometheusService
+
+
+def get_utilization_clusters() -> list[Cluster]:
+    return Cluster.query.order_by(
+        Cluster.name,
+    ).all()
+
+
+def get_selected_cluster(
+    cluster_id: str | None,
+) -> Cluster | None:
+    if cluster_id:
+        cluster = Cluster.query.filter_by(
+            id=cluster_id,
+        ).first()
+
+        if cluster:
+            return cluster
+
+    return Cluster.query.order_by(
+        Cluster.name,
+    ).first()
 
 
 class UtilizationService:
@@ -33,6 +57,24 @@ class UtilizationService:
             ValueError,
         ):
             return 0.0
+
+    def get_prometheus_status(
+        self,
+    ) -> dict[str, bool | int | str]:
+        start = perf_counter()
+
+        self.prometheus.instant_query(
+            queries.PROMETHEUS_HEALTH,
+        )
+
+        response_time_ms = int((perf_counter() - start) * 1000)
+
+        return {
+            'connected': True,
+            'response_time_ms': response_time_ms,
+            'label': 'Prometheus Connected',
+            'description': 'Last query completed successfully.',
+        }
 
     @staticmethod
     def _extract_consumers(
@@ -103,9 +145,7 @@ class UtilizationService:
             for item in results
         }
 
-        return sorted(
-            value for value in values if value
-        )
+        return sorted(value for value in values if value)
 
     @staticmethod
     def _extract_series(
@@ -754,7 +794,6 @@ class UtilizationService:
                 'scope': 'All nodes',
             },
         ]
-
 
     def get_memory_pressure_nodes(
         self,

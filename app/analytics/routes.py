@@ -4,7 +4,7 @@ from flask_login import login_required
 from app.analytics.capacity.routes import capacity
 from app.analytics.forecast import ForecastService
 from app.analytics.overview.service import get_analytics_overview
-from app.analytics.storage.routes import storage_analysis
+from app.analytics.storage.routes import storage
 from app.analytics.utilization.routes import (
     utilization,
     utilization_node_detail,
@@ -15,7 +15,7 @@ from app.analytics.utilization.service import (
     get_selected_cluster,
     get_utilization_clusters,
 )
-from app.analytics.workload.routes import workload_analysis
+from app.analytics.workload.routes import workload
 from app.prometheus.service import PrometheusService
 
 analytics_bp = Blueprint(
@@ -56,21 +56,26 @@ analytics_bp.add_url_rule(
 
 analytics_bp.add_url_rule(
     '/capacity',
-    endpoint='capacity',
     view_func=capacity,
+    methods=[
+        'GET',
+    ],
 )
-
 
 analytics_bp.add_url_rule(
     '/storage',
-    endpoint='storage_analysis',
-    view_func=storage_analysis,
+    view_func=storage,
+    methods=[
+        'GET',
+    ],
 )
 
 analytics_bp.add_url_rule(
     '/workload',
-    endpoint='workload_analysis',
-    view_func=workload_analysis,
+    view_func=workload,
+    methods=[
+        'GET',
+    ],
 )
 
 

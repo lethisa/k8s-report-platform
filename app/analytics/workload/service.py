@@ -6,7 +6,6 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from app.analytics.capacity import queries
 from app.analytics.common.base_service import (
     AnalyticsBaseService,
     bytes_to_gib,
@@ -25,6 +24,7 @@ from app.analytics.common.params import (
 )
 from app.analytics.common.payloads import get_empty_workload_payload
 from app.analytics.utilization.service import UtilizationService
+from app.analytics.workload import queries
 
 REQUIRED_QUOTA_KEYS = [
     'requests.cpu',

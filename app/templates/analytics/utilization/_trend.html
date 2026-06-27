@@ -1,0 +1,269 @@
+<div id="utilization-trend-panel"
+     class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <div class="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Resource Utilization Trend</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                CPU, memory, and pod utilization trend for all nodes or a selected worker node.
+            </p>
+        </div>
+        <form method="get"
+              action="{{ url_for('analytics.utilization_trend') }}"
+              hx-get="{{ url_for('analytics.utilization_trend') }}"
+              hx-target="#utilization-trend-panel"
+              hx-swap="outerHTML"
+              hx-trigger="change from:select"
+              class="grid gap-3 sm:grid-cols-2 xl:w-[520px]">
+            <input type="hidden"
+                   name="cluster_id"
+                   value="{{ cluster.id if cluster else '' }}" />
+            <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Trend Range</label>
+                <select name="trend_hours"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100">
+                    {% for option in allowed_trend_hours %}
+                        <option value="{{ option }}"
+                                {% if trend_hours == option %}selected{% endif %}>Last {{ option }}h</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Worker Node</label>
+                <select name="trend_node"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100">
+                    <option value="">All Nodes</option>
+                    {% for node in available_worker_nodes %}
+                        <option value="{{ node }}"
+                                {% if selected_trend_node == node %}selected{% endif %}>{{ node }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+    {% if error %}
+        <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+            {{ error }}
+        </div>
+    {% endif %}
+    <div class="mb-4 flex flex-wrap gap-2">
+        <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+            CPU {{ summary.cpu_utilization }}%
+        </span>
+        <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            Memory {{ summary.memory_utilization }}%
+        </span>
+        <span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
+            Pods {{ summary.pod_utilization }}%
+        </span>
+        {% if selected_trend_node %}
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                Scope: {{ selected_trend_node }}
+            </span>
+        {% else %}
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                Scope: All Nodes
+            </span>
+        {% endif %}
+    </div>
+    <div class="h-80">
+        <canvas id="utilizationTrendChart"></canvas>
+    </div>
+    <div id="trendEmptyState"
+         class="hidden py-8 text-center text-sm text-slate-500 dark:text-slate-400">No trend data available.</div>
+    <script>
+(function() {
+    const renderTrendChart = function() {
+        const cpuTrend =
+            {{ trends.cpu|default([])|tojson }};
+
+        const memoryTrend =
+            {{ trends.memory|default([])|tojson }};
+
+        const podTrend =
+            {{ trends.pods|default([])|tojson }};
+
+        const canvas =
+            document.getElementById(
+                'utilizationTrendChart'
+            );
+
+        if (
+            !canvas ||
+            typeof Chart === 'undefined'
+        ) {
+            return;
+        }
+
+        if (
+            cpuTrend.length === 0 &&
+            memoryTrend.length === 0 &&
+            podTrend.length === 0
+        ) {
+            document
+                .getElementById(
+                    'trendEmptyState'
+                )
+                ?.classList.remove(
+                    'hidden'
+                );
+
+            return;
+        }
+
+        if (
+            window.kubeReportUtilizationTrendChart
+        ) {
+            window.kubeReportUtilizationTrendChart.destroy();
+        }
+
+        const isDarkMode =
+            document.documentElement.classList.contains(
+                'dark'
+            );
+
+        const textColor =
+            isDarkMode ? '#cbd5e1' : '#475569';
+
+        const gridColor =
+            isDarkMode ? 'rgba(148, 163, 184, 0.18)' : 'rgba(148, 163, 184, 0.25)';
+
+        const baseTrend =
+            cpuTrend.length > 0
+                ? cpuTrend
+                : memoryTrend.length > 0
+                    ? memoryTrend
+                    : podTrend;
+
+        const labels =
+            baseTrend.map(
+                item =>
+                    new Date(
+                        item.timestamp * 1000
+                    ).toLocaleTimeString(
+                        [],
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        }
+                    )
+            );
+
+        window.kubeReportUtilizationTrendChart =
+            new Chart(
+                canvas,
+                {
+                    type: 'line',
+
+                    data: {
+                        labels,
+
+                        datasets: [
+                            {
+                                label: 'CPU',
+                                data: cpuTrend.map(
+                                    item => item.value
+                                ),
+                                borderColor: '#3b82f6',
+                                backgroundColor: '#3b82f6',
+                                tension: 0.35,
+                            },
+                            {
+                                label: 'Memory',
+                                data: memoryTrend.map(
+                                    item => item.value
+                                ),
+                                borderColor: '#10b981',
+                                backgroundColor: '#10b981',
+                                tension: 0.35,
+                            },
+                            {
+                                label: 'Pods',
+                                data: podTrend.map(
+                                    item => item.value
+                                ),
+                                borderColor: '#a855f7',
+                                backgroundColor: '#a855f7',
+                                tension: 0.35,
+                            },
+                        ],
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: textColor,
+                                },
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label: function(
+                                        context
+                                    ) {
+                                        return (
+                                            context.dataset.label +
+                                            ': ' +
+                                            context.parsed.y.toFixed(
+                                                2
+                                            ) +
+                                            '%'
+                                        );
+                                    },
+                                },
+                            },
+                        },
+
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+
+                                ticks: {
+                                    color: textColor,
+                                    callback:
+                                        value => value + '%',
+                                },
+
+                                grid: {
+                                    color: gridColor,
+                                },
+                            },
+
+                            x: {
+                                ticks: {
+                                    color: textColor,
+                                    maxTicksLimit: 12,
+                                },
+
+                                grid: {
+                                    color: gridColor,
+                                },
+                            },
+                        },
+                    },
+                }
+            );
+    };
+
+    if (
+        document.readyState === 'loading'
+    ) {
+        document.addEventListener(
+            'DOMContentLoaded',
+            renderTrendChart
+        );
+    } else {
+        renderTrendChart();
+    }
+})();
+    </script>
+</div>

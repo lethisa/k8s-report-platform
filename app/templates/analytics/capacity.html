@@ -285,7 +285,7 @@
 
 {% if finding['filter'] == 'storage-analysis' %}
     {% set finding_url = url_for(
-        'analytics.storage_analysis',
+        'analytics.storage',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
         time_range=selected_time_range
@@ -299,7 +299,7 @@
     'over-requested'
 ] %}
     {% set finding_url = url_for(
-        'analytics.workload_analysis',
+        'analytics.workload',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
         time_range=selected_time_range
@@ -322,7 +322,7 @@
                                 {% endfor %}
                             </div>
                            <div class="border-t border-slate-200 px-4 py-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-    View details opens the relevant Workload Analysis view.
+    View details opens the relevant analysis view.
 </div>
                         </div>
                     </div>
@@ -345,7 +345,7 @@
 
 {% if item['title'] == 'Review Storage Capacity' %}
     {% set recommendation_url = url_for(
-        'analytics.storage_analysis',
+        'analytics.storage',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
         time_range=selected_time_range
@@ -358,7 +358,7 @@
     'Optimize Limit Quota Allocation'
 ] %}
     {% set recommendation_url = url_for(
-        'analytics.workload_analysis',
+        'analytics.workload',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
         time_range=selected_time_range

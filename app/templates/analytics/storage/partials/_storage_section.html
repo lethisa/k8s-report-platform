@@ -14,7 +14,7 @@
             </div>
 
             <form method="GET"
-                  action="{{ url_for('analytics.storage_analysis') }}"
+                  action="{{ url_for('analytics.storage') }}"
                   class="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
                 <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
@@ -207,14 +207,14 @@
 
                     <div class="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-950">
                         {% set pvc_tab_url = url_for(
-                            'analytics.storage_analysis',
+                            'analytics.storage',
                             cluster_id=cluster.id if cluster else '',
                             namespace=selected_namespace,
                             time_range=selected_time_range,
                             storage_tab='pvc'
                         ) %}
                         {% set pv_tab_url = url_for(
-                            'analytics.storage_analysis',
+                            'analytics.storage',
                             cluster_id=cluster.id if cluster else '',
                             namespace=selected_namespace,
                             time_range=selected_time_range,
@@ -258,7 +258,7 @@
                     </div>
 
                     <form method="GET"
-                          action="{{ url_for('analytics.storage_analysis') }}"
+                          action="{{ url_for('analytics.storage') }}"
                           class="mb-5 grid gap-3 lg:grid-cols-[1fr_180px_220px_90px]">
                         <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
                         <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
@@ -362,7 +362,7 @@
                     </div>
 
                     <form method="GET"
-                          action="{{ url_for('analytics.storage_analysis') }}"
+                          action="{{ url_for('analytics.storage') }}"
                           class="mb-5 grid gap-3 lg:grid-cols-[1fr_180px_220px_90px]">
                         <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
                         <input type="hidden" name="namespace" value="{{ selected_namespace }}" />

@@ -9,7 +9,7 @@ from app.analytics.workload.service import get_workload_analysis_context
 
 
 @login_required
-def workload_analysis() -> str:
+def workload() -> str:
     context = get_workload_analysis_context(
         query_args=request.args,
     )

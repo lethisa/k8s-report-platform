@@ -9,7 +9,7 @@ from app.analytics.storage.service import get_storage_analysis_context
 
 
 @login_required
-def storage_analysis() -> str:
+def storage() -> str:
     context = get_storage_analysis_context(
         query_args=request.args,
     )
