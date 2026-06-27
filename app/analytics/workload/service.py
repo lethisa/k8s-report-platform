@@ -1674,28 +1674,9 @@ class WorkloadAnalysisService(AnalyticsBaseService):
 
     def get_recommendation_cards(
         self,
-        capacity_summary: dict[str, dict[str, float]],
         tenant_quota_rows: list[dict[str, Any]],
         workload_mapping_rows: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        low_headroom = [
-            resource
-            for resource, item in capacity_summary.items()
-            if resource
-            in [
-                'cpu',
-                'memory',
-                'pods',
-            ]
-            and self.to_float(
-                item.get(
-                    'headroom',
-                    0,
-                )
-            )
-            < 30
-        ]
-
         no_quota_count = len(
             [
                 row
@@ -1758,17 +1739,6 @@ class WorkloadAnalysisService(AnalyticsBaseService):
             ]
         )
 
-        capacity_description = (
-            'Monitor headroom trend and plan capacity expansion ' 'before sustained usage reaches warning threshold.'
-        )
-
-        if low_headroom:
-            capacity_description = (
-                'Low headroom detected on '
-                f"{', '.join(low_headroom)}. "
-                'Prioritize capacity planning for these resources.'
-            )
-
         return [
             {
                 'title': 'Right-size Resource Requests',
@@ -1799,8 +1769,11 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                 'icon_class': 'bg-blue-100 text-blue-600',
             },
             {
-                'title': 'Monitor Capacity Growth',
-                'description': capacity_description,
+                'title': 'Review Workload Growth',
+                'description': (
+                    'Track workload count, replicas, request coverage, and runtime usage '
+                    'trend before expanding namespace quota or cluster capacity.'
+                ),
                 'icon': 'trending-up',
                 'icon_class': 'bg-violet-100 text-violet-600',
             },
@@ -2096,17 +2069,6 @@ def get_workload_analysis_context(
     )
 
     recommendation_cards = workload_service.get_recommendation_cards(
-        capacity_summary={
-            'cpu': {
-                'headroom': 100,
-            },
-            'memory': {
-                'headroom': 100,
-            },
-            'pods': {
-                'headroom': 100,
-            },
-        },
         tenant_quota_rows=tenant_quota_all_rows,
         workload_mapping_rows=workload_mapping_all_rows,
     )
