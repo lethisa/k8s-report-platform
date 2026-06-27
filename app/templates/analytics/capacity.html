@@ -271,64 +271,48 @@
                                 {% for finding in governance_findings %}
                                     <div class="flex items-center justify-between gap-3 px-4 py-3">
                                         <div class="flex items-center gap-3">
-                                            {% if finding['severity'] == 'critical' %}
-                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-red-500"></i>
-                                            {% elif finding['severity'] == 'warning' %}
-                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-amber-500"></i>
-                                            {% else %}
-                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-emerald-500"></i>
-                                            {% endif %}
+                                           {% if finding['severity'] == 'critical' %}
+    <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-red-500"></i>
+{% elif finding['severity'] == 'warning' %}
+    <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-amber-500"></i>
+{% elif finding['severity'] == 'info' %}
+    <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-blue-500"></i>
+{% else %}
+    <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-emerald-500"></i>
+{% endif %}
                                             <span class="text-sm text-slate-700 dark:text-slate-200">{{ finding['label'] }}</span>
                                         </div>
-                                       {% if finding['filter'] == 'missing-quota' %}
+
+{% if finding['filter'] == 'storage-analysis' %}
     {% set finding_url = url_for(
-        'analytics.workload_analysis',
+        'analytics.storage_analysis',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
-        time_range=selected_time_range,
-        tenant_quota_status='Missing'
+        time_range=selected_time_range
     ) %}
-{% elif finding['filter'] == 'missing-request' %}
-    {% set finding_url = url_for(
-        'analytics.workload_analysis',
-        cluster_id=cluster.id if cluster else '',
-        namespace=selected_namespace,
-        time_range=selected_time_range,
-        workload_resource_status='Missing Request'
-    ) %}
-{% elif finding['filter'] == 'missing-limit' %}
-    {% set finding_url = url_for(
-        'analytics.workload_analysis',
-        cluster_id=cluster.id if cluster else '',
-        namespace=selected_namespace,
-        time_range=selected_time_range,
-        workload_resource_status='Missing Limit'
-    ) %}
-{% elif finding['filter'] == 'best-effort' %}
-    {% set finding_url = url_for(
-        'analytics.workload_analysis',
-        cluster_id=cluster.id if cluster else '',
-        namespace=selected_namespace,
-        time_range=selected_time_range,
-        workload_qos='BestEffort'
-    ) %}
-{% elif finding['filter'] == 'over-requested' %}
-    {% set finding_url = url_for(
-        'analytics.workload_analysis',
-        cluster_id=cluster.id if cluster else '',
-        namespace=selected_namespace,
-        time_range=selected_time_range,
-        workload_search='',
-        workload_risk='Medium'
-    ) %}
-{% else %}
+{% elif finding['filter'] in [
+    'workload-analysis',
+    'missing-quota',
+    'missing-request',
+    'missing-limit',
+    'best-effort',
+    'over-requested'
+] %}
     {% set finding_url = url_for(
         'analytics.workload_analysis',
         cluster_id=cluster.id if cluster else '',
         namespace=selected_namespace,
         time_range=selected_time_range
     ) %}
-{% endif %}
+{% else %}
+    {% set finding_url = url_for(
+        'analytics.capacity',
+        cluster_id=cluster.id if cluster else '',
+        namespace=selected_namespace,
+        time_range=selected_time_range
+    ) %}
+{% endif %} 
+
 
 <a href="{{ finding_url }}"
    class="shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
@@ -358,27 +342,37 @@
                 </div>
                 <div class="grid gap-4 p-6 lg:grid-cols-2 xl:grid-cols-4">
                     {% for item in recommendation_cards %}
-    {% if item['title'] in [
-        'Right-size Resource Requests',
-        'Strengthen Governance',
-        'Optimize Limit Quota Allocation'
-    ] %}
-        {% set recommendation_url = url_for(
-            'analytics.workload_analysis',
-            cluster_id=cluster.id if cluster else '',
-            namespace=selected_namespace,
-            time_range=selected_time_range
-        ) %}
-        {% set recommendation_label = 'Open Workload Analysis' %}
-    {% else %}
-        {% set recommendation_url = url_for(
-            'analytics.capacity',
-            cluster_id=cluster.id if cluster else '',
-            namespace=selected_namespace,
-            time_range=selected_time_range
-        ) %}
-        {% set recommendation_label = 'Review Capacity' %}
-    {% endif %}
+
+{% if item['title'] == 'Review Storage Capacity' %}
+    {% set recommendation_url = url_for(
+        'analytics.storage_analysis',
+        cluster_id=cluster.id if cluster else '',
+        namespace=selected_namespace,
+        time_range=selected_time_range
+    ) %}
+    {% set recommendation_label = 'Open Storage Analysis' %}
+{% elif item['title'] in [
+    'Right-size Resource Requests',
+    'Review Workload Governance',
+    'Strengthen Governance',
+    'Optimize Limit Quota Allocation'
+] %}
+    {% set recommendation_url = url_for(
+        'analytics.workload_analysis',
+        cluster_id=cluster.id if cluster else '',
+        namespace=selected_namespace,
+        time_range=selected_time_range
+    ) %}
+    {% set recommendation_label = 'Open Workload Analysis' %}
+{% else %}
+    {% set recommendation_url = url_for(
+        'analytics.capacity',
+        cluster_id=cluster.id if cluster else '',
+        namespace=selected_namespace,
+        time_range=selected_time_range
+    ) %}
+    {% set recommendation_label = 'Review Capacity' %}
+{% endif %}
 
     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
         <div class="flex h-full flex-col justify-between gap-4">

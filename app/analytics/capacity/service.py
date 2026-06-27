@@ -476,11 +476,10 @@ def get_capacity_page_context(
     error = None
     prometheus_connected = False
     prometheus_status = {
-        'label': 'Disconnected',
-        'caption': 'Prometheus unavailable',
-        'class': 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
-        'icon': 'plug-zap',
-        'elapsed_ms': 0,
+        'connected': False,
+        'response_time_ms': None,
+        'label': 'Prometheus Disconnected',
+        'description': 'Prometheus unavailable',
     }
     capacity_payload = empty_capacity_payload.copy()
 
@@ -4072,11 +4071,10 @@ class CapacityService:
 
         if prometheus is None:
             return {
-                'label': 'Disconnected',
-                'caption': 'Prometheus service unavailable',
-                'class': 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
-                'icon': 'plug-zap',
-                'elapsed_ms': 0,
+                'connected': False,
+                'response_time_ms': None,
+                'label': 'Prometheus Disconnected',
+                'description': 'Prometheus service unavailable',
             }
 
         start_time = time.perf_counter()
@@ -4087,14 +4085,14 @@ class CapacityService:
                 'instant_query',
             ):
                 prometheus.instant_query(
-                    'up',
+                    'vector(1)',
                 )
             elif hasattr(
                 prometheus,
                 'query',
             ):
                 prometheus.query(
-                    'up',
+                    'vector(1)',
                 )
             else:
                 raise RuntimeError(
@@ -4103,11 +4101,10 @@ class CapacityService:
 
         except Exception:
             return {
-                'label': 'Disconnected',
-                'caption': 'Prometheus query failed',
-                'class': 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
-                'icon': 'plug-zap',
-                'elapsed_ms': 0,
+                'connected': False,
+                'response_time_ms': None,
+                'label': 'Prometheus Disconnected',
+                'description': 'Prometheus query failed',
             }
 
         elapsed_ms = int(
@@ -4116,19 +4113,17 @@ class CapacityService:
 
         if elapsed_ms >= 1500:
             return {
-                'label': 'Degraded',
-                'caption': f'{elapsed_ms} ms response',
-                'class': 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-                'icon': 'activity',
-                'elapsed_ms': elapsed_ms,
+                'connected': True,
+                'response_time_ms': elapsed_ms,
+                'label': 'Prometheus Degraded',
+                'description': 'Prometheus responded slowly.',
             }
 
         return {
-            'label': 'Connected',
-            'caption': f'{elapsed_ms} ms response',
-            'class': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-            'icon': 'activity',
-            'elapsed_ms': elapsed_ms,
+            'connected': True,
+            'response_time_ms': elapsed_ms,
+            'label': 'Prometheus Connected',
+            'description': 'Last query completed successfully.',
         }
 
     def get_prometheus_scalar(
@@ -4553,11 +4548,10 @@ def build_capacity_service_for_query(
         'error': None,
         'prometheus_connected': False,
         'prometheus_status': {
-            'label': 'Disconnected',
-            'caption': 'Prometheus unavailable',
-            'class': 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
-            'icon': 'plug-zap',
-            'elapsed_ms': 0,
+            'connected': False,
+            'response_time_ms': None,
+            'label': 'Prometheus Disconnected',
+            'description': 'Prometheus unavailable',
         },
         'selected_namespace': get_query_value(
             query_args=query_args,
@@ -4585,10 +4579,12 @@ def build_capacity_service_for_query(
     )
 
     base_context['prometheus_status'] = capacity_service.get_prometheus_status()
-    base_context['prometheus_connected'] = base_context['prometheus_status']['label'] in [
-        'Connected',
-        'Degraded',
-    ]
+    base_context['prometheus_connected'] = bool(
+        base_context['prometheus_status'].get(
+            'connected',
+            False,
+        )
+    )
 
     return clusters, cluster, capacity_service, base_context
 
