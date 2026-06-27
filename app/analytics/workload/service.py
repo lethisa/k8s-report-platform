@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity.service import (
+    CapacityService,
     get_empty_capacity_payload,
     get_per_page_arg,
     get_positive_int_arg,
     get_query_value,
     get_selected_time_range,
 )
-from app.analytics.common.context import build_analysis_capacity_service_context
+from app.analytics.common.context import build_analysis_utilization_context
+from app.analytics.utilization.service import UtilizationService
 
 
 def get_allowed_time_ranges() -> list[dict[str, str]]:
@@ -157,12 +159,91 @@ def filter_workload_rows(
     return filtered_rows
 
 
+class WorkloadAnalysisService:
+    def __init__(
+        self,
+        utilization_service: UtilizationService,
+    ) -> None:
+        self.capacity_service = CapacityService(
+            utilization_service,
+        )
+
+    def get_prometheus_status(
+        self,
+    ) -> dict[str, Any]:
+        return self.capacity_service.get_prometheus_status()
+
+    def get_all_namespace_options(
+        self,
+    ) -> list[str]:
+        return self.capacity_service.get_all_namespace_options()
+
+    def get_tenant_quota_summary(
+        self,
+        selected_namespace: str,
+    ) -> dict[str, Any]:
+        return self.capacity_service.get_tenant_quota_summary(
+            selected_namespace=selected_namespace,
+        )
+
+    def get_workload_mapping_payload(
+        self,
+        selected_namespace: str,
+        time_range: str,
+    ) -> dict[str, Any]:
+        return self.capacity_service.get_workload_mapping_payload(
+            selected_namespace=selected_namespace,
+            time_range=time_range,
+        )
+
+    def paginate_rows(
+        self,
+        rows: list[dict[str, Any]],
+        page: int,
+        per_page: int,
+    ) -> dict[str, Any]:
+        return self.capacity_service.paginate_rows(
+            rows=rows,
+            page=page,
+            per_page=per_page,
+        )
+
+    def get_governance_findings(
+        self,
+        tenant_quota_rows: list[dict[str, Any]],
+        workload_mapping_rows: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return self.capacity_service.get_governance_findings(
+            tenant_quota_rows=tenant_quota_rows,
+            workload_mapping_rows=workload_mapping_rows,
+        )
+
+    def get_recommendation_cards(
+        self,
+        capacity_summary: dict[str, dict[str, float]],
+        tenant_quota_rows: list[dict[str, Any]],
+        workload_mapping_rows: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return self.capacity_service.get_recommendation_cards(
+            capacity_summary=capacity_summary,
+            tenant_quota_rows=tenant_quota_rows,
+            workload_mapping_rows=workload_mapping_rows,
+        )
+
+
 def get_workload_analysis_context(
     query_args: Mapping[str, Any],
 ) -> dict[str, Any]:
-    _, _, capacity_service, context = build_analysis_capacity_service_context(
+    _, _, utilization_service, context = build_analysis_utilization_context(
         query_args=query_args,
     )
+
+    workload_service: WorkloadAnalysisService | None = None
+
+    if utilization_service is not None:
+        workload_service = WorkloadAnalysisService(
+            utilization_service,
+        )
 
     selected_namespace = get_query_value(
         query_args=query_args,
@@ -259,7 +340,7 @@ def get_workload_analysis_context(
         }
     )
 
-    if capacity_service is None:
+    if workload_service is None:
         context.update(
             get_empty_capacity_payload(
                 selected_namespace=selected_namespace,
@@ -269,7 +350,17 @@ def get_workload_analysis_context(
 
         return context
 
-    tenant_quota_summary = capacity_service.get_tenant_quota_summary(
+    prometheus_status = workload_service.get_prometheus_status()
+
+    context['prometheus_status'] = prometheus_status
+    context['prometheus_connected'] = bool(
+        prometheus_status.get(
+            'connected',
+            False,
+        )
+    )
+
+    tenant_quota_summary = workload_service.get_tenant_quota_summary(
         selected_namespace=selected_namespace,
     )
 
@@ -282,7 +373,7 @@ def get_workload_analysis_context(
         selected_risk=selected_tenant_risk,
     )
 
-    tenant_quota_page = capacity_service.paginate_rows(
+    tenant_quota_page = workload_service.paginate_rows(
         rows=tenant_quota_filtered_rows,
         page=get_positive_int_arg(
             query_args=query_args,
@@ -299,7 +390,7 @@ def get_workload_analysis_context(
     tenant_quota_summary['rows'] = tenant_quota_page['rows']
     tenant_quota_summary['pagination'] = tenant_quota_page['pagination']
 
-    workload_mapping_payload = capacity_service.get_workload_mapping_payload(
+    workload_mapping_payload = workload_service.get_workload_mapping_payload(
         selected_namespace=selected_namespace,
         time_range=selected_time_range,
     )
@@ -315,7 +406,7 @@ def get_workload_analysis_context(
         selected_risk=selected_workload_risk,
     )
 
-    workload_mapping_page = capacity_service.paginate_rows(
+    workload_mapping_page = workload_service.paginate_rows(
         rows=workload_mapping_filtered_rows,
         page=get_positive_int_arg(
             query_args=query_args,
@@ -389,7 +480,7 @@ def get_workload_analysis_context(
         }
     )
 
-    namespace_options = capacity_service.get_all_namespace_options()
+    namespace_options = workload_service.get_all_namespace_options()
 
     quota_status_options = sorted(
         {
@@ -423,12 +514,12 @@ def get_workload_analysis_context(
         }
     )
 
-    governance_findings = capacity_service.get_governance_findings(
+    governance_findings = workload_service.get_governance_findings(
         tenant_quota_rows=tenant_quota_all_rows,
         workload_mapping_rows=workload_mapping_all_rows,
     )
 
-    recommendation_cards = capacity_service.get_recommendation_cards(
+    recommendation_cards = workload_service.get_recommendation_cards(
         capacity_summary={
             'cpu': {
                 'headroom': 100,
