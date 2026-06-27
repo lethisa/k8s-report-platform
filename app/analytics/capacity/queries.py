@@ -86,3 +86,43 @@ max_over_time(
   )[__TIME_RANGE__:5m]
 )
 """
+WORKER_CPU_ALLOCATABLE_QUERY = """
+sum(
+  kube_node_status_allocatable{
+    resource="cpu",
+    unit="core"
+  }
+  unless on(node)
+  kube_node_role{
+    role=~"control-plane|master"
+  }
+)
+"""
+
+
+WORKER_MEMORY_ALLOCATABLE_QUERY = """
+sum(
+  kube_node_status_allocatable{
+    resource="memory",
+    unit="byte"
+  }
+  unless on(node)
+  kube_node_role{
+    role=~"control-plane|master"
+  }
+)
+"""
+
+
+WORKER_POD_ALLOCATABLE_QUERY = """
+sum(
+  kube_node_status_allocatable{
+    resource="pods",
+    unit="integer"
+  }
+  unless on(node)
+  kube_node_role{
+    role=~"control-plane|master"
+  }
+)
+"""

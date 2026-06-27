@@ -207,11 +207,8 @@ class CapacityService(AnalyticsBaseService):
         self,
         summary: dict[str, Any],
     ) -> dict[str, dict[str, float]]:
-        cpu_capacity = self.to_float(
-            summary.get(
-                'cpu_capacity',
-                0,
-            )
+        cpu_capacity = self.get_prometheus_scalar(
+            queries.WORKER_CPU_ALLOCATABLE_QUERY,
         )
 
         cpu_usage = self.to_float(
@@ -221,11 +218,8 @@ class CapacityService(AnalyticsBaseService):
             )
         )
 
-        memory_capacity = self.to_float(
-            summary.get(
-                'memory_capacity',
-                0,
-            )
+        memory_capacity = self.get_prometheus_scalar(
+            queries.WORKER_MEMORY_ALLOCATABLE_QUERY,
         )
 
         memory_usage = self.to_float(
@@ -235,11 +229,8 @@ class CapacityService(AnalyticsBaseService):
             )
         )
 
-        pod_capacity = self.to_float(
-            summary.get(
-                'pod_capacity',
-                0,
-            )
+        pod_capacity = self.get_prometheus_scalar(
+            queries.WORKER_POD_ALLOCATABLE_QUERY,
         )
 
         pod_usage = self.to_float(
@@ -312,13 +303,6 @@ class CapacityService(AnalyticsBaseService):
                     pod_available,
                     pod_capacity,
                 ),
-            },
-            # Backward-compatible key for old template only.
-            'storage': {
-                'capacity': 0,
-                'used': 0,
-                'available': 0,
-                'headroom': 0,
             },
         }
 
@@ -393,25 +377,16 @@ class CapacityService(AnalyticsBaseService):
         summary: dict[str, Any],
         time_range: str,
     ) -> dict[str, dict[str, Any]]:
-        cpu_allocatable = self.to_float(
-            summary.get(
-                'cpu_capacity',
-                0,
-            )
+        cpu_allocatable = self.get_prometheus_scalar(
+            queries.WORKER_CPU_ALLOCATABLE_QUERY,
         )
 
-        memory_allocatable_bytes = self.to_float(
-            summary.get(
-                'memory_capacity',
-                0,
-            )
+        memory_allocatable_bytes = self.get_prometheus_scalar(
+            queries.WORKER_MEMORY_ALLOCATABLE_QUERY,
         )
 
-        pod_capacity = self.to_float(
-            summary.get(
-                'pod_capacity',
-                0,
-            )
+        pod_capacity = self.get_prometheus_scalar(
+            queries.WORKER_POD_ALLOCATABLE_QUERY,
         )
 
         cpu_actual = self.to_float(
