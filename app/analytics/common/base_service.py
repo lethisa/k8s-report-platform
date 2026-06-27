@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 
@@ -535,3 +536,92 @@ class AnalyticsBaseService:
                 return 0
 
         return 0
+
+    def get_prometheus_status(
+        self,
+    ) -> dict[str, Any]:
+        utilization_service = getattr(
+            self,
+            'utilization_service',
+            None,
+        )
+
+        if utilization_service is None:
+            return {
+                'connected': False,
+                'response_time_ms': None,
+                'label': 'Prometheus Disconnected',
+                'description': 'Prometheus service unavailable',
+            }
+
+        prometheus = getattr(
+            utilization_service,
+            'prometheus',
+            None,
+        )
+
+        if prometheus is None:
+            prometheus = getattr(
+                utilization_service,
+                'prometheus_service',
+                None,
+            )
+
+        if prometheus is None:
+            return {
+                'connected': False,
+                'response_time_ms': None,
+                'label': 'Prometheus Disconnected',
+                'description': 'Prometheus service unavailable',
+            }
+
+        start_time = time.perf_counter()
+
+        try:
+            if hasattr(
+                prometheus,
+                'instant_query',
+            ):
+                prometheus.instant_query(
+                    'vector(1)',
+                )
+
+            elif hasattr(
+                prometheus,
+                'query',
+            ):
+                prometheus.query(
+                    'vector(1)',
+                )
+
+            else:
+                raise RuntimeError(
+                    'Prometheus query method unavailable',
+                )
+
+        except Exception:
+            return {
+                'connected': False,
+                'response_time_ms': None,
+                'label': 'Prometheus Disconnected',
+                'description': 'Prometheus query failed',
+            }
+
+        elapsed_ms = int(
+            (time.perf_counter() - start_time) * 1000,
+        )
+
+        if elapsed_ms >= 1500:
+            return {
+                'connected': True,
+                'response_time_ms': elapsed_ms,
+                'label': 'Prometheus Degraded',
+                'description': 'Prometheus responded slowly.',
+            }
+
+        return {
+            'connected': True,
+            'response_time_ms': elapsed_ms,
+            'label': 'Prometheus Connected',
+            'description': 'Last query completed successfully.',
+        }
