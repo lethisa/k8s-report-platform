@@ -722,6 +722,228 @@ class WorkloadAnalysisService(AnalyticsBaseService):
             'rows': rows,
         }
 
+    def get_resource_status(
+        self,
+        cpu_request: float,
+        cpu_limit: float,
+        memory_request: float,
+        memory_limit: float,
+    ) -> dict[str, str]:
+        missing_request = not cpu_request or not memory_request
+        missing_limit = not cpu_limit or not memory_limit
+
+        if missing_request and missing_limit:
+            return {
+                'label': 'BestEffort',
+                'class': 'bg-red-100 text-red-700',
+            }
+
+        if missing_request:
+            return {
+                'label': 'Missing Request',
+                'class': 'bg-amber-100 text-amber-700',
+            }
+
+        if missing_limit:
+            return {
+                'label': 'Missing Limit',
+                'class': 'bg-amber-100 text-amber-700',
+            }
+
+        return {
+            'label': 'Complete',
+            'class': 'bg-emerald-100 text-emerald-700',
+        }
+
+    def get_workload_qos(
+        self,
+        qos_distribution: dict[str, int],
+    ) -> dict[str, str]:
+        if not qos_distribution:
+            return {
+                'label': 'Unknown',
+                'class': 'bg-slate-100 text-slate-700',
+            }
+
+        if len(qos_distribution) > 1:
+            return {
+                'label': 'Mixed',
+                'class': 'bg-indigo-100 text-indigo-700',
+            }
+
+        qos = next(
+            iter(
+                qos_distribution.keys(),
+            )
+        )
+
+        class_map = {
+            'Guaranteed': 'bg-emerald-100 text-emerald-700',
+            'Burstable': 'bg-blue-100 text-blue-700',
+            'BestEffort': 'bg-red-100 text-red-700',
+        }
+
+        return {
+            'label': qos,
+            'class': class_map.get(
+                qos,
+                'bg-slate-100 text-slate-700',
+            ),
+        }
+
+    def get_efficiency_score(
+        self,
+        cpu_usage: float,
+        cpu_request: float,
+        memory_usage: float,
+        memory_request: float,
+    ) -> float:
+        cpu_score = safe_percent(
+            cpu_usage,
+            cpu_request,
+        )
+
+        memory_score = safe_percent(
+            memory_usage,
+            memory_request,
+        )
+
+        if not cpu_request and not memory_request:
+            return 0
+
+        if cpu_request and memory_request:
+            return safe_round(
+                (cpu_score + memory_score) / 2,
+                1,
+            )
+
+        return safe_round(
+            cpu_score or memory_score,
+            1,
+        )
+
+    def get_workload_recommendation(
+        self,
+        cpu_usage: float,
+        cpu_request: float,
+        cpu_limit: float,
+        memory_usage: float,
+        memory_request: float,
+        memory_limit: float,
+        resource_status: str,
+    ) -> str:
+        if resource_status == 'BestEffort':
+            return 'Review BestEffort workload'
+
+        if not cpu_request and not memory_request:
+            return 'Set CPU and memory requests'
+
+        if not cpu_request:
+            return 'Set CPU request'
+
+        if not memory_request:
+            return 'Set memory request'
+
+        if not memory_limit:
+            return 'Set memory limit'
+
+        if not cpu_limit:
+            return 'Review CPU limit policy'
+
+        cpu_efficiency = safe_percent(
+            cpu_usage,
+            cpu_request,
+        )
+
+        memory_efficiency = safe_percent(
+            memory_usage,
+            memory_request,
+        )
+
+        if cpu_efficiency < 30 and memory_efficiency < 30:
+            return 'Reduce requests'
+
+        if cpu_efficiency < 30:
+            return 'Reduce CPU request'
+
+        if memory_efficiency < 30:
+            return 'Reduce memory request'
+
+        if memory_efficiency > 90:
+            return 'Increase memory request'
+
+        if cpu_efficiency > 90:
+            return 'Increase CPU request'
+
+        return 'No action needed'
+
+    def get_workload_risk(
+        self,
+        resource_status: str,
+        efficiency: float,
+        recommendation: str,
+    ) -> dict[str, str]:
+        if resource_status in [
+            'BestEffort',
+            'Missing Request',
+        ]:
+            return {
+                'label': 'High',
+                'class': 'bg-red-100 text-red-700',
+            }
+
+        if 'increase' in recommendation.lower():
+            return {
+                'label': 'High',
+                'class': 'bg-red-100 text-red-700',
+            }
+
+        if resource_status in [
+            'Missing Limit',
+            'Partial',
+        ]:
+            return {
+                'label': 'Medium',
+                'class': 'bg-amber-100 text-amber-700',
+            }
+
+        if efficiency < 40:
+            return {
+                'label': 'Medium',
+                'class': 'bg-amber-100 text-amber-700',
+            }
+
+        return {
+            'label': 'Low',
+            'class': 'bg-emerald-100 text-emerald-700',
+        }
+
+    def get_risk_sort_weight(
+        self,
+        risk: str,
+    ) -> int:
+        weights = {
+            'High': 0,
+            'Critical': 0,
+            'Medium': 1,
+            'Low': 2,
+        }
+
+        return weights.get(
+            risk,
+            3,
+        )
+
+    def build_range_query(
+        self,
+        query_template: str,
+        time_range: str,
+    ) -> str:
+        return query_template.replace(
+            '__TIME_RANGE__',
+            time_range,
+        )
+
     def get_resource_quota_map(
         self,
         query: str,
