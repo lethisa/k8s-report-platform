@@ -1219,10 +1219,323 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         selected_namespace: str,
         time_range: str,
     ) -> dict[str, Any]:
-        return self.capacity_service.get_workload_mapping_payload(
-            selected_namespace=selected_namespace,
-            time_range=time_range,
+        cpu_requests = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_CPU_REQUESTS_QUERY,
+            label='pod',
+            secondary_label='namespace',
         )
+
+        cpu_limits = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_CPU_LIMITS_QUERY,
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        cpu_avg = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_CPU_AVG_QUERY,
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        cpu_peak = self.get_prometheus_vector_map(
+            query=self.build_range_query(
+                queries.WORKLOAD_CPU_PEAK_QUERY_TEMPLATE,
+                time_range,
+            ),
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        memory_requests = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_MEMORY_REQUESTS_QUERY,
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        memory_limits = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_MEMORY_LIMITS_QUERY,
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        memory_avg = self.get_prometheus_vector_map(
+            query=queries.WORKLOAD_MEMORY_AVG_QUERY,
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        memory_peak = self.get_prometheus_vector_map(
+            query=self.build_range_query(
+                queries.WORKLOAD_MEMORY_PEAK_QUERY_TEMPLATE,
+                time_range,
+            ),
+            label='pod',
+            secondary_label='namespace',
+        )
+
+        owner_map = self.get_pod_owner_map()
+        qos_map = self.get_pod_qos_map()
+
+        keys = set(
+            cpu_requests.keys(),
+        )
+
+        keys.update(
+            cpu_limits.keys(),
+        )
+
+        keys.update(
+            cpu_avg.keys(),
+        )
+
+        keys.update(
+            memory_requests.keys(),
+        )
+
+        keys.update(
+            memory_limits.keys(),
+        )
+
+        keys.update(
+            memory_avg.keys(),
+        )
+
+        workload_map: dict[str, dict[str, Any]] = {}
+
+        for key in sorted(
+            keys,
+        ):
+            namespace, pod = self.split_composite_key(
+                key,
+            )
+
+            if selected_namespace and namespace != selected_namespace:
+                continue
+
+            owner = owner_map.get(
+                key,
+                self.infer_workload_owner(
+                    pod,
+                ),
+            )
+
+            workload_key = f"{namespace}/{owner['name']}"
+
+            if workload_key not in workload_map:
+                workload_map[workload_key] = {
+                    'workload': owner['name'],
+                    'type': owner['kind'],
+                    'namespace': namespace,
+                    'replicas': 0,
+                    'pods': [],
+                    'cpu_request_raw': 0.0,
+                    'cpu_limit_raw': 0.0,
+                    'cpu_avg_raw': 0.0,
+                    'cpu_peak_raw': 0.0,
+                    'memory_request_raw': 0.0,
+                    'memory_limit_raw': 0.0,
+                    'memory_avg_raw': 0.0,
+                    'memory_peak_raw': 0.0,
+                    'qos_distribution': {},
+                }
+
+            item = workload_map[workload_key]
+
+            item['replicas'] += 1
+            item['pods'].append(
+                pod,
+            )
+
+            item['cpu_request_raw'] += cpu_requests.get(
+                key,
+                0,
+            )
+
+            item['cpu_limit_raw'] += cpu_limits.get(
+                key,
+                0,
+            )
+
+            item['cpu_avg_raw'] += cpu_avg.get(
+                key,
+                0,
+            )
+
+            item['cpu_peak_raw'] += cpu_peak.get(
+                key,
+                cpu_avg.get(
+                    key,
+                    0,
+                ),
+            )
+
+            item['memory_request_raw'] += memory_requests.get(
+                key,
+                0,
+            )
+
+            item['memory_limit_raw'] += memory_limits.get(
+                key,
+                0,
+            )
+
+            item['memory_avg_raw'] += memory_avg.get(
+                key,
+                0,
+            )
+
+            item['memory_peak_raw'] += memory_peak.get(
+                key,
+                memory_avg.get(
+                    key,
+                    0,
+                ),
+            )
+
+            qos = qos_map.get(
+                key,
+                'Unknown',
+            )
+
+            qos_distribution = item['qos_distribution']
+
+            qos_distribution[qos] = (
+                qos_distribution.get(
+                    qos,
+                    0,
+                )
+                + 1
+            )
+
+        rows: list[dict[str, Any]] = []
+
+        for item in workload_map.values():
+            resource_status = self.get_resource_status(
+                cpu_request=item['cpu_request_raw'],
+                cpu_limit=item['cpu_limit_raw'],
+                memory_request=item['memory_request_raw'],
+                memory_limit=item['memory_limit_raw'],
+            )
+
+            qos = self.get_workload_qos(
+                item['qos_distribution'],
+            )
+
+            efficiency = self.get_efficiency_score(
+                cpu_usage=item['cpu_avg_raw'],
+                cpu_request=item['cpu_request_raw'],
+                memory_usage=item['memory_avg_raw'],
+                memory_request=item['memory_request_raw'],
+            )
+
+            recommendation = self.get_workload_recommendation(
+                cpu_usage=item['cpu_avg_raw'],
+                cpu_request=item['cpu_request_raw'],
+                cpu_limit=item['cpu_limit_raw'],
+                memory_usage=item['memory_avg_raw'],
+                memory_request=item['memory_request_raw'],
+                memory_limit=item['memory_limit_raw'],
+                resource_status=resource_status['label'],
+            )
+
+            risk = self.get_workload_risk(
+                resource_status=resource_status['label'],
+                efficiency=efficiency,
+                recommendation=recommendation,
+            )
+
+            rows.append(
+                {
+                    'workload': item['workload'],
+                    'type': item['type'],
+                    'namespace': item['namespace'],
+                    'replicas': item['replicas'],
+                    'resource_status': resource_status,
+                    'qos': qos,
+                    'cpu_summary': (
+                        f"Req {self.format_cpu(item['cpu_request_raw'])} · "
+                        f"Lim {self.format_cpu(item['cpu_limit_raw'])} · "
+                        f"Avg {self.format_cpu(item['cpu_avg_raw'])} · "
+                        f"Peak {self.format_cpu(item['cpu_peak_raw'])}"
+                    ),
+                    'memory_summary': (
+                        f"Req {self.format_memory_bytes(item['memory_request_raw'])} · "
+                        f"Lim {self.format_memory_bytes(item['memory_limit_raw'])} · "
+                        f"Avg {self.format_memory_bytes(item['memory_avg_raw'])} · "
+                        f"Peak {self.format_memory_bytes(item['memory_peak_raw'])}"
+                    ),
+                    'efficiency': efficiency,
+                    'risk': risk,
+                    'recommendation': recommendation,
+                    'detail': {
+                        'pods': item['pods'],
+                        'qos_distribution': item['qos_distribution'],
+                    },
+                    'cpu_request': self.format_cpu(
+                        item['cpu_request_raw'],
+                    ),
+                    'cpu_limit': self.format_cpu(
+                        item['cpu_limit_raw'],
+                    ),
+                    'cpu_avg': self.format_cpu(
+                        item['cpu_avg_raw'],
+                    ),
+                    'cpu_peak': self.format_cpu(
+                        item['cpu_peak_raw'],
+                    ),
+                    'memory_request': self.format_memory_bytes(
+                        item['memory_request_raw'],
+                    ),
+                    'memory_limit': self.format_memory_bytes(
+                        item['memory_limit_raw'],
+                    ),
+                    'memory_avg': self.format_memory_bytes(
+                        item['memory_avg_raw'],
+                    ),
+                    'memory_peak': self.format_memory_bytes(
+                        item['memory_peak_raw'],
+                    ),
+                }
+            )
+
+        rows.sort(
+            key=lambda row: (
+                self.get_risk_sort_weight(
+                    row['risk']['label'],
+                ),
+                row['namespace'],
+                row['workload'],
+            )
+        )
+
+        return {
+            'rows': rows,
+            'filters': {
+                'resource_status': [
+                    'All',
+                    'Complete',
+                    'Partial',
+                    'Missing Request',
+                    'Missing Limit',
+                    'BestEffort',
+                    'No Metrics',
+                ],
+                'qos': [
+                    'All',
+                    'Guaranteed',
+                    'Burstable',
+                    'BestEffort',
+                    'Mixed',
+                    'Unknown',
+                ],
+                'risk': [
+                    'All',
+                    'Low',
+                    'Medium',
+                    'High',
+                ],
+            },
+        }
 
     def paginate_rows(
         self,
