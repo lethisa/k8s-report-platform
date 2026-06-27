@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -224,6 +225,194 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         )
 
         return sorted(namespace for namespace in namespaces if namespace)
+
+    def get_pod_owner_map(
+        self,
+    ) -> dict[str, dict[str, str]]:
+        result = self.get_prometheus_result(
+            queries.WORKLOAD_POD_OWNER_QUERY,
+        )
+
+        values: dict[str, dict[str, str]] = {}
+
+        for item in result:
+            metric = item.get(
+                'metric',
+                {},
+            )
+
+            if not isinstance(
+                metric,
+                dict,
+            ):
+                continue
+
+            namespace = metric.get(
+                'namespace',
+                '',
+            )
+
+            pod = metric.get(
+                'pod',
+                '',
+            )
+
+            owner_kind = metric.get(
+                'owner_kind',
+                'Pod',
+            )
+
+            owner_name = metric.get(
+                'owner_name',
+                pod,
+            )
+
+            if (
+                not isinstance(
+                    namespace,
+                    str,
+                )
+                or not isinstance(
+                    pod,
+                    str,
+                )
+                or not namespace
+                or not pod
+            ):
+                continue
+
+            if not isinstance(
+                owner_kind,
+                str,
+            ):
+                owner_kind = 'Pod'
+
+            if not isinstance(
+                owner_name,
+                str,
+            ):
+                owner_name = pod
+
+            if owner_kind == 'ReplicaSet':
+                owner_kind = 'Deployment'
+                owner_name = self.strip_replicaset_hash(
+                    owner_name,
+                )
+
+            values[f'{namespace}/{pod}'] = {
+                'kind': owner_kind,
+                'name': owner_name,
+            }
+
+        return values
+
+    def get_pod_qos_map(
+        self,
+    ) -> dict[str, str]:
+        result = self.get_prometheus_result(
+            queries.WORKLOAD_QOS_QUERY,
+        )
+
+        values: dict[str, str] = {}
+
+        for item in result:
+            metric = item.get(
+                'metric',
+                {},
+            )
+
+            if not isinstance(
+                metric,
+                dict,
+            ):
+                continue
+
+            namespace = metric.get(
+                'namespace',
+                '',
+            )
+
+            pod = metric.get(
+                'pod',
+                '',
+            )
+
+            qos_class = metric.get(
+                'qos_class',
+                '',
+            )
+
+            if (
+                not isinstance(
+                    namespace,
+                    str,
+                )
+                or not isinstance(
+                    pod,
+                    str,
+                )
+                or not isinstance(
+                    qos_class,
+                    str,
+                )
+                or not namespace
+                or not pod
+                or not qos_class
+            ):
+                continue
+
+            values[f'{namespace}/{pod}'] = qos_class
+
+        return values
+
+    def infer_workload_owner(
+        self,
+        pod_name: str,
+    ) -> dict[str, str]:
+        workload_name = self.strip_pod_suffix(
+            pod_name,
+        )
+
+        return {
+            'kind': 'Workload',
+            'name': workload_name,
+        }
+
+    def strip_pod_suffix(
+        self,
+        pod_name: str,
+    ) -> str:
+        match = re.match(
+            r'^(?P<name>.+)-[a-z0-9]{8,10}-[a-z0-9]{5}$',
+            pod_name,
+        )
+
+        if match:
+            return match.group(
+                'name',
+            )
+
+        match = re.match(
+            r'^(?P<name>.+)-[a-z0-9]{5}$',
+            pod_name,
+        )
+
+        if match:
+            return match.group(
+                'name',
+            )
+
+        return pod_name
+
+    def strip_replicaset_hash(
+        self,
+        owner_name: str,
+    ) -> str:
+        return re.sub(
+            r'-[a-z0-9]{8,10}$',
+            '',
+            owner_name,
+        )
 
     def get_tenant_quota_summary(
         self,
