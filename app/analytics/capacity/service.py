@@ -156,6 +156,7 @@ class CapacityService(AnalyticsBaseService):
 
         governance_findings = self.get_capacity_governance_findings(
             capacity_summary=capacity_summary,
+            allocation_summary=allocation_summary,
         )
 
         recommendation_cards = self.get_capacity_recommendation_cards(
@@ -292,6 +293,70 @@ class CapacityService(AnalyticsBaseService):
                 ),
             },
         }
+
+    def get_allocation_status_findings(
+        self,
+        allocation_summary: dict[str, dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        resource_labels = {
+            'cpu': 'CPU',
+            'memory': 'Memory',
+            'pods': 'Pods',
+        }
+
+        resource_icons = {
+            'cpu': 'cpu',
+            'memory': 'memory-stick',
+            'pods': 'box',
+        }
+
+        findings: list[dict[str, Any]] = []
+
+        for resource in [
+            'cpu',
+            'memory',
+            'pods',
+        ]:
+            section = allocation_summary.get(
+                resource,
+                {},
+            )
+
+            status = section.get(
+                'status',
+                {},
+            )
+
+            if not isinstance(
+                status,
+                dict,
+            ):
+                continue
+
+            status_label = str(
+                status.get(
+                    'label',
+                    'Unknown',
+                )
+            )
+
+            findings.append(
+                {
+                    'label': (
+                        f'{resource_labels.get(resource, resource.title())} ' f'allocation status: {status_label}'
+                    ),
+                    'severity': self.get_allocation_finding_severity(
+                        status_label,
+                    ),
+                    'icon': resource_icons.get(
+                        resource,
+                        'activity',
+                    ),
+                    'filter': 'capacity-allocation',
+                }
+            )
+
+        return findings
 
     def get_worker_capacity_summary(
         self,
@@ -713,11 +778,38 @@ class CapacityService(AnalyticsBaseService):
 
         return risks
 
+    def get_allocation_finding_severity(
+        self,
+        status_label: str,
+    ) -> str:
+        normalized_label = status_label.lower()
+
+        if 'overcommit' in normalized_label:
+            return 'critical'
+
+        if 'near capacity' in normalized_label:
+            return 'warning'
+
+        if 'watch' in normalized_label:
+            return 'warning'
+
+        if 'healthy' in normalized_label:
+            return 'healthy'
+
+        return 'info'
+
     def get_capacity_governance_findings(
         self,
         capacity_summary: dict[str, dict[str, float]],
+        allocation_summary: dict[str, dict[str, Any]],
     ) -> list[dict[str, Any]]:
         findings: list[dict[str, Any]] = []
+
+        findings.extend(
+            self.get_allocation_status_findings(
+                allocation_summary,
+            )
+        )
 
         low_headroom = [
             resource
