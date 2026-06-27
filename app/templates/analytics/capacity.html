@@ -1,353 +1,388 @@
 {% extends "layouts/dashboard.html" %}
 {% block title %}Capacity Analysis{% endblock title %}
 {% block dashboard_content %}
-    <div class=" mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <div class=" flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between ">
-            <div class="flex items-start gap-4">
-                <div class=" flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 ">
-                    <i data-lucide="gauge" class=" h-6 w-6 text-blue-600 "></i>
+    <div class="space-y-6">
+        <!-- Page Header -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                        <i data-lucide="bar-chart-3" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Capacity Analysis</h1>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Analyze cluster capacity, tenant quota allocation, workload resource mapping, and storage utilization.
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class=" text-3xl font-bold text-slate-900 ">Capacity Analysis</h1>
-                    <p class=" mt-1 text-sm text-slate-500 ">
-                        Analyze cluster capacity,
-                        available resources,
-                        headroom and growth potential.
-                    </p>
-                </div>
-            </div>
-            <div class=" flex items-center gap-3 ">
-                <span class=" rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 ">Capacity Planning</span>
-                <form method="GET" action="{{ url_for('analytics.capacity') }}">
-                    <select name="cluster_id"
-                            onchange="this.form.submit()"
-                            class=" rounded-xl border border-slate-300 px-4 py-2 text-sm ">
-                        {% for item in clusters %}
-                            <option value="{{ item.id }}"
-                                    {% if cluster and cluster.id == item.id %}selected{% endif %}>
-                                {{ item.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                <form method="GET"
+                      action="{{ url_for('analytics.capacity') }}"
+                      class="grid gap-3 md:grid-cols-2 xl:grid-cols-[220px_260px_180px_220px_auto]">
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Cluster</span>
+                        <select name="cluster_id"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in clusters %}
+                                <option value="{{ item.id }}"
+                                        {% if cluster and cluster.id == item.id %}selected{% endif %}>
+                                    {{ item.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Namespace</span>
+                        <select name="namespace"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            <option value="">All Namespaces</option>
+                            {% for namespace in namespace_options %}
+                                <option value="{{ namespace }}"
+                                        {% if selected_namespace == namespace %}selected{% endif %}>
+                                    {{ namespace }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Time Range</span>
+                        <select name="time_range"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in allowed_time_ranges %}
+                                <option value="{{ item.value }}"
+                                        {% if selected_time_range == item.value %}selected{% endif %}>
+                                    {{ item.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    {% include "analytics/capacity/partials/_prometheus_status.html" %}
+                    <div class="flex items-end">
+                        <button type="submit"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                            Refresh Analysis
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
-    </div>
-    <div class=" mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <div class=" flex items-start justify-between ">
-            <div>
-                <h2 class=" text-2xl font-bold text-slate-900 ">{{ cluster.name }}</h2>
-                <p class=" text-sm text-slate-500 ">
-                    Kubernetes
-                    {{ cluster_info.kubernetes_version }}
-                </p>
-            </div>
-            <span class=" rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 ">Capacity Overview</span>
-        </div>
-        <div class=" mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6 ">
-            <div>
-                <div class="text-xs text-slate-500">Nodes</div>
-                <div class="text-3xl font-bold">{{ cluster_info.total_nodes }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-slate-500">Workers</div>
-                <div class="text-3xl font-bold">{{ cluster_info.worker_nodes }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-slate-500">Masters</div>
-                <div class="text-3xl font-bold">{{ cluster_info.master_nodes }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-slate-500">CPU Capacity</div>
-                <div class="text-3xl font-bold">{{ cluster_info.cpu_capacity }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-slate-500">Memory</div>
-                <div class="text-3xl font-bold">
-                    {{ "%.2f"|format(cluster_info.memory_capacity
-                                        / 1024**3) 
-                    }}
-                    GiB
-                </div>
-            </div>
-            <div>
-                <div class="text-xs text-slate-500">Pod Capacity</div>
-                <div class="text-3xl font-bold">{{ cluster_info.pod_capacity }}</div>
-            </div>
-        </div>
-    </div>
-    <div class=" grid gap-6 md:grid-cols-2 xl:grid-cols-4 ">
-        {% for resource, item in capacity_summary.items() %}
-            <div class=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-                <div class=" mb-4 text-lg font-semibold capitalize ">{{ resource }}</div>
-                <div class="space-y-3">
-                    <div class=" flex items-center justify-between ">
-                        <span class="text-slate-500">Capacity</span>
-                        <span class="font-medium">
-                            {% if resource in ['memory', 'storage'] %}
-                                {{ item.capacity }} GiB
-                            {% elif resource == 'pods' %}
-                                {{ item.capacity }}
-                            {% else %}
-                                {{ item.capacity }} Core
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class=" flex items-center justify-between ">
-                        <span class="text-slate-500">Used</span>
-                        <span class="font-medium">
-                            {% if resource in ['memory', 'storage'] %}
-                                {{ item.used }} GiB
-                            {% elif resource == 'pods' %}
-                                {{ item.used }}
-                            {% else %}
-                                {{ item.used }} Core
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class=" flex items-center justify-between ">
-                        <span class="text-slate-500">Available</span>
-                        <span class="font-medium">
-                            {% if resource in ['memory', 'storage'] %}
-                                {{ item.available }} GiB
-                            {% elif resource == 'pods' %}
-                                {{ item.available }}
-                            {% else %}
-                                {{ item.available }} Core
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-                <div class="mt-6">
-                    <div class=" mb-2 flex items-center justify-between ">
-                        <span class="text-sm text-slate-500">Headroom</span>
-                        <span class="font-semibold">{{ "%.1f"|format(item.headroom) }}%</span>
-                    </div>
-                    <div class=" h-2 overflow-hidden rounded-full bg-slate-200 ">
-                        <div class=" h-2 rounded-full bg-blue-500 "
-                             style="width: {{ item.headroom }}%"></div>
+        {% if error %}
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="triangle-alert" class="mt-0.5 h-5 w-5"></i>
+                    <div>
+                        <div class="font-semibold">Prometheus connection issue</div>
+                        <div class="mt-1">{{ error }}</div>
                     </div>
                 </div>
             </div>
-        {% endfor %}
-    </div>
-    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm ">
-        <div class=" border-b border-slate-200 px-6 py-4 ">
-            <h3 class=" text-lg font-semibold text-slate-900 ">Capacity Breakdown</h3>
-            <p class=" mt-1 text-sm text-slate-500 ">Resource availability and remaining capacity.</p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class=" border-b border-slate-200 bg-slate-50 ">
-                        <th class=" px-6 py-3 text-left text-sm font-semibold ">Resource</th>
-                        <th class=" px-6 py-3 text-left text-sm font-semibold ">Capacity</th>
-                        <th class=" px-6 py-3 text-left text-sm font-semibold ">Used</th>
-                        <th class=" px-6 py-3 text-left text-sm font-semibold ">Available</th>
-                        <th class=" px-6 py-3 text-left text-sm font-semibold ">Headroom</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for resource, item in capacity_summary.items() %}
-                        <tr class=" border-b border-slate-100 ">
-                            <td class=" px-6 py-4 font-medium capitalize ">{{ resource }}</td>
-                            <td class="px-6 py-4">{{ item.capacity }}</td>
-                            <td class="px-6 py-4">{{ item.used }}</td>
-                            <td class="px-6 py-4">{{ item.available }}</td>
-                            <td class="px-6 py-4">
-                                <div class=" flex items-center gap-3 ">
-                                    <div class=" h-2 w-32 overflow-hidden rounded-full bg-slate-200 ">
-                                        <div class=" h-2 rounded-full bg-blue-500 "
-                                             style="width: {{ item.headroom }}%"></div>
-                                    </div>
-                                    <span class=" text-sm font-medium ">
-                                        {{ "%.1f"|format(item.headroom) 
-                                        }}%
+        {% endif %}
+        {% if cluster %}
+            <!-- Worker Capacity Summary -->
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Worker Capacity Summary</h2>
+                        <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
+                    </div>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Schedulable capacity is calculated from Ready worker nodes. Control-plane nodes are shown for context only.
+                    </p>
+                </div>
+                <div class="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-4">
+                    {% for card in kpi_cards %}
+                        <div class="rounded-2xl border border-slate-200 p-5 shadow-sm dark:border-slate-700">
+                            <div class="flex items-start gap-4">
+                                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl {{ card['icon_class'] }}">
+                                    <i data-lucide="{{ card['icon'] }}" class="h-6 w-6"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ card['label'] }}</div>
+                                    <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ card['value'] }}</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">{{ card['caption'] }}</div>
+                                    {% if card.get('footer') %}
+                                        <div class="mt-3 text-[11px] font-medium text-slate-400 dark:text-slate-500">{{ card['footer'] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            <!-- Allocation and Risk -->
+            <div class="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+                <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Cluster Resource Allocation &amp; Headroom</h2>
+                            <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
+                        </div>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Compare worker allocatable capacity, workload requests, limits, actual usage, and remaining headroom.
+                        </p>
+                    </div>
+                    <div class="space-y-6 p-6">
+                        {% for key, section in allocation_summary.items() %}
+                            <div class="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                                <div class="mb-4 flex items-center justify-between gap-3">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">{{ section['title'] }}</h3>
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ section['status']['class'] }}">
+                                        {{ section['status']['label'] }}
                                     </span>
                                 </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <h3 class=" text-lg font-semibold text-slate-900 ">Capacity Assessment</h3>
-        <p class=" mt-1 text-sm text-slate-500 ">Current capacity risk based on available headroom.</p>
-        <div class=" mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4 ">
-            {% for resource, item in capacity_assessment.items() %}
-                <div class=" rounded-xl border border-slate-200 p-4 ">
-                    <div class=" text-sm text-slate-500 capitalize ">{{ resource }}</div>
-                    <div class="mt-2">
-                        {% if item.status == 'Healthy' %}
-                            <span class=" rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 ">Healthy</span>
-                        {% elif item.status == 'Warning' %}
-                            <span class=" rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 ">Warning</span>
-                        {% else %}
-                            <span class=" rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 ">Critical</span>
-                        {% endif %}
+                                <div class="space-y-4">
+                                    {% for item in section['items'] %}
+                                        <div>
+                                            <div class="mb-1 flex items-center justify-between gap-3">
+                                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ item['label'] }}</span>
+                                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ item['display'] }}</span>
+                                            </div>
+                                            <div class="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                                <div class="capacity-progress h-2.5 rounded-full {{ item['bar_class'] }}"
+                                                     data-progress="{{ item['percent'] }}"></div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div class=" mt-3 text-sm text-slate-500 ">
-                        Headroom:
-                        {{ "%.1f"|format(item.headroom) 
-                        }}%
+                    <div class="border-t border-slate-200 px-6 py-4 dark:border-slate-700">
+                        <div class="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+                            <span class="inline-flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-300"></span>
+                                Allocatable / Capacity
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+                                Configured Requests
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-blue-300"></span>
+                                Configured Limits
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                                Actual Avg Usage
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-800"></span>
+                                Peak Usage
+                            </span>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <div class=" mb-6 flex items-center justify-between ">
-            <div>
-                <h3 class=" text-lg font-semibold text-slate-900 ">Capacity Distribution</h3>
-                <p class=" mt-1 text-sm text-slate-500 ">Used versus available capacity across cluster resources.</p>
+                </section>
+                <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Capacity Risk Summary</h2>
+                            <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
+                        </div>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Current compute and scheduling headroom, plus governance findings.
+                        </p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+                            {% for item in risk_summary %}
+                                <div class="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-2xl {{ item['icon_class'] }}">
+                                            <i data-lucide="{{ item['icon'] }}" class="h-5 w-5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ item['label'] }}</div>
+                                            <div class="text-xs text-slate-500 dark:text-slate-400">Headroom</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex items-end justify-between">
+                                        <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ "%.1f"|format(item['headroom']) }}%</div>
+                                        <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ item['status']['class'] }}">
+                                            {{ item['status']['label'] }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-6 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                            <div class="mb-4 flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">Headroom Overview</h3>
+                                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Visual summary of current CPU, memory, and pod headroom.</p>
+                                </div>
+                                <i data-lucide="gauge" class="h-5 w-5 text-slate-400"></i>
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-3">
+                                {% for item in risk_summary %}
+                                    <div class="rounded-2xl bg-slate-50 p-4 text-center dark:bg-slate-950">
+                                        <div class="mx-auto h-24 w-24">
+                                            <svg viewBox="0 0 36 36" class="h-24 w-24">
+                                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3" class="text-slate-200 dark:text-slate-800"></circle>
+                                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 18 18)" data-progress="{{ item['headroom'] }}" class="capacity-ring
+                                                {% if item['resource'] == 'cpu' %}
+                                                    text-emerald-500
+                                                {% elif item['resource'] == 'memory' %}
+                                                    text-violet-500
+                                                {% else %}
+                                                    text-cyan-500
+                                                {% endif %}
+                                                "></circle>
+                                                <text x="18" y="17" text-anchor="middle" class="fill-slate-900 text-[0.42rem] font-bold dark:fill-white">
+                                                {{ "%.0f"|format(item['headroom']) }}%
+                                                </text>
+                                                <text x="18" y="22" text-anchor="middle" class="fill-slate-500 text-[0.22rem] font-semibold uppercase dark:fill-slate-400">
+                                                Headroom
+                                                </text>
+                                            </svg>
+                                        </div>
+                                        <div class="mt-3 text-sm font-semibold text-slate-900 dark:text-white">{{ item['label'] }}</div>
+                                        <div class="mt-1">
+                                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ item['status']['class'] }}">
+                                                {{ item['status']['label'] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                                <h3 class="font-semibold text-slate-900 dark:text-white">Governance Findings</h3>
+                            </div>
+                            <div class="divide-y divide-slate-200 dark:divide-slate-700">
+                                {% for finding in governance_findings %}
+                                    <div class="flex items-center justify-between gap-3 px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            {% if finding['severity'] == 'critical' %}
+                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-red-500"></i>
+                                            {% elif finding['severity'] == 'warning' %}
+                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-amber-500"></i>
+                                            {% else %}
+                                                <i data-lucide="{{ finding['icon'] }}" class="h-4 w-4 text-emerald-500"></i>
+                                            {% endif %}
+                                            <span class="text-sm text-slate-700 dark:text-slate-200">{{ finding['label'] }}</span>
+                                        </div>
+                                        <a href="#workload-resource-mapping"
+                                           class="shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
+                                            View details
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="border-t border-slate-200 px-4 py-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                View details opens filtered Workload Resource Mapping.
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </div>
-        <div class="h-96">
-            <canvas id="capacityDistributionChart"></canvas>
-        </div>
-    </div>
-    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <h3 class=" text-lg font-semibold text-slate-900 ">Resource Saturation Ranking</h3>
-        <p class=" mt-1 text-sm text-slate-500 ">Resources ordered by lowest available headroom.</p>
-        <div class=" mt-6 space-y-4 ">
-            {% for item in resource_ranking %}
-                <div class=" flex items-center justify-between rounded-xl border border-slate-200 p-4 ">
-                    <div class=" flex items-center gap-3 ">
-                        <div class=" flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 ">
-                            {{ loop.index }}
-                        </div>
-                        <div>
-                            <div class=" font-medium capitalize ">{{ item.resource }}</div>
-                            <div class=" text-xs text-slate-500 ">Capacity Headroom</div>
-                        </div>
+            {% include "analytics/capacity/partials/_storage_section.html" %}
+            {% include "analytics/capacity/partials/_tenant_quota_section.html" %}
+            {% include "analytics/capacity/partials/_workload_mapping_section.html" %}
+            <!-- Recommendations -->
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Capacity Recommendations</h2>
+                        <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
                     </div>
-                    <div class=" text-right ">
-                        <div class=" text-lg font-bold ">
-                            {{ "%.1f"|format(item.headroom) 
-                            }}%
-                        </div>
-                    </div>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Actionable steps to maintain healthy headroom and improve resource efficiency.
+                    </p>
                 </div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class=" mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ">
-        <h3 class=" text-lg font-semibold ">Capacity Recommendations</h3>
-        <p class=" mt-1 text-sm text-slate-500 ">Automated recommendations based on current headroom.</p>
-        <div class=" mt-6 space-y-3 ">
-            {% for recommendation in recommendations %}
-                <div class=" rounded-xl border border-slate-200 bg-slate-50 p-4 ">
-                    <div class=" flex items-start gap-3 ">
-                        <i data-lucide="lightbulb" class=" h-5 w-5 text-amber-500 "></i>
-                        <div>
-                            <div class=" text-sm font-medium text-slate-900 ">Recommendation</div>
-                            <div class=" mt-1 text-sm text-slate-600 ">{{ recommendation }}</div>
+                <div class="grid gap-4 p-6 lg:grid-cols-2 xl:grid-cols-4">
+                    {% for item in recommendation_cards %}
+                        <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
+                            <div class="flex items-start gap-4">
+                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl {{ item['icon_class'] }}">
+                                    <i data-lucide="{{ item['icon'] }}" class="h-5 w-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">{{ item['title'] }}</h3>
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item['description'] }}</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
+            </section>
+        {% else %}
+            <div class="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                    <i data-lucide="database-zap" class="h-7 w-7"></i>
+                </div>
+                <h2 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">No cluster configured</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Add a Kubernetes cluster before opening Capacity Analysis.
+                </p>
+            </div>
+        {% endif %}
     </div>
     {% block scripts %}
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-const capacityCtx =
-    document.getElementById(
-        'capacityDistributionChart'
-    );
+    function hydrateCapacityUi() {
+        document
+            .querySelectorAll(
+                '.capacity-progress'
+            )
+            .forEach(
+                function (element) {
+                    const rawValue = Number(
+                        element.dataset.progress || 0
+                    );
 
-if (capacityCtx) {
+                    const value = Math.max(
+                        0,
+                        Math.min(
+                            rawValue,
+                            100
+                        )
+                    );
 
-    new Chart(
-        capacityCtx,
-        {
-            type: 'bar',
+                    element.style.width = `${value}%`;
+                }
+            );
 
-            data: {
+        document
+            .querySelectorAll(
+                '.capacity-ring'
+            )
+            .forEach(
+                function (element) {
+                    const rawValue = Number(
+                        element.dataset.progress || 0
+                    );
 
-                labels: [
-                    'CPU',
-                    'Memory',
-                    'Storage',
-                    'Pods',
-                ],
+                    const value = Math.max(
+                        0,
+                        Math.min(
+                            rawValue,
+                            100
+                        )
+                    );
 
-                datasets: [
+                    element.setAttribute(
+                        'stroke-dasharray',
+                        `${value} 100`
+                    );
+                }
+            );
 
-                    {
-                        label: 'Used',
-
-                        data: [
-
-                            {{ capacity_chart.cpu.used }},
-                            {{ capacity_chart.memory.used }},
-                            {{ capacity_chart.storage.used }},
-                            {{ capacity_chart.pods.used }},
-
-                        ],
-
-                        backgroundColor:
-                            '#3b82f6',
-                    },
-
-                    {
-                        label:
-                            'Available',
-
-                        data: [
-
-                            {{ capacity_chart.cpu.available }},
-                            {{ capacity_chart.memory.available }},
-                            {{ capacity_chart.storage.available }},
-                            {{ capacity_chart.pods.available }},
-
-                        ],
-
-                        backgroundColor:
-                            '#cbd5e1',
-                    },
-
-                ],
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio:
-                    false,
-
-                plugins: {
-
-                    legend: {
-                        position:
-                            'top',
-                    },
-
-                },
-
-                scales: {
-
-                    x: {
-                        stacked: true,
-                    },
-
-                    y: {
-                        stacked: true,
-                        beginAtZero: true,
-                    },
-
-                },
-
-            },
-
+        if (window.lucide) {
+            window.lucide.createIcons();
         }
+    }
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        hydrateCapacityUi
     );
 
-}
-
+    document.body.addEventListener(
+        'htmx:afterSwap',
+        hydrateCapacityUi
+    );
         </script>
     {% endblock scripts %}
 {% endblock dashboard_content %}

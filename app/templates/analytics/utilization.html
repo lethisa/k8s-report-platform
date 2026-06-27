@@ -10,7 +10,6 @@
             <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Normal</span>
         {% endif %}
     {% endmacro %}
-
     {% macro risk_status_badge(status) %}
         {% if status == 'Critical' %}
             <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">Critical</span>
@@ -236,7 +235,9 @@
                 <form method="get"
                       action="{{ url_for('analytics.utilization') }}"
                       class="grid gap-3 sm:grid-cols-2 xl:w-[520px]">
-                    <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
+                    <input type="hidden"
+                           name="cluster_id"
+                           value="{{ cluster.id if cluster else '' }}" />
                     <input type="hidden" name="node" value="{{ selected_node }}" />
                     <input type="hidden"
                            name="filesystem_instance"
@@ -247,9 +248,8 @@
                                 onchange="this.form.submit()"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100">
                             {% for option in allowed_trend_hours %}
-                                <option value="{{ option }}" {% if trend_hours == option %}selected{% endif %}>
-                                    Last {{ option }}h
-                                </option>
+                                <option value="{{ option }}"
+                                        {% if trend_hours == option %}selected{% endif %}>Last {{ option }}h</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -260,9 +260,8 @@
                                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100">
                             <option value="">All Nodes</option>
                             {% for node in available_worker_nodes %}
-                                <option value="{{ node }}" {% if selected_trend_node == node %}selected{% endif %}>
-                                    {{ node }}
-                                </option>
+                                <option value="{{ node }}"
+                                        {% if selected_trend_node == node %}selected{% endif %}>{{ node }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -301,7 +300,9 @@
                     <form method="get"
                           action="{{ url_for('analytics.utilization') }}"
                           class="grid gap-3 md:grid-cols-2 xl:w-[640px]">
-                        <input type="hidden" name="cluster_id" value="{{ cluster.id if cluster else '' }}" />
+                        <input type="hidden"
+                               name="cluster_id"
+                               value="{{ cluster.id if cluster else '' }}" />
                         <input type="hidden" name="trend_hours" value="{{ trend_hours }}" />
                         <input type="hidden" name="trend_node" value="{{ selected_trend_node }}" />
                         <div>
@@ -337,7 +338,7 @@
                 <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900/20">
                     <div class="flex items-center justify-between gap-3">
                         <div class="text-sm text-slate-500 dark:text-slate-400">CPU</div>
-                        {{ risk_status_badge(cpu_risk.get('status', 'Normal')) }}
+                        {{ risk_status_badge(cpu_risk.get('status', 'Normal') ) }}
                     </div>
                     <div class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ detail_summary.cpu_utilization }}%</div>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -349,7 +350,7 @@
                 <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900/20">
                     <div class="flex items-center justify-between gap-3">
                         <div class="text-sm text-slate-500 dark:text-slate-400">Memory</div>
-                        {{ risk_status_badge(memory_risk.get('status', 'Normal')) }}
+                        {{ risk_status_badge(memory_risk.get('status', 'Normal') ) }}
                     </div>
                     <div class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ detail_summary.memory_utilization }}%</div>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -362,7 +363,7 @@
                 <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900/20">
                     <div class="flex items-center justify-between gap-3">
                         <div class="text-sm text-slate-500 dark:text-slate-400">Disk /var</div>
-                        {{ risk_status_badge(storage_risk.get('status', 'Normal')) }}
+                        {{ risk_status_badge(storage_risk.get('status', 'Normal') ) }}
                     </div>
                     <div class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ detail_summary.storage_utilization }}%</div>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -374,7 +375,7 @@
                 <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900/20">
                     <div class="flex items-center justify-between gap-3">
                         <div class="text-sm text-slate-500 dark:text-slate-400">Pods</div>
-                        {{ risk_status_badge(pods_risk.get('status', 'Normal')) }}
+                        {{ risk_status_badge(pods_risk.get('status', 'Normal') ) }}
                     </div>
                     <div class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ detail_summary.pod_utilization }}%</div>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">

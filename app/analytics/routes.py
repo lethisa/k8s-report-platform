@@ -1,7 +1,14 @@
+from typing import cast
+
 from flask import Blueprint, current_app, render_template, request
 from flask_login import login_required
 
-from app.analytics.capacity.service import CapacityService
+from app.analytics.capacity.routes import (
+    capacity,
+    capacity_storage,
+    capacity_tenant_quota,
+    capacity_workload_mapping,
+)
 from app.analytics.forecast import ForecastService
 from app.analytics.overview.service import get_analytics_overview
 from app.analytics.utilization.service import UtilizationService
@@ -220,6 +227,7 @@ def utilization() -> str:
 
     error = None
     prometheus_connected = False
+    service: UtilizationService | None = None
 
     try:
         prometheus = PrometheusService(
@@ -255,9 +263,7 @@ def utilization() -> str:
 
         detail_summary = service.get_detail_summary(
             node_name=selected_node or None,
-            filesystem_instance=(
-                selected_filesystem_instance or None
-            ),
+            filesystem_instance=(selected_filesystem_instance or None),
         )
 
         trends = service.get_trends(
@@ -312,14 +318,20 @@ def utilization() -> str:
 
     detail_risk_assessment = risk_assessment.copy()
 
-    if prometheus_connected:
+    if prometheus_connected and service is not None:
         try:
             risk_assessment = service.get_capacity_pressure_risk(
-                summary,
+                cast(
+                    dict[str, int | float],
+                    summary,
+                ),
             )
 
             detail_risk_assessment = service.get_capacity_pressure_risk(
-                detail_summary,
+                cast(
+                    dict[str, int | float],
+                    detail_summary,
+                ),
                 selected_node or None,
             )
         except Exception as exc:
@@ -353,152 +365,29 @@ def utilization() -> str:
     )
 
 
-@analytics_bp.route(
+analytics_bp.add_url_rule(
     '/capacity',
+    endpoint='capacity',
+    view_func=capacity,
 )
-@login_required
-def capacity():
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
 
-    cluster_id = request.args.get(
-        'cluster_id',
-    )
+analytics_bp.add_url_rule(
+    '/capacity/storage',
+    endpoint='capacity_storage',
+    view_func=capacity_storage,
+)
 
-    cluster = None
+analytics_bp.add_url_rule(
+    '/capacity/tenant-quota',
+    endpoint='capacity_tenant_quota',
+    view_func=capacity_tenant_quota,
+)
 
-    if cluster_id:
-        cluster = Cluster.query.get(
-            cluster_id,
-        )
-
-    if not cluster and clusters:
-        cluster = clusters[0]
-
-    if not cluster:
-        return render_template(
-            'analytics/capacity.html',
-            clusters=[],
-            capacity_summary={},
-        )
-
-    prometheus = PrometheusService(
-        cluster,
-    )
-
-    utilization_service = UtilizationService(
-        prometheus,
-    )
-
-    capacity_service = CapacityService(
-        utilization_service,
-    )
-
-    summary = utilization_service.get_summary()
-
-    cluster_info = utilization_service.get_cluster_info(
-        summary,
-    )
-
-    capacity_summary = capacity_service.get_capacity_summary()
-
-    capacity_assessment = {}
-
-    for resource, item in capacity_summary.items():
-        headroom = item.get(
-            'headroom',
-            0,
-        )
-
-        if headroom < 15:
-            status = 'Critical'
-
-        elif headroom < 30:
-            status = 'Warning'
-
-        else:
-            status = 'Healthy'
-
-        capacity_assessment[resource] = {
-            'status': status,
-            'headroom': headroom,
-        }
-
-    resource_ranking = sorted(
-        [
-            {
-                'resource': resource,
-                'headroom': item.get(
-                    'headroom',
-                    0,
-                ),
-            }
-            for resource, item in capacity_summary.items()
-        ],
-        key=lambda x: x['headroom'],
-    )
-
-    recommendations = []
-
-    for resource, item in capacity_summary.items():
-        headroom = item.get(
-            'headroom',
-            0,
-        )
-
-        if headroom < 15:
-            recommendations.append(
-                f'{resource.title()} capacity is critical '
-                f'({headroom:.1f}% headroom remaining).'
-            )
-
-        elif headroom < 30:
-            recommendations.append(
-                f'{resource.title()} capacity is running low '
-                f'({headroom:.1f}% headroom remaining).'
-            )
-
-        elif headroom < 50:
-            recommendations.append(
-                f'Monitor {resource} growth trends. '
-                f'Current headroom is '
-                f'{headroom:.1f}%.'
-            )
-
-    if not recommendations:
-        recommendations.append(
-            'All cluster resources currently have healthy capacity headroom.'
-        )
-
-    return render_template(
-        'analytics/capacity.html',
-        clusters=clusters,
-        cluster=cluster,
-        cluster_info=cluster_info,
-        capacity_summary=capacity_summary,
-        capacity_assessment=capacity_assessment,
-        resource_ranking=resource_ranking,
-        recommendations=recommendations,
-        capacity_chart={
-            'cpu': {
-                'used': capacity_summary['cpu']['used'],
-                'available': capacity_summary['cpu']['available'],
-            },
-            'memory': {
-                'used': capacity_summary['memory']['used'],
-                'available': capacity_summary['memory']['available'],
-            },
-            'storage': {
-                'used': capacity_summary['storage']['used'],
-                'available': capacity_summary['storage']['available'],
-            },
-            'pods': {
-                'used': capacity_summary['pods']['used'],
-                'available': capacity_summary['pods']['available'],
-            },
-        },
-    )
+analytics_bp.add_url_rule(
+    '/capacity/workload-mapping',
+    endpoint='capacity_workload_mapping',
+    view_func=capacity_workload_mapping,
+)
 
 
 @analytics_bp.route(
