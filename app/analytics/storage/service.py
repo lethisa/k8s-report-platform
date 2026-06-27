@@ -7,13 +7,17 @@ from typing import Any
 
 from app.analytics.capacity.service import (
     ALLOWED_TIME_RANGE_VALUES,
-    build_capacity_service_for_query,
+    CapacityService,
     get_empty_capacity_payload,
     get_per_page_arg,
     get_positive_int_arg,
     get_query_value,
+    get_selected_cluster,
     get_selected_time_range,
 )
+from app.analytics.utilization.service import UtilizationService
+from app.models import Cluster
+from app.prometheus.service import PrometheusService
 
 
 def get_allowed_time_ranges() -> list[dict[str, str]]:
@@ -37,6 +41,71 @@ def get_allowed_time_ranges() -> list[dict[str, str]]:
     ]
 
 
+def build_storage_capacity_service_for_query(
+    query_args: Mapping[str, Any],
+) -> tuple[list[Cluster], Cluster | None, CapacityService | None, dict[str, Any]]:
+    clusters = Cluster.query.order_by(
+        Cluster.name,
+    ).all()
+
+    cluster_id = get_query_value(
+        query_args=query_args,
+        name='cluster_id',
+        default='',
+    )
+
+    cluster = get_selected_cluster(
+        clusters=clusters,
+        cluster_id=cluster_id,
+    )
+
+    base_context: dict[str, Any] = {
+        'clusters': clusters,
+        'cluster': cluster,
+        'error': None,
+        'prometheus_connected': False,
+        'prometheus_status': {
+            'connected': False,
+            'response_time_ms': None,
+            'label': 'Prometheus Disconnected',
+            'description': 'Prometheus unavailable',
+        },
+        'selected_namespace': get_query_value(
+            query_args=query_args,
+            name='namespace',
+            default='',
+        ),
+        'selected_time_range': get_selected_time_range(
+            query_args=query_args,
+        ),
+    }
+
+    if cluster is None:
+        return clusters, None, None, base_context
+
+    prometheus = PrometheusService(
+        cluster,
+    )
+
+    utilization_service = UtilizationService(
+        prometheus,
+    )
+
+    capacity_service = CapacityService(
+        utilization_service,
+    )
+
+    base_context['prometheus_status'] = capacity_service.get_prometheus_status()
+    base_context['prometheus_connected'] = bool(
+        base_context['prometheus_status'].get(
+            'connected',
+            False,
+        )
+    )
+
+    return clusters, cluster, capacity_service, base_context
+
+
 def get_selected_storage_tab(
     query_args: Mapping[str, Any],
 ) -> str:
@@ -58,7 +127,7 @@ def get_selected_storage_tab(
 def get_storage_analysis_context(
     query_args: Mapping[str, Any],
 ) -> dict[str, Any]:
-    _, _, capacity_service, context = build_capacity_service_for_query(
+    _, _, capacity_service, context = build_storage_capacity_service_for_query(
         query_args=query_args,
     )
 

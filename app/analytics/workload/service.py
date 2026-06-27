@@ -6,15 +6,17 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity.service import (
-    build_capacity_service_for_query,
-    filter_tenant_quota_rows,
-    filter_workload_rows,
+    CapacityService,
     get_empty_capacity_payload,
     get_per_page_arg,
     get_positive_int_arg,
     get_query_value,
+    get_selected_cluster,
     get_selected_time_range,
 )
+from app.analytics.utilization.service import UtilizationService
+from app.models import Cluster
+from app.prometheus.service import PrometheusService
 
 
 def get_allowed_time_ranges() -> list[dict[str, str]]:
@@ -38,10 +40,196 @@ def get_allowed_time_ranges() -> list[dict[str, str]]:
     ]
 
 
+def build_workload_capacity_service_for_query(
+    query_args: Mapping[str, Any],
+) -> tuple[list[Cluster], Cluster | None, CapacityService | None, dict[str, Any]]:
+    clusters = Cluster.query.order_by(
+        Cluster.name,
+    ).all()
+
+    cluster_id = get_query_value(
+        query_args=query_args,
+        name='cluster_id',
+        default='',
+    )
+
+    cluster = get_selected_cluster(
+        clusters=clusters,
+        cluster_id=cluster_id,
+    )
+
+    base_context: dict[str, Any] = {
+        'clusters': clusters,
+        'cluster': cluster,
+        'error': None,
+        'prometheus_connected': False,
+        'prometheus_status': {
+            'connected': False,
+            'response_time_ms': None,
+            'label': 'Prometheus Disconnected',
+            'description': 'Prometheus unavailable',
+        },
+        'selected_namespace': get_query_value(
+            query_args=query_args,
+            name='namespace',
+            default='',
+        ),
+        'selected_time_range': get_selected_time_range(
+            query_args=query_args,
+        ),
+    }
+
+    if cluster is None:
+        return clusters, None, None, base_context
+
+    prometheus = PrometheusService(
+        cluster,
+    )
+
+    utilization_service = UtilizationService(
+        prometheus,
+    )
+
+    capacity_service = CapacityService(
+        utilization_service,
+    )
+
+    base_context['prometheus_status'] = capacity_service.get_prometheus_status()
+    base_context['prometheus_connected'] = bool(
+        base_context['prometheus_status'].get(
+            'connected',
+            False,
+        )
+    )
+
+    return clusters, cluster, capacity_service, base_context
+
+
+def filter_tenant_quota_rows(
+    rows: list[dict[str, Any]],
+    selected_search: str = '',
+    selected_quota_status: str = '',
+    selected_risk: str = '',
+) -> list[dict[str, Any]]:
+    filtered_rows: list[dict[str, Any]] = []
+
+    for row in rows:
+        if (
+            selected_search
+            and selected_search.lower()
+            not in str(
+                row.get(
+                    'namespace',
+                    '',
+                )
+            ).lower()
+        ):
+            continue
+
+        if (
+            selected_quota_status
+            and row.get(
+                'quota_status',
+                {},
+            ).get(
+                'label',
+            )
+            != selected_quota_status
+        ):
+            continue
+
+        if (
+            selected_risk
+            and row.get(
+                'risk',
+                {},
+            ).get(
+                'label',
+            )
+            != selected_risk
+        ):
+            continue
+
+        filtered_rows.append(
+            row,
+        )
+
+    return filtered_rows
+
+
+def filter_workload_rows(
+    rows: list[dict[str, Any]],
+    selected_search: str = '',
+    selected_type: str = '',
+    selected_resource_status: str = '',
+    selected_qos: str = '',
+    selected_risk: str = '',
+) -> list[dict[str, Any]]:
+    filtered_rows: list[dict[str, Any]] = []
+
+    for row in rows:
+        if selected_search:
+            haystack = (f"{row.get('workload', '')} " f"{row.get('namespace', '')}").lower()
+
+            if selected_search.lower() not in haystack:
+                continue
+
+        if (
+            selected_type
+            and row.get(
+                'type',
+            )
+            != selected_type
+        ):
+            continue
+
+        if (
+            selected_resource_status
+            and row.get(
+                'resource_status',
+                {},
+            ).get(
+                'label',
+            )
+            != selected_resource_status
+        ):
+            continue
+
+        if (
+            selected_qos
+            and row.get(
+                'qos',
+                {},
+            ).get(
+                'label',
+            )
+            != selected_qos
+        ):
+            continue
+
+        if (
+            selected_risk
+            and row.get(
+                'risk',
+                {},
+            ).get(
+                'label',
+            )
+            != selected_risk
+        ):
+            continue
+
+        filtered_rows.append(
+            row,
+        )
+
+    return filtered_rows
+
+
 def get_workload_analysis_context(
     query_args: Mapping[str, Any],
 ) -> dict[str, Any]:
-    _, _, capacity_service, context = build_capacity_service_for_query(
+    _, _, capacity_service, context = build_workload_capacity_service_for_query(
         query_args=query_args,
     )
 

@@ -652,98 +652,18 @@ class CapacityService:
             capacity_summary=capacity_summary,
         )
 
-        storage_summary = self.get_storage_capacity_summary(
-            selected_namespace=selected_namespace,
-            selected_node=selected_storage_node,
-            selected_pvc_search=selected_pvc_search,
-            selected_pvc_status=selected_pvc_status,
-            selected_pvc_storage_class=selected_pvc_storage_class,
-            pvc_page=pvc_page,
-            pvc_per_page=pvc_per_page,
-            selected_pv_search=selected_pv_search,
-            selected_pv_status=selected_pv_status,
-            selected_pv_storage_class=selected_pv_storage_class,
-            pv_page=pv_page,
-            pv_per_page=pv_per_page,
-        )
-
-        tenant_quota_summary = self.get_tenant_quota_summary(
-            selected_namespace=selected_namespace,
-        )
-
-        tenant_quota_all_rows = tenant_quota_summary['rows']
-
-        tenant_quota_page = self.paginate_rows(
-            rows=tenant_quota_all_rows,
-            page=quota_page,
-            per_page=quota_per_page,
-        )
-
-        tenant_quota_summary['rows'] = tenant_quota_page['rows']
-        tenant_quota_summary['pagination'] = tenant_quota_page['pagination']
-
-        tenant_quota_rows = tenant_quota_all_rows
-
-        workload_mapping_payload = self.get_workload_mapping_payload(
-            selected_namespace=selected_namespace,
-            time_range=time_range,
-        )
-
-        workload_mapping_all_rows = workload_mapping_payload['rows']
-
-        workload_mapping_page = self.paginate_rows(
-            rows=workload_mapping_all_rows,
-            page=workload_page,
-            per_page=workload_per_page,
-        )
-
-        workload_mapping_payload['rows'] = workload_mapping_page['rows']
-        workload_mapping_payload['pagination'] = workload_mapping_page['pagination']
-        workload_mapping_payload['workload_type_options'] = sorted(
-            {row.get('type', '') for row in workload_mapping_all_rows if row.get('type')}
-        )
-        workload_mapping_payload['resource_status_options'] = sorted(
-            {
-                row.get('resource_status', {}).get('label', '')
-                for row in workload_mapping_all_rows
-                if row.get('resource_status')
-            }
-        )
-        workload_mapping_payload['qos_options'] = sorted(
-            {row.get('qos', {}).get('label', '') for row in workload_mapping_all_rows if row.get('qos')}
-        )
-        workload_mapping_payload['risk_options'] = sorted(
-            {row.get('risk', {}).get('label', '') for row in workload_mapping_all_rows if row.get('risk')}
-        )
-
-        workload_mapping_rows = workload_mapping_all_rows
-
         namespace_options = self.get_all_namespace_options()
-
-        if not namespace_options:
-            namespace_options = self.get_namespace_options(
-                tenant_quota_rows=tenant_quota_rows,
-                workload_mapping_rows=workload_mapping_rows,
-            )
-
-        quota_coverage = self.get_quota_coverage(
-            tenant_quota_rows=tenant_quota_rows,
-            namespace_options=namespace_options,
-        )
 
         risk_summary = self.get_capacity_risk_summary(
             capacity_summary=capacity_summary,
         )
 
-        governance_findings = self.get_governance_findings(
-            tenant_quota_rows=tenant_quota_rows,
-            workload_mapping_rows=workload_mapping_rows,
+        governance_findings = self.get_capacity_governance_findings(
+            capacity_summary=capacity_summary,
         )
 
-        recommendation_cards = self.get_recommendation_cards(
+        recommendation_cards = self.get_capacity_recommendation_cards(
             capacity_summary=capacity_summary,
-            tenant_quota_rows=tenant_quota_rows,
-            workload_mapping_rows=workload_mapping_rows,
         )
 
         kpi_cards = self.get_kpi_cards(
@@ -756,19 +676,33 @@ class CapacityService:
             'capacity_summary': capacity_summary,
             'worker_capacity_summary': worker_capacity_summary,
             'allocation_summary': allocation_summary,
-            'storage_summary': storage_summary,
-            'tenant_quota_summary': tenant_quota_summary,
-            'tenant_quota_rows': tenant_quota_rows,
-            'quota_status_options': sorted(
-                {row.get('quota_status', {}).get('label', '') for row in tenant_quota_rows if row.get('quota_status')}
-            ),
-            'tenant_risk_options': sorted(
-                {row.get('risk', {}).get('label', '') for row in tenant_quota_rows if row.get('risk')}
-            ),
-            'workload_mapping_payload': workload_mapping_payload,
-            'workload_mapping_rows': workload_mapping_rows,
+            'storage_summary': {},
+            'tenant_quota_summary': {
+                'summary_cards': [],
+                'rows': [],
+                'pagination': {},
+            },
+            'tenant_quota_rows': [],
+            'quota_status_options': [],
+            'tenant_risk_options': [],
+            'workload_mapping_payload': {
+                'rows': [],
+                'filters': {},
+                'pagination': {},
+                'workload_type_options': [],
+                'resource_status_options': [],
+                'qos_options': [],
+                'risk_options': [],
+            },
+            'workload_mapping_rows': [],
             'namespace_options': namespace_options,
-            'quota_coverage': quota_coverage,
+            'quota_coverage': {
+                'total_namespaces': len(
+                    namespace_options,
+                ),
+                'quota_namespaces': 0,
+                'coverage_percent': 0,
+            },
             'risk_summary': risk_summary,
             'governance_findings': governance_findings,
             'recommendation_cards': recommendation_cards,
@@ -2950,6 +2884,139 @@ class CapacityService:
 
         return risks
 
+    def get_capacity_governance_findings(
+        self,
+        capacity_summary: dict[str, dict[str, float]],
+    ) -> list[dict[str, Any]]:
+        findings: list[dict[str, Any]] = []
+
+        low_headroom = [
+            resource
+            for resource, item in capacity_summary.items()
+            if resource
+            in [
+                'cpu',
+                'memory',
+                'pods',
+            ]
+            and self.to_float(
+                item.get(
+                    'headroom',
+                    0,
+                )
+            )
+            < 30
+        ]
+
+        if low_headroom:
+            findings.append(
+                {
+                    'label': ('Low capacity headroom detected on ' f"{', '.join(low_headroom)}"),
+                    'severity': 'critical',
+                    'icon': 'circle-alert',
+                    'filter': 'capacity-headroom',
+                }
+            )
+
+        findings.append(
+            {
+                'label': 'Open Workload Analysis for quota and request/limit findings',
+                'severity': 'info',
+                'icon': 'boxes',
+                'filter': 'workload-analysis',
+            }
+        )
+
+        findings.append(
+            {
+                'label': 'Open Storage Analysis for PV, PVC, and filesystem findings',
+                'severity': 'info',
+                'icon': 'hard-drive',
+                'filter': 'storage-analysis',
+            }
+        )
+
+        if not findings:
+            findings.append(
+                {
+                    'label': 'No capacity findings detected',
+                    'severity': 'healthy',
+                    'icon': 'check-circle',
+                    'filter': '',
+                }
+            )
+
+        return findings
+
+    def get_capacity_recommendation_cards(
+        self,
+        capacity_summary: dict[str, dict[str, float]],
+    ) -> list[dict[str, Any]]:
+        low_headroom = [
+            resource
+            for resource, item in capacity_summary.items()
+            if resource
+            in [
+                'cpu',
+                'memory',
+                'pods',
+            ]
+            and self.to_float(
+                item.get(
+                    'headroom',
+                    0,
+                )
+            )
+            < 30
+        ]
+
+        capacity_description = (
+            'Monitor headroom trend and plan capacity expansion ' 'before sustained usage reaches warning threshold.'
+        )
+
+        if low_headroom:
+            capacity_description = (
+                'Low headroom detected on '
+                f"{', '.join(low_headroom)}. "
+                'Prioritize capacity planning for these resources.'
+            )
+
+        return [
+            {
+                'title': 'Monitor Capacity Growth',
+                'description': capacity_description,
+                'icon': 'trending-up',
+                'icon_class': 'bg-violet-100 text-violet-600',
+            },
+            {
+                'title': 'Review Storage Capacity',
+                'description': (
+                    'Open Storage Analysis to review node filesystem, '
+                    'PersistentVolume capacity, PVC requests, and storage risk.'
+                ),
+                'icon': 'hard-drive',
+                'icon_class': 'bg-blue-100 text-blue-600',
+            },
+            {
+                'title': 'Review Workload Governance',
+                'description': (
+                    'Open Workload Analysis to validate ResourceQuota coverage, '
+                    'workload requests, limits, QoS class, and right-sizing actions.'
+                ),
+                'icon': 'shield-alert',
+                'icon_class': 'bg-orange-100 text-orange-600',
+            },
+            {
+                'title': 'Right-size Resource Requests',
+                'description': (
+                    'Use Workload Analysis to compare requests and limits '
+                    'against actual runtime usage before changing quotas.'
+                ),
+                'icon': 'activity',
+                'icon_class': 'bg-emerald-100 text-emerald-600',
+            },
+        ]
+
     def get_governance_findings(
         self,
         tenant_quota_rows: list[dict[str, Any]],
@@ -4519,350 +4586,3 @@ class CapacityService:
                 return 0
 
         return 0
-
-
-# HTMX section context helpers -------------------------------------------------
-
-
-def build_capacity_service_for_query(
-    query_args: Mapping[str, Any],
-) -> tuple[list[Cluster], Cluster | None, CapacityService | None, dict[str, Any]]:
-    clusters = Cluster.query.order_by(
-        Cluster.name,
-    ).all()
-
-    cluster_id = get_query_value(
-        query_args=query_args,
-        name='cluster_id',
-        default='',
-    )
-
-    cluster = get_selected_cluster(
-        clusters=clusters,
-        cluster_id=cluster_id,
-    )
-
-    base_context: dict[str, Any] = {
-        'clusters': clusters,
-        'cluster': cluster,
-        'error': None,
-        'prometheus_connected': False,
-        'prometheus_status': {
-            'connected': False,
-            'response_time_ms': None,
-            'label': 'Prometheus Disconnected',
-            'description': 'Prometheus unavailable',
-        },
-        'selected_namespace': get_query_value(
-            query_args=query_args,
-            name='namespace',
-            default='',
-        ),
-        'selected_time_range': get_selected_time_range(
-            query_args=query_args,
-        ),
-    }
-
-    if cluster is None:
-        return clusters, None, None, base_context
-
-    prometheus = PrometheusService(
-        cluster,
-    )
-
-    utilization_service = UtilizationService(
-        prometheus,
-    )
-
-    capacity_service = CapacityService(
-        utilization_service,
-    )
-
-    base_context['prometheus_status'] = capacity_service.get_prometheus_status()
-    base_context['prometheus_connected'] = bool(
-        base_context['prometheus_status'].get(
-            'connected',
-            False,
-        )
-    )
-
-    return clusters, cluster, capacity_service, base_context
-
-
-def get_storage_section_context(
-    query_args: Mapping[str, Any],
-) -> dict[str, Any]:
-    _, _, capacity_service, context = build_capacity_service_for_query(
-        query_args=query_args,
-    )
-
-    selected_storage_tab = get_query_value(
-        query_args=query_args,
-        name='storage_tab',
-        default='pvc',
-    )
-
-    if selected_storage_tab not in [
-        'pvc',
-        'pv',
-    ]:
-        selected_storage_tab = 'pvc'
-
-    context.update(
-        {
-            'selected_storage_tab': selected_storage_tab,
-            'selected_pvc_search': get_query_value(query_args, 'pvc_search', ''),
-            'selected_pvc_status': get_query_value(query_args, 'pvc_status', ''),
-            'selected_pvc_storage_class': get_query_value(query_args, 'pvc_storage_class', ''),
-            'selected_pv_search': get_query_value(query_args, 'pv_search', ''),
-            'selected_pv_status': get_query_value(query_args, 'pv_status', ''),
-            'selected_pv_storage_class': get_query_value(query_args, 'pv_storage_class', ''),
-        }
-    )
-
-    if capacity_service is None:
-        context.update(
-            get_empty_capacity_payload(
-                selected_namespace=context['selected_namespace'],
-                selected_time_range=context['selected_time_range'],
-            )
-        )
-        return context
-
-    storage_summary = capacity_service.get_storage_capacity_summary(
-        selected_namespace=context['selected_namespace'],
-        selected_node='',
-        selected_pvc_search=context['selected_pvc_search'],
-        selected_pvc_status=context['selected_pvc_status'],
-        selected_pvc_storage_class=context['selected_pvc_storage_class'],
-        pvc_page=get_positive_int_arg(query_args, 'pvc_page', 1),
-        pvc_per_page=get_per_page_arg(query_args, 'pvc_per_page', 10),
-        selected_pv_search=context['selected_pv_search'],
-        selected_pv_status=context['selected_pv_status'],
-        selected_pv_storage_class=context['selected_pv_storage_class'],
-        pv_page=get_positive_int_arg(query_args, 'pv_page', 1),
-        pv_per_page=get_per_page_arg(query_args, 'pv_per_page', 10),
-    )
-
-    context['storage_summary'] = storage_summary
-    context['tenant_quota_summary'] = {
-        'pagination': {
-            'page': get_positive_int_arg(query_args, 'quota_page', 1),
-            'per_page': get_per_page_arg(query_args, 'quota_per_page', 10),
-        }
-    }
-    context['workload_mapping_payload'] = {
-        'pagination': {
-            'page': get_positive_int_arg(query_args, 'workload_page', 1),
-            'per_page': get_per_page_arg(query_args, 'workload_per_page', 10),
-        }
-    }
-
-    return context
-
-
-def filter_tenant_quota_rows(
-    rows: list[dict[str, Any]],
-    selected_search: str = '',
-    selected_quota_status: str = '',
-    selected_risk: str = '',
-) -> list[dict[str, Any]]:
-    filtered_rows: list[dict[str, Any]] = []
-
-    for row in rows:
-        if selected_search and selected_search.lower() not in str(row.get('namespace', '')).lower():
-            continue
-
-        if selected_quota_status and row.get('quota_status', {}).get('label') != selected_quota_status:
-            continue
-
-        if selected_risk and row.get('risk', {}).get('label') != selected_risk:
-            continue
-
-        filtered_rows.append(row)
-
-    return filtered_rows
-
-
-def get_tenant_quota_section_context(
-    query_args: Mapping[str, Any],
-) -> dict[str, Any]:
-    _, _, capacity_service, context = build_capacity_service_for_query(
-        query_args=query_args,
-    )
-
-    selected_search = get_query_value(query_args, 'tenant_search', '')
-    selected_quota_status = get_query_value(query_args, 'tenant_quota_status', '')
-    selected_risk = get_query_value(query_args, 'tenant_risk', '')
-
-    context.update(
-        {
-            'selected_tenant_search': selected_search,
-            'selected_tenant_quota_status': selected_quota_status,
-            'selected_tenant_risk': selected_risk,
-        }
-    )
-
-    if capacity_service is None:
-        context.update(
-            get_empty_capacity_payload(
-                selected_namespace=context['selected_namespace'],
-                selected_time_range=context['selected_time_range'],
-            )
-        )
-        return context
-
-    tenant_quota_summary = capacity_service.get_tenant_quota_summary(
-        selected_namespace=context['selected_namespace'],
-    )
-
-    all_rows = tenant_quota_summary['rows']
-    filtered_rows = filter_tenant_quota_rows(
-        rows=all_rows,
-        selected_search=selected_search,
-        selected_quota_status=selected_quota_status,
-        selected_risk=selected_risk,
-    )
-
-    page_payload = capacity_service.paginate_rows(
-        rows=filtered_rows,
-        page=get_positive_int_arg(query_args, 'quota_page', 1),
-        per_page=get_per_page_arg(query_args, 'quota_per_page', 10),
-    )
-
-    tenant_quota_summary['rows'] = page_payload['rows']
-    tenant_quota_summary['pagination'] = page_payload['pagination']
-    tenant_quota_summary['quota_status_options'] = capacity_service.get_unique_options(
-        rows=all_rows,
-        key='quota_status_label',
-    )
-
-    context['tenant_quota_summary'] = tenant_quota_summary
-    context['tenant_quota_rows'] = all_rows
-    context['quota_status_options'] = sorted(
-        {row.get('quota_status', {}).get('label', '') for row in all_rows if row.get('quota_status')}
-    )
-    context['tenant_risk_options'] = sorted(
-        {row.get('risk', {}).get('label', '') for row in all_rows if row.get('risk')}
-    )
-    context['workload_mapping_payload'] = {
-        'pagination': {
-            'page': get_positive_int_arg(query_args, 'workload_page', 1),
-            'per_page': get_per_page_arg(query_args, 'workload_per_page', 10),
-        }
-    }
-
-    return context
-
-
-def filter_workload_rows(
-    rows: list[dict[str, Any]],
-    selected_search: str = '',
-    selected_type: str = '',
-    selected_resource_status: str = '',
-    selected_qos: str = '',
-    selected_risk: str = '',
-) -> list[dict[str, Any]]:
-    filtered_rows: list[dict[str, Any]] = []
-
-    for row in rows:
-        if selected_search:
-            haystack = f"{row.get('workload', '')} {row.get('namespace', '')}".lower()
-            if selected_search.lower() not in haystack:
-                continue
-
-        if selected_type and row.get('type') != selected_type:
-            continue
-
-        if selected_resource_status and row.get('resource_status', {}).get('label') != selected_resource_status:
-            continue
-
-        if selected_qos and row.get('qos', {}).get('label') != selected_qos:
-            continue
-
-        if selected_risk and row.get('risk', {}).get('label') != selected_risk:
-            continue
-
-        filtered_rows.append(row)
-
-    return filtered_rows
-
-
-def get_workload_mapping_section_context(
-    query_args: Mapping[str, Any],
-) -> dict[str, Any]:
-    _, _, capacity_service, context = build_capacity_service_for_query(
-        query_args=query_args,
-    )
-
-    selected_search = get_query_value(query_args, 'workload_search', '')
-    selected_type = get_query_value(query_args, 'workload_type', '')
-    selected_resource_status = get_query_value(query_args, 'workload_resource_status', '')
-    selected_qos = get_query_value(query_args, 'workload_qos', '')
-    selected_risk = get_query_value(query_args, 'workload_risk', '')
-
-    context.update(
-        {
-            'selected_workload_search': selected_search,
-            'selected_workload_type': selected_type,
-            'selected_workload_resource_status': selected_resource_status,
-            'selected_workload_qos': selected_qos,
-            'selected_workload_risk': selected_risk,
-        }
-    )
-
-    if capacity_service is None:
-        context.update(
-            get_empty_capacity_payload(
-                selected_namespace=context['selected_namespace'],
-                selected_time_range=context['selected_time_range'],
-            )
-        )
-        return context
-
-    workload_mapping_payload = capacity_service.get_workload_mapping_payload(
-        selected_namespace=context['selected_namespace'],
-        time_range=context['selected_time_range'],
-    )
-
-    all_rows = workload_mapping_payload['rows']
-    filtered_rows = filter_workload_rows(
-        rows=all_rows,
-        selected_search=selected_search,
-        selected_type=selected_type,
-        selected_resource_status=selected_resource_status,
-        selected_qos=selected_qos,
-        selected_risk=selected_risk,
-    )
-
-    page_payload = capacity_service.paginate_rows(
-        rows=filtered_rows,
-        page=get_positive_int_arg(query_args, 'workload_page', 1),
-        per_page=get_per_page_arg(query_args, 'workload_per_page', 10),
-    )
-
-    workload_mapping_payload['rows'] = page_payload['rows']
-    workload_mapping_payload['pagination'] = page_payload['pagination']
-    workload_mapping_payload['workload_type_options'] = sorted(
-        {row.get('type', '') for row in all_rows if row.get('type')}
-    )
-    workload_mapping_payload['resource_status_options'] = sorted(
-        {row.get('resource_status', {}).get('label', '') for row in all_rows if row.get('resource_status')}
-    )
-    workload_mapping_payload['qos_options'] = sorted(
-        {row.get('qos', {}).get('label', '') for row in all_rows if row.get('qos')}
-    )
-    workload_mapping_payload['risk_options'] = sorted(
-        {row.get('risk', {}).get('label', '') for row in all_rows if row.get('risk')}
-    )
-
-    context['workload_mapping_payload'] = workload_mapping_payload
-    context['workload_mapping_rows'] = all_rows
-    context['tenant_quota_summary'] = {
-        'pagination': {
-            'page': get_positive_int_arg(query_args, 'quota_page', 1),
-            'per_page': get_per_page_arg(query_args, 'quota_per_page', 10),
-        }
-    }
-
-    return context
