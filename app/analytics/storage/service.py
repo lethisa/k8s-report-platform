@@ -13,7 +13,6 @@ from app.analytics.common.base_service import (
 from app.analytics.common.context import build_analysis_utilization_context
 from app.analytics.common.params import (
     ALLOWED_PER_PAGE_VALUES,
-    ALLOWED_TIME_RANGE_VALUES,
     get_allowed_time_ranges,
     get_per_page_arg,
     get_positive_int_arg,
@@ -1049,7 +1048,6 @@ def get_storage_analysis_context(
             'selected_pv_status': selected_pv_status,
             'selected_pv_storage_class': selected_pv_storage_class,
             'allowed_time_ranges': get_allowed_time_ranges(),
-            'allowed_time_range_values': ALLOWED_TIME_RANGE_VALUES,
             'namespace_options': [],
         }
     )
