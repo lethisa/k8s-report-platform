@@ -27,7 +27,6 @@ def get_empty_pagination() -> dict[str, Any]:
 
 
 def get_empty_capacity_payload(
-    selected_namespace: str,
     selected_time_range: str,
 ) -> dict[str, Any]:
     empty_pagination = get_empty_pagination()
@@ -123,7 +122,6 @@ def get_empty_capacity_payload(
             'risk_options': [],
         },
         'workload_mapping_rows': [],
-        'namespace_options': [],
         'quota_coverage': {
             'total_namespaces': 0,
             'quota_namespaces': 0,
@@ -150,7 +148,6 @@ def get_empty_capacity_payload(
             },
         ],
         'kpi_cards': [],
-        'selected_namespace': selected_namespace,
         'selected_time_range': selected_time_range,
         'allowed_time_ranges': get_allowed_time_ranges(),
     }

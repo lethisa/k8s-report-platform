@@ -34,12 +34,6 @@ def get_capacity_page_context(
         Cluster.name,
     ).all()
 
-    selected_namespace = get_query_value(
-        query_args=query_args,
-        name='namespace',
-        default='',
-    )
-
     selected_time_range = get_selected_time_range(
         query_args=query_args,
     )
@@ -56,7 +50,6 @@ def get_capacity_page_context(
     )
 
     empty_capacity_payload = get_empty_capacity_payload(
-        selected_namespace=selected_namespace,
         selected_time_range=selected_time_range,
     )
 
@@ -95,7 +88,6 @@ def get_capacity_page_context(
         prometheus_status = capacity_service.get_prometheus_status()
 
         capacity_payload = capacity_service.get_capacity_analysis(
-            selected_namespace=selected_namespace,
             time_range=selected_time_range,
         )
 
@@ -136,7 +128,6 @@ class CapacityService(AnalyticsBaseService):
 
     def get_capacity_analysis(
         self,
-        selected_namespace: str = '',
         time_range: str = '24h',
     ) -> dict[str, Any]:
         summary = self.utilization_service.get_summary()
@@ -158,8 +149,6 @@ class CapacityService(AnalyticsBaseService):
             cluster_info=cluster_info,
             capacity_summary=capacity_summary,
         )
-
-        namespace_options = self.get_all_namespace_options()
 
         risk_summary = self.get_capacity_risk_summary(
             capacity_summary=capacity_summary,
@@ -183,12 +172,10 @@ class CapacityService(AnalyticsBaseService):
             'capacity_summary': capacity_summary,
             'worker_capacity_summary': worker_capacity_summary,
             'allocation_summary': allocation_summary,
-            'namespace_options': namespace_options,
             'risk_summary': risk_summary,
             'governance_findings': governance_findings,
             'recommendation_cards': recommendation_cards,
             'kpi_cards': kpi_cards,
-            'selected_namespace': selected_namespace,
             'selected_time_range': time_range,
             'allowed_time_ranges': get_allowed_time_ranges(),
         }
@@ -667,16 +654,6 @@ class CapacityService(AnalyticsBaseService):
                 'bar_class': 'bg-indigo-500',
             },
         ]
-
-    def get_all_namespace_options(
-        self,
-    ) -> list[str]:
-        active_namespaces = self.get_prometheus_vector_map(
-            query=queries.NAMESPACE_ACTIVE_QUERY,
-            label='namespace',
-        )
-
-        return sorted(namespace for namespace in active_namespaces.keys() if namespace)
 
     def get_capacity_risk_summary(
         self,
