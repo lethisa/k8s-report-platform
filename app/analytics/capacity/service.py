@@ -15,6 +15,7 @@ from app.analytics.common.base_service import (
     safe_percent,
     safe_round,
 )
+from app.analytics.common.clusters import get_selected_cluster
 from app.analytics.common.params import (
     ALLOWED_PER_PAGE_VALUES,
     get_query_value,
@@ -220,24 +221,6 @@ def get_empty_capacity_payload(
             },
         ],
     }
-
-
-def get_selected_cluster(
-    clusters: list[Cluster],
-    cluster_id: str,
-) -> Cluster | None:
-    if cluster_id:
-        cluster = Cluster.query.filter_by(
-            id=cluster_id,
-        ).first()
-
-        if cluster:
-            return cluster
-
-    if clusters:
-        return clusters[0]
-
-    return None
 
 
 def get_capacity_page_context(

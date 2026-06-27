@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from app.analytics.capacity.service import get_selected_cluster
+from app.analytics.common.clusters import get_selected_cluster
 from app.analytics.common.params import (
     get_query_value,
     get_selected_time_range,
