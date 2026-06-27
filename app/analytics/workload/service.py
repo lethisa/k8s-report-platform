@@ -7,14 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity import queries
-from app.analytics.capacity.service import (
-    ALLOWED_PER_PAGE_VALUES,
-    get_empty_capacity_payload,
-    get_per_page_arg,
-    get_positive_int_arg,
-    get_query_value,
-    get_selected_time_range,
-)
+from app.analytics.capacity.service import get_empty_capacity_payload
 from app.analytics.common.base_service import (
     AnalyticsBaseService,
     bytes_to_gib,
@@ -23,6 +16,13 @@ from app.analytics.common.base_service import (
     safe_round,
 )
 from app.analytics.common.context import build_analysis_utilization_context
+from app.analytics.common.params import (
+    ALLOWED_PER_PAGE_VALUES,
+    get_per_page_arg,
+    get_positive_int_arg,
+    get_query_value,
+    get_selected_time_range,
+)
 from app.analytics.utilization.service import UtilizationService
 
 REQUIRED_QUOTA_KEYS = [
