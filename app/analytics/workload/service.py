@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity.service import (
+    ALLOWED_PER_PAGE_VALUES,
     CapacityService,
     get_empty_capacity_payload,
     get_per_page_arg,
@@ -13,6 +14,7 @@ from app.analytics.capacity.service import (
     get_query_value,
     get_selected_time_range,
 )
+from app.analytics.common.base_service import AnalyticsBaseService
 from app.analytics.common.context import build_analysis_utilization_context
 from app.analytics.utilization.service import UtilizationService
 
@@ -159,19 +161,15 @@ def filter_workload_rows(
     return filtered_rows
 
 
-class WorkloadAnalysisService:
+class WorkloadAnalysisService(AnalyticsBaseService):
     def __init__(
         self,
         utilization_service: UtilizationService,
     ) -> None:
+        self.utilization_service = utilization_service
         self.capacity_service = CapacityService(
             utilization_service,
         )
-
-    def get_prometheus_status(
-        self,
-    ) -> dict[str, Any]:
-        return self.capacity_service.get_prometheus_status()
 
     def get_all_namespace_options(
         self,
@@ -202,10 +200,12 @@ class WorkloadAnalysisService:
         page: int,
         per_page: int,
     ) -> dict[str, Any]:
-        return self.capacity_service.paginate_rows(
+        return self.paginate_rows_with_options(
             rows=rows,
             page=page,
             per_page=per_page,
+            allowed_per_page=ALLOWED_PER_PAGE_VALUES,
+            default_per_page=10,
         )
 
     def get_governance_findings(
