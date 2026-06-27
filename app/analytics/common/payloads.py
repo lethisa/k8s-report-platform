@@ -23,6 +23,153 @@ def get_empty_pagination() -> dict[str, Any]:
     }
 
 
+def get_empty_capacity_payload(
+    selected_namespace: str,
+    selected_time_range: str,
+) -> dict[str, Any]:
+    empty_pagination = get_empty_pagination()
+
+    return {
+        'cluster_info': {
+            'kubernetes_version': '-',
+            'total_nodes': 0,
+            'ready_nodes': 0,
+            'not_ready_nodes': 0,
+            'worker_nodes': 0,
+            'master_nodes': 0,
+            'cpu_capacity': 0,
+            'memory_capacity': 0,
+            'pod_capacity': 0,
+        },
+        'capacity_summary': {
+            'cpu': {
+                'capacity': 0,
+                'used': 0,
+                'available': 0,
+                'headroom': 0,
+            },
+            'memory': {
+                'capacity': 0,
+                'used': 0,
+                'available': 0,
+                'headroom': 0,
+            },
+            'storage': {
+                'capacity': 0,
+                'used': 0,
+                'available': 0,
+                'headroom': 0,
+            },
+            'pods': {
+                'capacity': 0,
+                'used': 0,
+                'available': 0,
+                'headroom': 0,
+            },
+        },
+        'worker_capacity_summary': {
+            'title': 'Worker Capacity Summary',
+            'subtitle': (
+                'Schedulable capacity is calculated from Ready worker nodes. '
+                'Control-plane nodes are shown for context only.'
+            ),
+            'cards': [],
+        },
+        'allocation_summary': {
+            'cpu': {
+                'title': 'CPU',
+                'status': {
+                    'label': 'Unknown',
+                    'class': 'bg-slate-100 text-slate-700',
+                },
+                'items': [],
+            },
+            'memory': {
+                'title': 'Memory',
+                'status': {
+                    'label': 'Unknown',
+                    'class': 'bg-slate-100 text-slate-700',
+                },
+                'items': [],
+            },
+            'pods': {
+                'title': 'Pods',
+                'status': {
+                    'label': 'Unknown',
+                    'class': 'bg-slate-100 text-slate-700',
+                },
+                'items': [],
+            },
+        },
+        'storage_summary': {},
+        'tenant_quota_summary': {
+            'summary_cards': [],
+            'rows': [],
+            'pagination': empty_pagination,
+        },
+        'tenant_quota_rows': [],
+        'quota_status_options': [],
+        'tenant_risk_options': [],
+        'workload_mapping_payload': {
+            'rows': [],
+            'filters': {},
+            'pagination': empty_pagination,
+            'workload_type_options': [],
+            'resource_status_options': [],
+            'qos_options': [],
+            'risk_options': [],
+        },
+        'workload_mapping_rows': [],
+        'namespace_options': [],
+        'quota_coverage': {
+            'total_namespaces': 0,
+            'quota_namespaces': 0,
+            'coverage_percent': 0,
+        },
+        'risk_summary': [],
+        'governance_findings': [
+            {
+                'label': 'No capacity data available',
+                'severity': 'warning',
+                'icon': 'triangle-alert',
+                'filter': '',
+            },
+        ],
+        'recommendation_cards': [
+            {
+                'title': 'Connect Prometheus Metrics',
+                'description': (
+                    'Capacity analysis requires Prometheus metrics to calculate '
+                    'worker headroom, allocation, and capacity risk.'
+                ),
+                'icon': 'plug-zap',
+                'icon_class': 'bg-amber-100 text-amber-600',
+            },
+        ],
+        'kpi_cards': [],
+        'selected_namespace': selected_namespace,
+        'selected_time_range': selected_time_range,
+        'allowed_time_ranges': [
+            {
+                'label': 'Last 1 Hour',
+                'value': '1h',
+            },
+            {
+                'label': 'Last 6 Hours',
+                'value': '6h',
+            },
+            {
+                'label': 'Last 24 Hours',
+                'value': '24h',
+            },
+            {
+                'label': 'Last 7 Days',
+                'value': '7d',
+            },
+        ],
+    }
+
+
 def get_empty_storage_payload(
     selected_namespace: str,
     selected_time_range: str,
