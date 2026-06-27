@@ -18,3 +18,27 @@ def workload() -> str:
         'analytics/workload/index.html',
         **context,
     )
+
+
+@login_required
+def workload_tenant_quota() -> str:
+    context = get_workload_analysis_context(
+        query_args=request.args,
+    )
+
+    return render_template(
+        'analytics/workload/partials/_tenant_quota_section.html',
+        **context,
+    )
+
+
+@login_required
+def workload_resource_mapping() -> str:
+    context = get_workload_analysis_context(
+        query_args=request.args,
+    )
+
+    return render_template(
+        'analytics/workload/partials/_workload_mapping_section.html',
+        **context,
+    )

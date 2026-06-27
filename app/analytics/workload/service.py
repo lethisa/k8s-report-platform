@@ -35,6 +35,31 @@ REQUIRED_QUOTA_KEYS = [
 ]
 
 
+def format_decimal(
+    value: float,
+    digits: int = 2,
+) -> str:
+    return f'{safe_round(value, digits):.{digits}f}'
+
+
+def format_cpu_core(
+    value: float,
+) -> str:
+    return f'{format_decimal(value, 2)} core'
+
+
+def format_memory_gib(
+    value: float,
+) -> str:
+    return f'{format_decimal(bytes_to_gib(value), 2)} GiB'
+
+
+def format_count(
+    value: float,
+) -> str:
+    return f'{safe_round(value, 0):.0f}'
+
+
 def filter_tenant_quota_rows(
     rows: list[dict[str, Any]],
     selected_search: str = '',
@@ -487,6 +512,16 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                 ),
             )
 
+            quota_usage_percent = safe_round(
+                quota_usage_percent,
+                2,
+            )
+
+            actual_usage_percent = safe_round(
+                actual_usage_percent,
+                2,
+            )
+
             risk = self.get_tenant_analysis_risk(
                 quota_status=quota_status['label'],
                 quota_usage_percent=quota_usage_percent,
@@ -500,17 +535,62 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                 actual_usage_percent=actual_usage_percent,
             )
 
+            cpu_quota_raw = hard_values.get(
+                'limits.cpu',
+                0,
+            )
+
+            cpu_requested_raw = used_values.get(
+                'requests.cpu',
+                0,
+            )
+
+            cpu_limited_raw = used_values.get(
+                'limits.cpu',
+                0,
+            )
+
+            cpu_actual_raw = cpu_actual.get(
+                namespace,
+                0,
+            )
+
+            memory_quota_raw = hard_values.get(
+                'limits.memory',
+                0,
+            )
+
+            memory_requested_raw = used_values.get(
+                'requests.memory',
+                0,
+            )
+
+            memory_limited_raw = used_values.get(
+                'limits.memory',
+                0,
+            )
+
+            memory_actual_raw = memory_actual.get(
+                namespace,
+                0,
+            )
+
+            pod_actual_raw = pod_actual.get(
+                namespace,
+                0,
+            )
+
             rows.append(
                 {
                     'namespace': namespace,
                     'quota_status': quota_status,
-                    'quota_usage_percent': safe_round(
+                    'quota_usage_percent': quota_usage_percent,
+                    'quota_usage_percent_display': format_decimal(
                         quota_usage_percent,
-                        1,
                     ),
-                    'actual_usage_percent': safe_round(
+                    'actual_usage_percent': actual_usage_percent,
+                    'actual_usage_percent_display': format_decimal(
                         actual_usage_percent,
-                        1,
                     ),
                     'risk': risk,
                     'recommendation': recommendation,
@@ -530,124 +610,120 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                         used_values,
                     ),
                     'actual': {
-                        'cpu': cpu_actual.get(
-                            namespace,
-                            0,
+                        'cpu': format_cpu_core(
+                            cpu_actual_raw,
                         ),
-                        'memory': memory_actual.get(
-                            namespace,
-                            0,
+                        'memory': format_memory_gib(
+                            memory_actual_raw,
                         ),
-                        'pods': pod_actual.get(
-                            namespace,
-                            0,
+                        'pods': format_count(
+                            pod_actual_raw,
                         ),
                     },
-                    'cpu_quota': hard_values.get(
-                        'limits.cpu',
-                        0,
+                    'cpu_quota': format_cpu_core(
+                        cpu_quota_raw,
                     ),
-                    'cpu_requested': used_values.get(
-                        'requests.cpu',
-                        0,
+                    'cpu_requested': format_cpu_core(
+                        cpu_requested_raw,
                     ),
-                    'cpu_limited': used_values.get(
-                        'limits.cpu',
-                        0,
+                    'cpu_limited': format_cpu_core(
+                        cpu_limited_raw,
                     ),
-                    'cpu_actual': cpu_actual.get(
-                        namespace,
-                        0,
+                    'cpu_actual': format_cpu_core(
+                        cpu_actual_raw,
                     ),
-                    'cpu_requested_percent': safe_percent(
-                        used_values.get(
-                            'requests.cpu',
-                            0,
+                    'cpu_requested_percent': safe_round(
+                        safe_percent(
+                            cpu_requested_raw,
+                            cpu_quota_raw,
                         ),
-                        hard_values.get(
-                            'limits.cpu',
-                            0,
-                        ),
+                        2,
                     ),
-                    'cpu_limited_percent': safe_percent(
-                        used_values.get(
-                            'limits.cpu',
-                            0,
-                        ),
-                        hard_values.get(
-                            'limits.cpu',
-                            0,
-                        ),
-                    ),
-                    'cpu_actual_percent': safe_percent(
-                        cpu_actual.get(
-                            namespace,
-                            0,
-                        ),
-                        hard_values.get(
-                            'limits.cpu',
-                            0,
-                        ),
-                    ),
-                    'memory_quota': bytes_to_gib(
-                        hard_values.get(
-                            'limits.memory',
-                            0,
+                    'cpu_requested_percent_display': format_decimal(
+                        safe_percent(
+                            cpu_requested_raw,
+                            cpu_quota_raw,
                         )
                     ),
-                    'memory_requested': bytes_to_gib(
-                        used_values.get(
-                            'requests.memory',
-                            0,
+                    'cpu_limited_percent': safe_round(
+                        safe_percent(
+                            cpu_limited_raw,
+                            cpu_quota_raw,
+                        ),
+                        2,
+                    ),
+                    'cpu_limited_percent_display': format_decimal(
+                        safe_percent(
+                            cpu_limited_raw,
+                            cpu_quota_raw,
                         )
                     ),
-                    'memory_limited': bytes_to_gib(
-                        used_values.get(
-                            'limits.memory',
-                            0,
+                    'cpu_actual_percent': safe_round(
+                        safe_percent(
+                            cpu_actual_raw,
+                            cpu_quota_raw,
+                        ),
+                        2,
+                    ),
+                    'cpu_actual_percent_display': format_decimal(
+                        safe_percent(
+                            cpu_actual_raw,
+                            cpu_quota_raw,
                         )
                     ),
-                    'memory_actual': bytes_to_gib(
-                        memory_actual.get(
-                            namespace,
-                            0,
+                    'memory_quota': format_memory_gib(
+                        memory_quota_raw,
+                    ),
+                    'memory_requested': format_memory_gib(
+                        memory_requested_raw,
+                    ),
+                    'memory_limited': format_memory_gib(
+                        memory_limited_raw,
+                    ),
+                    'memory_actual': format_memory_gib(
+                        memory_actual_raw,
+                    ),
+                    'memory_requested_percent': safe_round(
+                        safe_percent(
+                            memory_requested_raw,
+                            memory_quota_raw,
+                        ),
+                        2,
+                    ),
+                    'memory_requested_percent_display': format_decimal(
+                        safe_percent(
+                            memory_requested_raw,
+                            memory_quota_raw,
                         )
                     ),
-                    'memory_requested_percent': safe_percent(
-                        used_values.get(
-                            'requests.memory',
-                            0,
+                    'memory_limited_percent': safe_round(
+                        safe_percent(
+                            memory_limited_raw,
+                            memory_quota_raw,
                         ),
-                        hard_values.get(
-                            'limits.memory',
-                            0,
-                        ),
+                        2,
                     ),
-                    'memory_limited_percent': safe_percent(
-                        used_values.get(
-                            'limits.memory',
-                            0,
-                        ),
-                        hard_values.get(
-                            'limits.memory',
-                            0,
-                        ),
-                    ),
-                    'memory_actual_percent': safe_percent(
-                        memory_actual.get(
-                            namespace,
-                            0,
-                        ),
-                        hard_values.get(
-                            'limits.memory',
-                            0,
-                        ),
-                    ),
-                    'workloads': int(
-                        pod_actual.get(
-                            namespace,
-                            0,
+                    'memory_limited_percent_display': format_decimal(
+                        safe_percent(
+                            memory_limited_raw,
+                            memory_quota_raw,
                         )
+                    ),
+                    'memory_actual_percent': safe_round(
+                        safe_percent(
+                            memory_actual_raw,
+                            memory_quota_raw,
+                        ),
+                        2,
+                    ),
+                    'memory_actual_percent_display': format_decimal(
+                        safe_percent(
+                            memory_actual_raw,
+                            memory_quota_raw,
+                        )
+                    ),
+                    'workloads': format_count(
+                        pod_actual_raw,
                     ),
                 }
             )
@@ -664,6 +740,21 @@ class WorkloadAnalysisService(AnalyticsBaseService):
             [row for row in rows if (row['quota_usage_percent'] >= 75 and row['actual_usage_percent'] < 40)]
         )
 
+        quota_coverage_percent = safe_percent(
+            covered_namespaces,
+            total_namespaces,
+        )
+
+        near_limit_percent = safe_percent(
+            near_limit_count,
+            total_namespaces,
+        )
+
+        efficiency_risk_percent = safe_percent(
+            efficiency_risk_count,
+            total_namespaces,
+        )
+
         return {
             'summary_cards': [
                 {
@@ -675,22 +766,22 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                 },
                 {
                     'label': 'Quota Coverage',
-                    'value': f'{safe_round(safe_percent(covered_namespaces, total_namespaces), 1)}%',
-                    'caption': f'{covered_namespaces} of {total_namespaces} namespaces',
+                    'value': f'{format_decimal(quota_coverage_percent)}%',
+                    'caption': (f'{covered_namespaces} of {total_namespaces} ' 'namespaces'),
                     'icon': 'shield-check',
                     'icon_class': 'bg-cyan-100 text-cyan-600',
                 },
                 {
                     'label': 'Quota Near Limit',
                     'value': near_limit_count,
-                    'caption': f'{safe_round(safe_percent(near_limit_count, total_namespaces), 1)}%',
+                    'caption': f'{format_decimal(near_limit_percent)}%',
                     'icon': 'triangle-alert',
                     'icon_class': 'bg-orange-100 text-orange-600',
                 },
                 {
                     'label': 'Quota Efficiency Risk',
                     'value': efficiency_risk_count,
-                    'caption': f'{safe_round(safe_percent(efficiency_risk_count, total_namespaces), 1)}%',
+                    'caption': f'{format_decimal(efficiency_risk_percent)}%',
                     'icon': 'activity',
                     'icon_class': 'bg-violet-100 text-violet-600',
                 },
@@ -790,12 +881,12 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         if cpu_request and memory_request:
             return safe_round(
                 (cpu_score + memory_score) / 2,
-                1,
+                2,
             )
 
         return safe_round(
             cpu_score or memory_score,
-            1,
+            2,
         )
 
     def get_workload_recommendation(
@@ -1150,25 +1241,22 @@ class WorkloadAnalysisService(AnalyticsBaseService):
         if key.endswith(
             '.cpu',
         ):
-            return self.format_cpu(
+            return format_cpu_core(
                 value,
             )
 
         if key.endswith(
             '.memory',
         ):
-            return self.format_memory_bytes(
+            return format_memory_gib(
                 value,
             )
 
         if key == 'pods':
-            return f'{safe_round(value, 0):.0f} pods'
+            return f'{format_count(value)} pods'
 
-        return str(
-            safe_round(
-                value,
-                2,
-            )
+        return format_decimal(
+            value,
         )
 
     def build_resource_quota_items(
@@ -1318,6 +1406,7 @@ class WorkloadAnalysisService(AnalyticsBaseService):
             item = workload_map[workload_key]
 
             item['replicas'] += 1
+
             item['pods'].append(
                 pod,
             )
@@ -1429,46 +1518,49 @@ class WorkloadAnalysisService(AnalyticsBaseService):
                     'resource_status': resource_status,
                     'qos': qos,
                     'cpu_summary': (
-                        f"Req {self.format_cpu(item['cpu_request_raw'])} · "
-                        f"Lim {self.format_cpu(item['cpu_limit_raw'])} · "
-                        f"Avg {self.format_cpu(item['cpu_avg_raw'])} · "
-                        f"Peak {self.format_cpu(item['cpu_peak_raw'])}"
+                        f"Req {format_cpu_core(item['cpu_request_raw'])} · "
+                        f"Lim {format_cpu_core(item['cpu_limit_raw'])} · "
+                        f"Avg {format_cpu_core(item['cpu_avg_raw'])} · "
+                        f"Peak {format_cpu_core(item['cpu_peak_raw'])}"
                     ),
                     'memory_summary': (
-                        f"Req {self.format_memory_bytes(item['memory_request_raw'])} · "
-                        f"Lim {self.format_memory_bytes(item['memory_limit_raw'])} · "
-                        f"Avg {self.format_memory_bytes(item['memory_avg_raw'])} · "
-                        f"Peak {self.format_memory_bytes(item['memory_peak_raw'])}"
+                        f"Req {format_memory_gib(item['memory_request_raw'])} · "
+                        f"Lim {format_memory_gib(item['memory_limit_raw'])} · "
+                        f"Avg {format_memory_gib(item['memory_avg_raw'])} · "
+                        f"Peak {format_memory_gib(item['memory_peak_raw'])}"
                     ),
                     'efficiency': efficiency,
+                    'efficiency_display': format_decimal(
+                        efficiency,
+                    ),
                     'risk': risk,
                     'recommendation': recommendation,
                     'detail': {
                         'pods': item['pods'],
                         'qos_distribution': item['qos_distribution'],
                     },
-                    'cpu_request': self.format_cpu(
+                    'cpu_request': format_cpu_core(
                         item['cpu_request_raw'],
                     ),
-                    'cpu_limit': self.format_cpu(
+                    'cpu_limit': format_cpu_core(
                         item['cpu_limit_raw'],
                     ),
-                    'cpu_avg': self.format_cpu(
+                    'cpu_avg': format_cpu_core(
                         item['cpu_avg_raw'],
                     ),
-                    'cpu_peak': self.format_cpu(
+                    'cpu_peak': format_cpu_core(
                         item['cpu_peak_raw'],
                     ),
-                    'memory_request': self.format_memory_bytes(
+                    'memory_request': format_memory_gib(
                         item['memory_request_raw'],
                     ),
-                    'memory_limit': self.format_memory_bytes(
+                    'memory_limit': format_memory_gib(
                         item['memory_limit_raw'],
                     ),
-                    'memory_avg': self.format_memory_bytes(
+                    'memory_avg': format_memory_gib(
                         item['memory_avg_raw'],
                     ),
-                    'memory_peak': self.format_memory_bytes(
+                    'memory_peak': format_memory_gib(
                         item['memory_peak_raw'],
                     ),
                 }
@@ -1864,6 +1956,7 @@ def get_workload_analysis_context(
             'selected_workload_resource_status': selected_workload_resource_status,
             'selected_workload_qos': selected_workload_qos,
             'selected_workload_risk': selected_workload_risk,
+            'allowed_per_page_values': ALLOWED_PER_PAGE_VALUES,
             'allowed_time_ranges': get_allowed_time_ranges(),
             'namespace_options': [],
             'tenant_quota_summary': {

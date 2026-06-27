@@ -5,16 +5,13 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
                 <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                        Workload Resource Mapping
-                    </h2>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Workload Resource Mapping</h2>
                     <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
                 </div>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Map workload requests, limits, actual usage, peak usage, QoS class, and right-sizing risk.
                 </p>
             </div>
-
             <form method="GET"
                   action="{{ url_for('analytics.workload_resource_mapping') }}"
                   hx-get="{{ url_for('analytics.workload_resource_mapping') }}"
@@ -32,24 +29,19 @@
                 <input type="hidden"
                        name="workload_per_page"
                        value="{{ workload_mapping_payload.pagination.per_page }}" />
-
                 <input type="text"
                        name="workload_search"
                        value="{{ selected_workload_search }}"
                        placeholder="Search workload or namespace"
                        class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200" />
-
                 <select name="workload_type"
                         class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
                     <option value="">All Type</option>
                     {% for item in workload_mapping_payload.workload_type_options %}
                         <option value="{{ item }}"
-                                {% if selected_workload_type == item %}selected{% endif %}>
-                            {{ item }}
-                        </option>
+                                {% if selected_workload_type == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
-
                 <select name="workload_resource_status"
                         class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
                     <option value="">All Resources</option>
@@ -60,31 +52,24 @@
                         </option>
                     {% endfor %}
                 </select>
-
                 <select name="workload_qos"
                         class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
                     <option value="">All QoS</option>
                     {% for item in workload_mapping_payload.qos_options %}
                         <option value="{{ item }}"
-                                {% if selected_workload_qos == item %}selected{% endif %}>
-                            {{ item }}
-                        </option>
+                                {% if selected_workload_qos == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
-
                 <select name="workload_risk"
                         class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
                     <option value="">All Risk</option>
                     {% for item in workload_mapping_payload.risk_options %}
                         <option value="{{ item }}"
-                                {% if selected_workload_risk == item %}selected{% endif %}>
-                            {{ item }}
-                        </option>
+                                {% if selected_workload_risk == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
             </form>
         </div>
-
         <div id="workload-mapping-loading"
              class="htmx-indicator mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
             <div class="flex items-center gap-2">
@@ -93,7 +78,6 @@
             </div>
         </div>
     </div>
-
     <div class="p-6">
         <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
             <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
@@ -123,56 +107,35 @@
                                     <span>{{ row.workload }}</span>
                                 </div>
                             </td>
-
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="folder-tree" class="h-4 w-4 text-slate-400"></i>
                                     <span>{{ row.namespace }}</span>
                                 </div>
                             </td>
-
-                            <td class="px-4 py-3">
-                                {{ row.type }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ row.replicas }}
-                            </td>
-
+                            <td class="px-4 py-3">{{ row.type }}</td>
+                            <td class="px-4 py-3">{{ row.replicas }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.resource_status.class }}">
                                     {{ row.resource_status.label }}
                                 </span>
                             </td>
-
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.qos.class }}">
-                                    {{ row.qos.label }}
-                                </span>
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.qos.class }}">{{ row.qos.label }}</span>
                             </td>
-
                             <td class="px-4 py-3">
                                 <div class="flex min-w-36 items-center gap-3">
                                     <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                                         <div class="workload-progress h-2 rounded-full bg-blue-500"
                                              data-progress="{{ row.efficiency }}"></div>
                                     </div>
-                                    <span class="w-12 text-right text-xs font-semibold">
-                                        {{ row.efficiency }}%
-                                    </span>
+                                    <span class="w-12 text-right text-xs font-semibold">{{ row.efficiency_display }}%</span>
                                 </div>
                             </td>
-
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
-                                    {{ row.risk.label }}
-                                </span>
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">{{ row.risk.label }}</span>
                             </td>
-
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                                {{ row.recommendation }}
-                            </td>
-
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ row.recommendation }}</td>
                             <td class="px-4 py-3 text-right">
                                 <button type="button"
                                         class="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -182,7 +145,6 @@
                                 </button>
                             </td>
                         </tr>
-
                         <tr x-show="openWorkloadDetail === '{{ workload_key }}'"
                             x-cloak
                             class="bg-slate-50/80 dark:bg-slate-950/40">
@@ -193,7 +155,6 @@
                                             <i data-lucide="cpu" class="h-4 w-4 text-blue-500"></i>
                                             CPU Detail
                                         </div>
-
                                         <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                                             <div class="flex justify-between gap-3">
                                                 <span>Request</span>
@@ -213,13 +174,11 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                                         <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                                             <i data-lucide="memory-stick" class="h-4 w-4 text-emerald-500"></i>
                                             Memory Detail
                                         </div>
-
                                         <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                                             <div class="flex justify-between gap-3">
                                                 <span>Request</span>
@@ -239,18 +198,14 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                                         <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                                             <i data-lucide="package-search" class="h-4 w-4 text-violet-500"></i>
                                             Pods & QoS Detail
                                         </div>
-
                                         <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
                                             <div>
-                                                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                                    QoS Distribution
-                                                </div>
+                                                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">QoS Distribution</div>
                                                 <div class="flex flex-wrap gap-1">
                                                     {% for qos_name, qos_count in row.detail.qos_distribution.items() %}
                                                         <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -261,11 +216,8 @@
                                                     {% endfor %}
                                                 </div>
                                             </div>
-
                                             <div>
-                                                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                                    Pods
-                                                </div>
+                                                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Pods</div>
                                                 <div class="flex flex-wrap gap-1">
                                                     {% for pod in row.detail.pods %}
                                                         {% if loop.index <= 12 %}
@@ -274,7 +226,6 @@
                                                             </span>
                                                         {% endif %}
                                                     {% endfor %}
-
                                                     {% if row.detail.pods|length > 12 %}
                                                         <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                                             +{{ row.detail.pods|length - 12 }} more
@@ -298,7 +249,6 @@
                 </tbody>
             </table>
         </div>
-
         {% set workload_pagination = workload_mapping_payload.pagination %}
         <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -306,7 +256,6 @@
                     Showing {{ workload_pagination.start_item }}-{{ workload_pagination.end_item }}
                     of {{ workload_pagination.total_items }} workloads
                 </div>
-
                 <form method="GET"
                       action="{{ url_for('analytics.workload_resource_mapping') }}"
                       hx-get="{{ url_for('analytics.workload_resource_mapping') }}"
@@ -320,15 +269,20 @@
                            value="{{ cluster.id if cluster else '' }}" />
                     <input type="hidden" name="namespace" value="{{ selected_namespace }}" />
                     <input type="hidden" name="time_range" value="{{ selected_time_range }}" />
-                    <input type="hidden" name="workload_search" value="{{ selected_workload_search }}" />
-                    <input type="hidden" name="workload_type" value="{{ selected_workload_type }}" />
+                    <input type="hidden"
+                           name="workload_search"
+                           value="{{ selected_workload_search }}" />
+                    <input type="hidden"
+                           name="workload_type"
+                           value="{{ selected_workload_type }}" />
                     <input type="hidden"
                            name="workload_resource_status"
                            value="{{ selected_workload_resource_status }}" />
                     <input type="hidden" name="workload_qos" value="{{ selected_workload_qos }}" />
-                    <input type="hidden" name="workload_risk" value="{{ selected_workload_risk }}" />
+                    <input type="hidden"
+                           name="workload_risk"
+                           value="{{ selected_workload_risk }}" />
                     <input type="hidden" name="workload_page" value="1" />
-
                     <select name="workload_per_page"
                             class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
                         {% for value in allowed_per_page_values %}
@@ -340,35 +294,33 @@
                     </select>
                 </form>
             </div>
-
             <div class="flex items-center gap-2">
                 {% set workload_prev_url = url_for(
-                    'analytics.workload_resource_mapping',
-                    cluster_id=cluster.id if cluster else '',
-                    namespace=selected_namespace,
-                    time_range=selected_time_range,
-                    workload_search=selected_workload_search,
-                    workload_type=selected_workload_type,
-                    workload_resource_status=selected_workload_resource_status,
-                    workload_qos=selected_workload_qos,
-                    workload_risk=selected_workload_risk,
-                    workload_page=workload_pagination.previous_page,
-                    workload_per_page=workload_pagination.per_page
-                ) %}
+                                    'analytics.workload_resource_mapping',
+                                    cluster_id=cluster.id if cluster else '',
+                                    namespace=selected_namespace,
+                                    time_range=selected_time_range,
+                                    workload_search=selected_workload_search,
+                                    workload_type=selected_workload_type,
+                                    workload_resource_status=selected_workload_resource_status,
+                                    workload_qos=selected_workload_qos,
+                                    workload_risk=selected_workload_risk,
+                                    workload_page=workload_pagination.previous_page,
+                                    workload_per_page=workload_pagination.per_page
+                                ) %}
                 {% set workload_next_url = url_for(
-                    'analytics.workload_resource_mapping',
-                    cluster_id=cluster.id if cluster else '',
-                    namespace=selected_namespace,
-                    time_range=selected_time_range,
-                    workload_search=selected_workload_search,
-                    workload_type=selected_workload_type,
-                    workload_resource_status=selected_workload_resource_status,
-                    workload_qos=selected_workload_qos,
-                    workload_risk=selected_workload_risk,
-                    workload_page=workload_pagination.next_page,
-                    workload_per_page=workload_pagination.per_page
-                ) %}
-
+                                    'analytics.workload_resource_mapping',
+                                    cluster_id=cluster.id if cluster else '',
+                                    namespace=selected_namespace,
+                                    time_range=selected_time_range,
+                                    workload_search=selected_workload_search,
+                                    workload_type=selected_workload_type,
+                                    workload_resource_status=selected_workload_resource_status,
+                                    workload_qos=selected_workload_qos,
+                                    workload_risk=selected_workload_risk,
+                                    workload_page=workload_pagination.next_page,
+                                    workload_per_page=workload_pagination.per_page
+                                ) %}
                 <a href="{{ workload_prev_url }}"
                    hx-get="{{ workload_prev_url }}"
                    hx-target="#workload-resource-mapping"
@@ -377,11 +329,9 @@
                    class="{% if workload_pagination.has_previous %}text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800{% else %}pointer-events-none text-slate-300 dark:text-slate-700{% endif %} rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-700">
                     Previous
                 </a>
-
                 <span class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
                     Page {{ workload_pagination.page }} of {{ workload_pagination.total_pages }}
                 </span>
-
                 <a href="{{ workload_next_url }}"
                    hx-get="{{ workload_next_url }}"
                    hx-target="#workload-resource-mapping"

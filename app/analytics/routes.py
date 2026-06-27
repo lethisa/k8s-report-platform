@@ -19,7 +19,11 @@ from app.analytics.utilization.service import (
     get_selected_cluster,
     get_utilization_clusters,
 )
-from app.analytics.workload.routes import workload
+from app.analytics.workload.routes import (
+    workload,
+    workload_resource_mapping,
+    workload_tenant_quota,
+)
 from app.prometheus.service import PrometheusService
 
 analytics_bp = Blueprint(
@@ -95,6 +99,24 @@ analytics_bp.add_url_rule(
 analytics_bp.add_url_rule(
     '/workload',
     view_func=workload,
+    methods=[
+        'GET',
+    ],
+)
+
+analytics_bp.add_url_rule(
+    '/workload/tenant-quota',
+    endpoint='workload_tenant_quota',
+    view_func=workload_tenant_quota,
+    methods=[
+        'GET',
+    ],
+)
+
+analytics_bp.add_url_rule(
+    '/workload/resource-mapping',
+    endpoint='workload_resource_mapping',
+    view_func=workload_resource_mapping,
     methods=[
         'GET',
     ],

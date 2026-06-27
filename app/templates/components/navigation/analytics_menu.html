@@ -13,7 +13,6 @@
            data-lucide="chevron-right"
            class="h-4 w-4 transition-transform"></i>
     </a>
-
     <!-- Analytics Sub Menu -->
     <div x-show="analyticsOpen && sidebarOpen"
          x-transition
@@ -23,43 +22,36 @@
             <i data-lucide="layout-dashboard" class="h-3.5 w-3.5"></i>
             <span>Overview</span>
         </a>
-
         <a href="{{ url_for('analytics.utilization') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.utilization' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="activity" class="h-3.5 w-3.5"></i>
             <span>Resource Utilization</span>
         </a>
-
         <a href="{{ url_for('analytics.capacity') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.capacity' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="database" class="h-3.5 w-3.5"></i>
             <span>Capacity Analysis</span>
         </a>
-
         <a href="{{ url_for('analytics.storage') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.storage' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i>
             <span>Storage Analysis</span>
         </a>
-
         <a href="{{ url_for('analytics.workload') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.workload' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="boxes" class="h-3.5 w-3.5"></i>
             <span>Workload Analysis</span>
         </a>
-
         <a href="{{ url_for('analytics.forecast') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.forecast' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
             <span>Trends &amp; forecast</span>
         </a>
-
         <a href="{{ url_for('analytics.consumers') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.consumers' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="users" class="h-3.5 w-3.5"></i>
             <span>Top Consumers</span>
         </a>
-
         <a href="{{ url_for('analytics.anomalies') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.anomalies' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="triangle-alert" class="h-3.5 w-3.5"></i>

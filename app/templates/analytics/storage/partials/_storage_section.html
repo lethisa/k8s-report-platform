@@ -3,16 +3,13 @@
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                        Storage Capacity &amp; Utilization
-                    </h2>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Storage Capacity &amp; Utilization</h2>
                     <i data-lucide="info" class="h-4 w-4 text-slate-400"></i>
                 </div>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Review node filesystem usage, persistent volume capacity, PVC requests, and storage health signals.
                 </p>
             </div>
-
             <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <label class="block">
                     <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Node Filesystem</span>
@@ -24,25 +21,18 @@
                             hx-swap="outerHTML"
                             hx-include="#storage-analysis-filter-form, [name='storage_node']"
                             hx-indicator="#storage-filesystem-indicator">
-                        <option value=""
-                                {% if not selected_storage_node %}selected{% endif %}>
-                            All Nodes
-                        </option>
+                        <option value="" {% if not selected_storage_node %}selected{% endif %}>All Nodes</option>
                         {% for node in storage_summary.node_filesystem.available_nodes %}
                             <option value="{{ node }}"
-                                    {% if selected_storage_node == node %}selected{% endif %}>
-                                {{ node }}
-                            </option>
+                                    {% if selected_storage_node == node %}selected{% endif %}>{{ node }}</option>
                         {% endfor %}
                     </select>
                 </label>
             </div>
         </div>
     </div>
-
-<div class="space-y-6 p-6">
-    {% include "analytics/storage/partials/_filesystem_panel.html" %}
-
-    {% include "analytics/storage/partials/_persistent_storage_panel.html" %}
-</div>
+    <div class="space-y-6 p-6">
+        {% include "analytics/storage/partials/_filesystem_panel.html" %}
+        {% include "analytics/storage/partials/_persistent_storage_panel.html" %}
+    </div>
 </section>
