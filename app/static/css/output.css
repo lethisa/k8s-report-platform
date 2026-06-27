@@ -2190,6 +2190,11 @@
       grid-template-columns: 220px 170px 150px 80px;
     }
   }
+  .xl\:grid-cols-\[220px_180px_260px_80px\] {
+    @media (width >= 80rem) {
+      grid-template-columns: 220px 180px 260px 80px;
+    }
+  }
   .xl\:grid-cols-\[220px_220px_180px_auto\] {
     @media (width >= 80rem) {
       grid-template-columns: 220px 220px 180px auto;

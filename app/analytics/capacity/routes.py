@@ -15,6 +15,6 @@ def capacity() -> str:
     )
 
     return render_template(
-        'analytics/capacity.html',
+        'analytics/capacity/index.html',
         **context,
     )
