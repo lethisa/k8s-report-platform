@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity import queries
-from app.analytics.capacity.service import get_empty_capacity_payload
 from app.analytics.common.base_service import (
     AnalyticsBaseService,
     bytes_to_gib,
@@ -23,6 +22,7 @@ from app.analytics.common.params import (
     get_query_value,
     get_selected_time_range,
 )
+from app.analytics.common.payloads import get_empty_workload_payload
 from app.analytics.utilization.service import UtilizationService
 
 REQUIRED_QUOTA_KEYS = [
@@ -1938,7 +1938,7 @@ def get_workload_analysis_context(
 
     if workload_service is None:
         context.update(
-            get_empty_capacity_payload(
+            get_empty_workload_payload(
                 selected_namespace=selected_namespace,
                 selected_time_range=selected_time_range,
             )

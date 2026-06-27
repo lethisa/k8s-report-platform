@@ -1,0 +1,133 @@
+# app/analytics/common/payloads.py
+
+from __future__ import annotations
+
+from typing import Any
+
+from app.analytics.common.params import ALLOWED_PER_PAGE_VALUES
+
+
+def get_empty_pagination() -> dict[str, Any]:
+    return {
+        'page': 1,
+        'per_page': 10,
+        'total_items': 0,
+        'total_pages': 1,
+        'start_item': 0,
+        'end_item': 0,
+        'has_previous': False,
+        'has_next': False,
+        'previous_page': 1,
+        'next_page': 1,
+        'per_page_options': ALLOWED_PER_PAGE_VALUES,
+    }
+
+
+def get_empty_storage_payload(
+    selected_namespace: str,
+    selected_time_range: str,
+) -> dict[str, Any]:
+    empty_pagination = get_empty_pagination()
+
+    return {
+        'storage_summary': {
+            'node_filesystem': {
+                'selected_node': '',
+                'available_nodes': [],
+                'summary': {
+                    'capacity': '-',
+                    'used': '-',
+                    'free': '-',
+                    'usage_percent': 0,
+                    'free_percent': 0,
+                    'highest_usage': 0,
+                    'highest_node': '-',
+                },
+                'rows': [],
+            },
+            'persistent_storage': {
+                'pv': {
+                    'count': 0,
+                    'capacity': '-',
+                    'used': '-',
+                    'free': '-',
+                    'used_percent': 0,
+                    'free_percent': 0,
+                },
+                'pvc': {
+                    'count': 0,
+                    'requested': '-',
+                    'used': '-',
+                    'free': '-',
+                    'used_percent': 0,
+                    'free_percent': 0,
+                },
+                'pvc_rows': [],
+                'pvc_pagination': empty_pagination,
+                'pvc_selected_search': '',
+                'pvc_status_options': [],
+                'pvc_storage_class_options': [],
+                'pvc_selected_status': '',
+                'pvc_selected_storage_class': '',
+                'pv_rows': [],
+                'pv_pagination': empty_pagination,
+                'pv_selected_search': '',
+                'pv_status_options': [],
+                'pv_storage_class_options': [],
+                'pv_selected_status': '',
+                'pv_selected_storage_class': '',
+            },
+        },
+        'namespace_options': [],
+        'selected_namespace': selected_namespace,
+        'selected_time_range': selected_time_range,
+        'selected_storage_node': '',
+        'selected_storage_tab': 'pvc',
+        'selected_pvc_search': '',
+        'selected_pvc_status': '',
+        'selected_pvc_storage_class': '',
+        'selected_pv_search': '',
+        'selected_pv_status': '',
+        'selected_pv_storage_class': '',
+    }
+
+
+def get_empty_workload_payload(
+    selected_namespace: str,
+    selected_time_range: str,
+) -> dict[str, Any]:
+    empty_pagination = get_empty_pagination()
+
+    return {
+        'namespace_options': [],
+        'tenant_quota_summary': {
+            'summary_cards': [],
+            'rows': [],
+            'pagination': empty_pagination,
+        },
+        'tenant_quota_rows': [],
+        'quota_status_options': [],
+        'tenant_risk_options': [],
+        'workload_mapping_payload': {
+            'rows': [],
+            'filters': {},
+            'pagination': empty_pagination,
+            'workload_type_options': [],
+            'resource_status_options': [],
+            'qos_options': [],
+            'risk_options': [],
+        },
+        'workload_mapping_rows': [],
+        'recommendation_cards': [],
+        'governance_findings': [],
+        'selected_namespace': selected_namespace,
+        'selected_time_range': selected_time_range,
+        'selected_tenant_search': '',
+        'selected_tenant_quota_status': '',
+        'selected_tenant_risk': '',
+        'selected_workload_search': '',
+        'selected_workload_type': '',
+        'selected_workload_resource_status': '',
+        'selected_workload_qos': '',
+        'selected_workload_risk': '',
+    }

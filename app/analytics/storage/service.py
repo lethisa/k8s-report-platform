@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.analytics.capacity import queries
-from app.analytics.capacity.service import get_empty_capacity_payload
 from app.analytics.common.base_service import (
     AnalyticsBaseService,
     raw_percent,
@@ -21,6 +20,7 @@ from app.analytics.common.params import (
     get_query_value,
     get_selected_time_range,
 )
+from app.analytics.common.payloads import get_empty_storage_payload
 from app.analytics.utilization.service import UtilizationService
 
 
@@ -1076,7 +1076,7 @@ def get_storage_analysis_context(
 
     if utilization_service is None:
         context.update(
-            get_empty_capacity_payload(
+            get_empty_storage_payload(
                 selected_namespace=selected_namespace,
                 selected_time_range=selected_time_range,
             )
