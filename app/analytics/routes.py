@@ -1,8 +1,11 @@
-from flask import Blueprint, current_app, render_template, request
+from flask import Blueprint, render_template
 from flask_login import login_required
 
 from app.analytics.capacity.routes import capacity
-from app.analytics.forecast import ForecastService
+from app.analytics.forecast.routes import (
+    forecast,
+    forecast_section,
+)
 from app.analytics.overview.service import get_analytics_overview
 from app.analytics.storage.routes import (
     storage,
@@ -14,17 +17,11 @@ from app.analytics.utilization.routes import (
     utilization_node_detail,
     utilization_trend,
 )
-from app.analytics.utilization.service import (
-    UtilizationService,
-    get_selected_cluster,
-    get_utilization_clusters,
-)
 from app.analytics.workload.routes import (
     workload,
     workload_resource_mapping,
     workload_tenant_quota,
 )
-from app.prometheus.service import PrometheusService
 
 analytics_bp = Blueprint(
     'analytics',
@@ -64,6 +61,7 @@ analytics_bp.add_url_rule(
 
 analytics_bp.add_url_rule(
     '/capacity',
+    endpoint='capacity',
     view_func=capacity,
     methods=[
         'GET',
@@ -72,6 +70,7 @@ analytics_bp.add_url_rule(
 
 analytics_bp.add_url_rule(
     '/storage',
+    endpoint='storage',
     view_func=storage,
     methods=[
         'GET',
@@ -98,6 +97,7 @@ analytics_bp.add_url_rule(
 
 analytics_bp.add_url_rule(
     '/workload',
+    endpoint='workload',
     view_func=workload,
     methods=[
         'GET',
@@ -122,80 +122,23 @@ analytics_bp.add_url_rule(
     ],
 )
 
-
-@analytics_bp.route(
+analytics_bp.add_url_rule(
     '/forecast',
+    endpoint='forecast',
+    view_func=forecast,
+    methods=[
+        'GET',
+    ],
 )
-@login_required
-def forecast():
-    clusters = get_utilization_clusters()
 
-    cluster_id = request.args.get(
-        'cluster_id',
-    )
-
-    cluster = get_selected_cluster(
-        cluster_id,
-    )
-
-    if not cluster:
-        return render_template(
-            'analytics/forecast.html',
-            clusters=[],
-            forecast_summary={},
-            error='No cluster configured',
-        )
-
-    try:
-        prometheus = PrometheusService(
-            cluster,
-        )
-
-        utilization_service = UtilizationService(
-            prometheus,
-        )
-
-        forecast_service = ForecastService(
-            utilization_service,
-        )
-
-        forecast_summary = forecast_service.get_forecast_summary()
-        forecast_insights = forecast_service.get_insights()
-        projection_data = forecast_service.get_projection_chart_data()
-
-        error = None
-
-    except Exception as exc:
-        current_app.logger.exception(
-            exc,
-        )
-
-        forecast_summary = {}
-
-        projection_data = {
-            'labels': [],
-            'historical': [],
-            'projection_labels': [],
-            'projected': [],
-        }
-
-        forecast_insights = []
-
-        error = (
-            'Unable to connect to Prometheus. '
-            'Please verify endpoint, credentials, '
-            'SSL configuration, and network connectivity.'
-        )
-
-    return render_template(
-        'analytics/forecast.html',
-        clusters=clusters,
-        cluster=cluster,
-        forecast_summary=forecast_summary,
-        projection_data=projection_data,
-        forecast_insights=forecast_insights,
-        error=error,
-    )
+analytics_bp.add_url_rule(
+    '/forecast/section',
+    endpoint='forecast_section',
+    view_func=forecast_section,
+    methods=[
+        'GET',
+    ],
+)
 
 
 @analytics_bp.route('/consumers')

@@ -1,0 +1,335 @@
+{% extends "layouts/dashboard.html" %}
+{% block title %}Resource Forecast{% endblock title %}
+
+{% block dashboard_content %}
+    <div class="space-y-6">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                        <i data-lucide="line-chart" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Resource Forecast</h1>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Predict CPU, memory, storage, and pod growth from historical Prometheus metrics.
+                        </p>
+                    </div>
+                </div>
+
+                <form id="forecast-filter-form"
+                      method="GET"
+                      action="{{ url_for('analytics.forecast') }}"
+                      class="grid gap-3 md:grid-cols-2 xl:grid-cols-[220px_220px_180px_180px_180px_240px_80px] xl:items-end">
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Cluster</span>
+                        <select name="cluster_id"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in clusters %}
+                                <option value="{{ item.id }}"
+                                        {% if cluster and cluster.id == item.id %}selected{% endif %}>
+                                    {{ item.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Namespace</span>
+                        <select name="namespace"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            <option value="">All Namespaces</option>
+                            {% for namespace in namespace_options %}
+                                <option value="{{ namespace }}"
+                                        {% if selected_namespace == namespace %}selected{% endif %}>
+                                    {{ namespace }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Resource</span>
+                        <select name="resource"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in resource_options %}
+                                <option value="{{ item.value }}"
+                                        {% if item.value == selected_resource %}selected{% endif %}>
+                                    {{ item.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">History</span>
+                        <select name="history_window"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in history_window_options %}
+                                <option value="{{ item.value }}"
+                                        {% if item.value == selected_history_window %}selected{% endif %}>
+                                    {{ item.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label class="block">
+                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Forecast</span>
+                        <select name="forecast_horizon"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                            {% for item in forecast_horizon_options %}
+                                <option value="{{ item.value }}"
+                                        {% if item.value == selected_forecast_horizon %}selected{% endif %}>
+                                    {{ item.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <div class="block">
+                        <div class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            {% if prometheus_status.response_time_ms is not none %}
+                                {{ prometheus_status.response_time_ms }} ms response
+                            {% else %}
+                                No response
+                            {% endif %}
+                        </div>
+                        <div class="mt-1 inline-flex h-[38px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm {% if prometheus_status.connected %} bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 {% else %} bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300 {% endif %}">
+                            {% if prometheus_status.connected %}
+                                <i data-lucide="activity" class="h-4 w-4 shrink-0"></i>
+                            {% else %}
+                                <i data-lucide="wifi-off" class="h-4 w-4 shrink-0"></i>
+                            {% endif %}
+                            <span class="whitespace-nowrap">{{ prometheus_status.label }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button type="submit"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
+                            <i data-lucide="bike" class="h-4 w-4"></i>
+                            GO
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if forecast_payload.message %}
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="triangle-alert" class="mt-0.5 h-5 w-5"></i>
+                    <div>
+                        <div class="font-semibold">Forecast data unavailable</div>
+                        <div class="mt-1">{{ forecast_payload.message }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if not prometheus_status.connected %}
+    <div class="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+        <div class="flex items-start gap-3">
+            <i data-lucide="triangle-alert" class="mt-0.5 h-5 w-5 shrink-0"></i>
+            <div>
+                <div class="font-semibold">
+                    Prometheus connection issue
+                </div>
+                <div class="mt-1">
+                    Unable to connect to Prometheus. Please verify endpoint, credentials, SSL configuration, and network connectivity.
+                </div>
+
+                {% if forecast_payload.message %}
+                    <div class="mt-2 rounded-xl bg-white/60 px-3 py-2 text-xs text-amber-700 dark:bg-slate-950/40 dark:text-amber-200">
+                        {{ forecast_payload.message }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% elif forecast_payload.message %}
+    <div class="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+        <div class="flex items-start gap-3">
+            <i data-lucide="triangle-alert" class="mt-0.5 h-5 w-5 shrink-0"></i>
+            <div>
+                <div class="font-semibold">
+                    Forecast data unavailable
+                </div>
+                <div class="mt-1">
+                    {{ forecast_payload.message }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+        <div id="forecast-section">
+            {% include "analytics/forecast/partials/_forecast_section.html" %}
+        </div>
+    </div>
+
+    {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            let forecastChart = null;
+
+            function getForecastChartData() {
+                const element = document.getElementById('forecast-chart-data');
+
+                if (!element) {
+                    return null;
+                }
+
+                try {
+                    return JSON.parse(element.textContent);
+                } catch {
+                    return null;
+                }
+            }
+
+            function buildForecastDatasets(payload) {
+                const datasets = [];
+
+                payload.datasets.forEach((item) => {
+                    datasets.push({
+                        label: `${item.label} Historical`,
+                        data: item.historical,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        pointRadius: 0
+                    });
+
+                    datasets.push({
+                        label: `${item.label} Forecast`,
+                        data: item.forecast,
+                        borderWidth: 2,
+                        borderDash: [6, 6],
+                        tension: 0.35,
+                        pointRadius: 0
+                    });
+                });
+
+                if (payload.datasets.length > 0) {
+                    const labelsLength = payload.datasets[0].labels.length;
+
+                    datasets.push({
+                        label: 'Warning 75%',
+                        data: Array(labelsLength).fill(payload.warning_threshold),
+                        borderWidth: 1,
+                        borderDash: [4, 4],
+                        pointRadius: 0
+                    });
+
+                    datasets.push({
+                        label: 'Critical 90%',
+                        data: Array(labelsLength).fill(payload.critical_threshold),
+                        borderWidth: 1,
+                        borderDash: [2, 4],
+                        pointRadius: 0
+                    });
+                }
+
+                return datasets;
+            }
+
+            function renderForecastChart() {
+                const canvas = document.getElementById('forecast-chart');
+
+                if (!canvas || typeof Chart === 'undefined') {
+                    return;
+                }
+
+                const payload = getForecastChartData();
+
+                if (!payload || !payload.datasets || payload.datasets.length === 0) {
+                    return;
+                }
+
+                const labels = payload.datasets[0].labels;
+
+                if (forecastChart !== null) {
+                    forecastChart.destroy();
+                }
+
+                forecastChart = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: buildForecastDatasets(payload)
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    boxWidth: 8
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.parsed.y;
+
+                                        if (value === null || value === undefined) {
+                                            return null;
+                                        }
+
+                                        return `${context.dataset.label}: ${value.toFixed(2)}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return `${value}%`;
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 8
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function hydrateForecastUi() {
+                renderForecastChart();
+
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+
+            document.addEventListener(
+                'DOMContentLoaded',
+                hydrateForecastUi
+            );
+
+            document.body.addEventListener(
+                'htmx:afterSwap',
+                function(event) {
+                    if (event.detail.target && event.detail.target.id === 'forecast-section') {
+                        hydrateForecastUi();
+                    }
+                }
+            );
+        </script>
+    {% endblock scripts %}
+{% endblock dashboard_content %}

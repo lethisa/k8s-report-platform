@@ -42,11 +42,13 @@
             <i data-lucide="boxes" class="h-3.5 w-3.5"></i>
             <span>Workload Analysis</span>
         </a>
-        <a href="{{ url_for('analytics.forecast') }}"
-           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.forecast' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
-            <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
-            <span>Trends &amp; forecast</span>
-        </a>
+
+<a href="{{ url_for('analytics.forecast') }}"
+   class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.forecast' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
+    <i data-lucide="line-chart" class="h-3.5 w-3.5"></i>
+    <span>Resource Forecast</span>
+</a>
+    
         <a href="{{ url_for('analytics.consumers') }}"
            class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.consumers' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="users" class="h-3.5 w-3.5"></i>
