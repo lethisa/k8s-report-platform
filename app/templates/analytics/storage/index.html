@@ -20,9 +20,10 @@
                     </div>
                 </div>
 
-                <form method="GET"
-                      action="{{ url_for('analytics.storage') }}"
-                      class="grid gap-3 md:grid-cols-2 xl:grid-cols-[220px_240px_180px_240px_80px] xl:items-end">
+               <form id="storage-analysis-filter-form"
+      method="GET"
+      action="{{ url_for('analytics.storage') }}"
+      class="grid gap-3 md:grid-cols-2 xl:grid-cols-[220px_240px_180px_240px_80px] xl:items-end">
                     <label class="block">
                         <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Cluster</span>
                         <select name="cluster_id"
@@ -86,8 +87,8 @@
                     <div class="flex items-end">
                         <button type="submit"
                                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
-                            <i data-lucide="play" class="h-4 w-4"></i>
-                            RUN
+                            <i data-lucide="bike" class="h-4 w-4"></i>
+                        GO
                         </button>
                     </div>
                 </form>

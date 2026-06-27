@@ -18,3 +18,27 @@ def storage() -> str:
         'analytics/storage/index.html',
         **context,
     )
+
+
+@login_required
+def storage_filesystem_summary() -> str:
+    context = get_storage_analysis_context(
+        query_args=request.args,
+    )
+
+    return render_template(
+        'analytics/storage/partials/_filesystem_panel.html',
+        **context,
+    )
+
+
+@login_required
+def storage_persistent_summary() -> str:
+    context = get_storage_analysis_context(
+        query_args=request.args,
+    )
+
+    return render_template(
+        'analytics/storage/partials/_persistent_storage_panel.html',
+        **context,
+    )

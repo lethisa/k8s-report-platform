@@ -4,7 +4,11 @@ from flask_login import login_required
 from app.analytics.capacity.routes import capacity
 from app.analytics.forecast import ForecastService
 from app.analytics.overview.service import get_analytics_overview
-from app.analytics.storage.routes import storage
+from app.analytics.storage.routes import (
+    storage,
+    storage_filesystem_summary,
+    storage_persistent_summary,
+)
 from app.analytics.utilization.routes import (
     utilization,
     utilization_node_detail,
@@ -65,6 +69,24 @@ analytics_bp.add_url_rule(
 analytics_bp.add_url_rule(
     '/storage',
     view_func=storage,
+    methods=[
+        'GET',
+    ],
+)
+
+analytics_bp.add_url_rule(
+    '/storage/filesystem-summary',
+    endpoint='storage_filesystem_summary',
+    view_func=storage_filesystem_summary,
+    methods=[
+        'GET',
+    ],
+)
+
+analytics_bp.add_url_rule(
+    '/storage/persistent-summary',
+    endpoint='storage_persistent_summary',
+    view_func=storage_persistent_summary,
     methods=[
         'GET',
     ],
