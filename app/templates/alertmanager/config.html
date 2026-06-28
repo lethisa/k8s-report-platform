@@ -4,93 +4,70 @@
 
 {% block dashboard_content %}
     <div class="space-y-6">
-        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300">
-                        <i data-lucide="siren" class="h-6 w-6"></i>
-                    </div>
-
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-950 dark:text-white">
-                            Alertmanager Configuration
-                        </h1>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            Configure Alertmanager endpoint for the selected Kubernetes cluster.
-                        </p>
-
-                        {% if cluster %}
-                            <div class="mt-3 inline-flex rounded-xl bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                Cluster: {{ cluster.name }}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Current Status
-                    </div>
-
-                    <div class="mt-2 flex items-center gap-2">
-                        {% if status.connected %}
-                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-semibold text-emerald-700 dark:text-emerald-300">
-                                {{ status.label }}
-                            </span>
-                        {% elif status.configured %}
-                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                            <span class="font-semibold text-amber-700 dark:text-amber-300">
-                                {{ status.label }}
-                            </span>
-                        {% else %}
-                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-slate-400"></span>
-                            <span class="font-semibold text-slate-600 dark:text-slate-300">
-                                {{ status.label }}
-                            </span>
-                        {% endif %}
-                    </div>
-
-                    {% if status.response_time_ms %}
-                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {{ status.response_time_ms }} ms response
-                        </div>
-                    {% endif %}
-                </div>
+        <!-- Hero Header -->
+    
+<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-red-500/10">
+                <i data-lucide="siren" class="h-7 w-7 text-red-500"></i>
             </div>
-        </section>
 
-        <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
-                <h2 class="text-base font-semibold text-slate-950 dark:text-white">
-                    Endpoint Settings
-                </h2>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Use the same authentication pattern as Prometheus: none, basic, or bearer token.
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                    Alertmanager Configuration
+                </h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Configure Alertmanager integration for cluster
+                    <span class="font-semibold">{{ cluster.name }}</span>
                 </p>
             </div>
+        </div>
 
-            <form method="POST" class="space-y-6 p-6">
-                <div class="grid gap-5 lg:grid-cols-2">
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <a href="{{ url_for('cluster.list_clusters') }}"
+           class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            Back to Clusters
+        </a>
+    </div>
+</div>
+
+        <!-- Form Card -->
+        {% set current_auth_type = config.auth_type if config else 'none' %}
+        <form method="POST" x-data="{ authType: '{{ current_auth_type }}' }">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <!-- Header -->
+                <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Connection Settings</h2>
+                </div>
+
+                <!-- Body -->
+                <div class="space-y-6 p-6">
+                    <!-- Endpoint -->
+                    <div>
+                        <label for="endpoint"
+                               class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                             Endpoint
-                        </span>
-                        <input type="url"
+                        </label>
+                        <input id="endpoint"
+                               type="url"
                                name="endpoint"
                                value="{{ config.endpoint if config else '' }}"
-                               placeholder="http://alertmanager.example.local:9093"
+                               placeholder="http://localhost:9093"
                                required
-                               class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    </label>
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                    </div>
 
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Authentication Type
-                        </span>
-                        <select name="auth_type"
-                                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                            {% set current_auth_type = config.auth_type if config else 'none' %}
+                    <!-- Authentication -->
+                    <div>
+                        <label for="auth_type"
+                               class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Authentication
+                        </label>
+                        <select id="auth_type"
+                                name="auth_type"
+                                x-on:change="authType = $event.target.value"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                             <option value="none"
                                     {% if current_auth_type == 'none' %}selected{% endif %}>
                                 None
@@ -104,93 +81,178 @@
                                 Bearer Token
                             </option>
                         </select>
-                    </label>
+                    </div>
 
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Username
-                        </span>
-                        <input type="text"
-                               name="username"
-                               value="{{ config.username if config and config.username else '' }}"
-                               placeholder="Optional basic auth username"
-                               class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    </label>
+                    <!-- Basic Auth -->
+                    <div x-show="authType === 'basic'" x-cloak x-transition class="space-y-6">
+                        <div>
+                            <label for="username"
+                                   class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Username
+                            </label>
+                            <input id="username"
+                                   type="text"
+                                   name="username"
+                                   value="{{ config.username if config and config.username else '' }}"
+                                   placeholder="Username"
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        </div>
 
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Password
-                        </span>
-                        <input type="password"
-                               name="password"
-                               value="{{ config.password if config and config.password else '' }}"
-                               placeholder="Optional basic auth password"
-                               class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    </label>
+                        <div>
+                            <label for="password"
+                                   class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Password
+                            </label>
+                            <input id="password"
+                                   type="password"
+                                   name="password"
+                                   value="{{ config.password if config and config.password else '' }}"
+                                   placeholder="Password"
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        </div>
+                    </div>
 
-                    <label class="block lg:col-span-2">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <!-- Bearer Token -->
+                    <div x-show="authType === 'bearer'" x-cloak x-transition>
+                        <label for="bearer_token"
+                               class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                             Bearer Token
-                        </span>
-                        <textarea name="bearer_token"
-                                  rows="4"
-                                  placeholder="Optional bearer token"
-                                  class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{{ config.bearer_token if config and config.bearer_token else '' }}</textarea>
-                    </label>
+                        </label>
+                        <input id="bearer_token"
+                               type="password"
+                               name="bearer_token"
+                               value="{{ config.bearer_token if config and config.bearer_token else '' }}"
+                               placeholder="eyJhbGciOi..."
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    </div>
 
-                    <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Timeout
-                        </span>
-                        <input type="number"
+                    <!-- Timeout -->
+                    <div>
+                        <label for="timeout"
+                               class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Timeout (seconds)
+                        </label>
+                        <input id="timeout"
+                               type="number"
                                name="timeout"
                                min="1"
                                max="120"
                                value="{{ config.timeout if config else 10 }}"
-                               class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    </label>
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                    </div>
 
-                    <label class="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-800">
-                        <input type="checkbox"
+                    <!-- Verify SSL -->
+                    <div class="flex items-center gap-3">
+                        <input id="verify_ssl"
+                               type="checkbox"
                                name="verify_ssl"
                                value="1"
                                {% if not config or config.verify_ssl %}checked{% endif %}
                                class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                        <span>
-                            <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                                Verify SSL
-                            </span>
-                            <span class="block text-xs text-slate-500 dark:text-slate-400">
-                                Disable only for trusted internal/self-signed endpoints.
-                            </span>
-                        </span>
-                    </label>
+                        <label for="verify_ssl" class="text-sm text-slate-700 dark:text-slate-300">
+                            Verify SSL Certificate
+                        </label>
+                    </div>
                 </div>
 
-                {% if status.error %}
-                    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-                        {{ status.error }}
-                    </div>
-                {% endif %}
+                <!-- Footer -->
+                <div class="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-800">
+                    <button type="button"
+                            id="test-connection-btn"
+                            class="rounded-xl bg-slate-700 px-4 py-2 text-white transition hover:bg-slate-600">
+                        Test Connection
+                    </button>
 
-                <div class="flex flex-col gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-end">
                     <button type="submit"
                             name="action"
                             value="save"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-                        <i data-lucide="save" class="h-4 w-4"></i>
-                        Save
-                    </button>
-
-                    <button type="submit"
-                            name="action"
-                            value="save_test"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                        <i data-lucide="plug-zap" class="h-4 w-4"></i>
-                        Save & Test
+                            class="rounded-xl bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700">
+                        Save Configuration
                     </button>
                 </div>
-            </form>
-        </section>
+            </div>
+        </form>
+
+        <!-- Test Result -->
+        <div id="test-result"
+             class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        </div>
     </div>
+
+    <script>
+    document.getElementById('test-connection-btn').addEventListener('click', async () => {
+        const resultDiv = document.getElementById('test-result')
+
+        resultDiv.classList.remove('hidden')
+        resultDiv.innerHTML = `
+            <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500"></span>
+                Testing Alertmanager connection...
+            </div>
+        `
+
+        try {
+            const response = await fetch("{{ url_for('alertmanager.test_cluster_alertmanager', cluster_id=cluster.id) }}", {
+                method: 'POST',
+            })
+
+            const data = await response.json()
+
+            if (data.success) {
+                resultDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            ✓
+                        </div>
+                        <div>
+                            <div class="font-semibold text-emerald-600 dark:text-emerald-400">
+                                Alertmanager Connected
+                            </div>
+                            <div class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                                Version:
+                                ${data.version || 'unknown'}
+                            </div>
+                            <div class="text-sm text-slate-600 dark:text-slate-300">
+                                Response Time:
+                                ${data.response_time_ms || 0} ms
+                            </div>
+                        </div>
+                    </div>
+                `
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+                            ✗
+                        </div>
+                        <div>
+                            <div class="font-semibold text-red-600 dark:text-red-400">
+                                Alertmanager Connection Failed
+                            </div>
+                            <div class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                                ${data.error || 'Unknown error'}
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+                        ✗
+                    </div>
+                    <div>
+                        <div class="font-semibold text-red-600 dark:text-red-400">
+                            Connection Failed
+                        </div>
+                        <div class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                            Failed to call Alertmanager test endpoint.
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    })
+    </script>
 {% endblock dashboard_content %}

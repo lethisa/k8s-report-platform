@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
 
@@ -124,23 +124,22 @@ def test_cluster_alertmanager(
         cluster_id=cluster_id,
     )
 
-    if result.get(
-        'connected',
-        False,
-    ):
-        flash(
-            'Alertmanager connection test succeeded.',
-            'success',
-        )
-    else:
-        flash(
-            f'Alertmanager connection test failed: {result.get("error")}',
-            'error',
-        )
-
-    return redirect(
-        url_for(
-            'alertmanager.cluster_alertmanager_config',
-            cluster_id=cluster_id,
-        )
+    return jsonify(
+        {
+            'success': result.get(
+                'connected',
+                False,
+            ),
+            'version': result.get(
+                'version',
+                'unknown',
+            ),
+            'response_time_ms': result.get(
+                'response_time_ms',
+                0,
+            ),
+            'error': result.get(
+                'error',
+            ),
+        }
     )
