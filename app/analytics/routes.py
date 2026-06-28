@@ -12,6 +12,11 @@ from app.analytics.storage.routes import (
     storage_filesystem_summary,
     storage_persistent_summary,
 )
+from app.analytics.top_consumers.routes import (
+    top_consumers,
+    top_consumers_section,
+    top_consumers_table,
+)
 from app.analytics.utilization.routes import (
     utilization,
     utilization_node_detail,
@@ -141,12 +146,26 @@ analytics_bp.add_url_rule(
 )
 
 
-@analytics_bp.route('/consumers')
-@login_required
-def consumers() -> str:
-    return render_template(
-        'analytics/consumers.html',
-    )
+analytics_bp.add_url_rule(
+    '/top-consumers',
+    endpoint='top_consumers',
+    view_func=top_consumers,
+    methods=['GET'],
+)
+
+analytics_bp.add_url_rule(
+    '/top-consumers/section',
+    endpoint='top_consumers_section',
+    view_func=top_consumers_section,
+    methods=['GET'],
+)
+
+analytics_bp.add_url_rule(
+    '/top-consumers/table',
+    endpoint='top_consumers_table',
+    view_func=top_consumers_table,
+    methods=['GET'],
+)
 
 
 @analytics_bp.route('/anomalies')

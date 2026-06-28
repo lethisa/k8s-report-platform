@@ -42,15 +42,13 @@
             <i data-lucide="boxes" class="h-3.5 w-3.5"></i>
             <span>Workload Analysis</span>
         </a>
-
-<a href="{{ url_for('analytics.forecast') }}"
-   class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.forecast' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
-    <i data-lucide="line-chart" class="h-3.5 w-3.5"></i>
-    <span>Resource Forecast</span>
-</a>
-    
-        <a href="{{ url_for('analytics.consumers') }}"
-           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint == 'analytics.consumers' else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
+        <a href="{{ url_for('analytics.forecast') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint in ['analytics.forecast', 'analytics.forecast_section'] else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
+            <i data-lucide="line-chart" class="h-3.5 w-3.5"></i>
+            <span>Resource Forecast</span>
+        </a>
+        <a href="{{ url_for('analytics.top_consumers') }}"
+           class="{{ 'border-l-2 border-blue-500 bg-blue-500/10 text-blue-400' if request.endpoint in ['analytics.top_consumers', 'analytics.top_consumers_section', 'analytics.top_consumers_table'] else 'text-slate-400 hover:text-white' }} flex items-center gap-2 py-2 pl-3 text-sm">
             <i data-lucide="users" class="h-3.5 w-3.5"></i>
             <span>Top Consumers</span>
         </a>

@@ -3,99 +3,73 @@
 {% set has_data = forecast_payload.has_data %}
 {% set fallback_items = [
     {
-        'key': 'cpu',
-        'label': 'CPU',
-        'icon': 'cpu',
-        'description': 'Projected CPU usage growth compared with worker-node allocatable CPU.'
+        "key": "cpu",
+        "label": "CPU",
+        "icon": "cpu",
+        "description": "Projected CPU usage growth compared with worker-node allocatable CPU."
     },
     {
-        'key': 'memory',
-        'label': 'Memory',
-        'icon': 'memory-stick',
-        'description': 'Projected memory working set growth compared with worker-node allocatable memory.'
+        "key": "memory",
+        "label": "Memory",
+        "icon": "memory-stick",
+        "description": "Projected memory working set growth compared with worker-node allocatable memory."
     },
     {
-        'key': 'storage',
-        'label': 'Storage',
-        'icon': 'database',
-        'description': 'Projected PVC storage growth compared with PVC capacity.'
+        "key": "storage",
+        "label": "Storage",
+        "icon": "database",
+        "description": "Projected PVC storage growth compared with PVC capacity."
     },
     {
-        'key': 'pods',
-        'label': 'Pods',
-        'icon': 'boxes',
-        'description': 'Projected running pod growth compared with worker-node pod capacity.'
+        "key": "pods",
+        "label": "Pods",
+        "icon": "boxes",
+        "description": "Projected running pod growth compared with worker-node pod capacity."
     }
 ] %}
-
 <div class="space-y-6">
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Highest Projection
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        {{ summary.highest_projected_percent }}%
-                    </p>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {{ summary.highest_projected_label }}
-                    </p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Highest Projection</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ summary.highest_projected_percent }}%</p>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ summary.highest_projected_label }}</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
                     <i data-lucide="activity" class="h-5 w-5"></i>
                 </div>
             </div>
         </div>
-
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Warning Resources
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        {{ summary.warning_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Projected 75%+
-                    </p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Warning Resources</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ summary.warning_count }}</p>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Projected 75%+</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300">
                     <i data-lucide="triangle-alert" class="h-5 w-5"></i>
                 </div>
             </div>
         </div>
-
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Critical Resources
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        {{ summary.critical_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Projected 90%+
-                    </p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Critical Resources</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ summary.critical_count }}</p>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Projected 90%+</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300">
                     <i data-lucide="flame" class="h-5 w-5"></i>
                 </div>
             </div>
         </div>
-
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Nearest Critical
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        {{ summary.nearest_critical.label }}
-                    </p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nearest Critical</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{{ summary.nearest_critical.label }}</p>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                         {% if summary.nearest_critical.date %}
                             {{ summary.nearest_critical.date }}
@@ -110,24 +84,19 @@
             </div>
         </div>
     </section>
-
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="grid gap-5 xl:grid-cols-[minmax(320px,0.9fr)_minmax(640px,1.6fr)] xl:items-stretch">
             <div class="flex h-full items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                 <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300">
                     <i data-lucide="sigma" class="h-5 w-5"></i>
                 </div>
-
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-base font-semibold text-slate-950 dark:text-white">
-                            Forecast Methodology
-                        </h2>
+                        <h2 class="text-base font-semibold text-slate-950 dark:text-white">Forecast Methodology</h2>
                         <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
                             Linear Regression
                         </span>
                     </div>
-
                     <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                         Forecast is calculated from Prometheus historical metrics using daily average aggregation,
                         then projected forward with a linear regression trend line. Projected utilization is compared
@@ -135,63 +104,43 @@
                     </p>
                 </div>
             </div>
-
             <div class="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
                 <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                     <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                         <i data-lucide="database" class="h-4 w-4"></i>
-                        <p class="text-xs font-semibold uppercase tracking-wide">
-                            Data Source
-                        </p>
+                        <p class="text-xs font-semibold uppercase tracking-wide">Data Source</p>
                     </div>
-                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
-                        Prometheus Range Query
-                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">Prometheus Range Query</p>
                     <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
                         CPU, memory, storage, and pod metrics are sampled from Prometheus history.
                     </p>
                 </div>
-
                 <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                     <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                         <i data-lucide="calendar-days" class="h-4 w-4"></i>
-                        <p class="text-xs font-semibold uppercase tracking-wide">
-                            Aggregation
-                        </p>
+                        <p class="text-xs font-semibold uppercase tracking-wide">Aggregation</p>
                     </div>
-                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
-                        Daily Average
-                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">Daily Average</p>
                     <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
                         Raw range data is grouped into daily average points before trend calculation.
                     </p>
                 </div>
-
                 <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                     <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                         <i data-lucide="trending-up" class="h-4 w-4"></i>
-                        <p class="text-xs font-semibold uppercase tracking-wide">
-                            Projection
-                        </p>
+                        <p class="text-xs font-semibold uppercase tracking-wide">Projection</p>
                     </div>
-                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
-                        y = slope × day + intercept
-                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">y = slope × day + intercept</p>
                     <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
                         The trend slope is extended based on the selected forecast horizon.
                     </p>
                 </div>
-
                 <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
                     <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                         <i data-lucide="shield-alert" class="h-4 w-4"></i>
-                        <p class="text-xs font-semibold uppercase tracking-wide">
-                            Risk Threshold
-                        </p>
+                        <p class="text-xs font-semibold uppercase tracking-wide">Risk Threshold</p>
                     </div>
-                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
-                        Warning 75% · Critical 90%
-                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">Warning 75% · Critical 90%</p>
                     <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
                         ETA is calculated from current usage, growth slope, and capacity threshold.
                     </p>
@@ -199,18 +148,14 @@
             </div>
         </div>
     </section>
-
     <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="flex flex-col gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h2 class="text-base font-semibold text-slate-950 dark:text-white">
-                    Forecast Trend
-                </h2>
+                <h2 class="text-base font-semibold text-slate-950 dark:text-white">Forecast Trend</h2>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Historical usage and projected utilization based on {{ forecast_payload.history_days }} days of data.
                 </p>
             </div>
-
             {% if forecast_payload.generated_at %}
                 <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
                     <i data-lucide="clock" class="h-3.5 w-3.5"></i>
@@ -218,13 +163,9 @@
                 </div>
             {% endif %}
         </div>
-
         <div class="p-6">
             {% if has_data %}
-                <script id="forecast-chart-data" type="application/json">
-                    {{ forecast_payload.chart | tojson }}
-                </script>
-
+                <script id="forecast-chart-data" type="application/json">{{ forecast_payload.chart | tojson }}</script>
                 <div class="h-[360px]">
                     <canvas id="forecast-chart"></canvas>
                 </div>
@@ -234,9 +175,7 @@
                         <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                             <i data-lucide="line-chart" class="h-7 w-7"></i>
                         </div>
-                        <h3 class="mt-4 text-base font-semibold text-slate-950 dark:text-white">
-                            No forecast data available
-                        </h3>
+                        <h3 class="mt-4 text-base font-semibold text-slate-950 dark:text-white">No forecast data available</h3>
                         <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
                             Forecast chart will appear after Prometheus is connected and historical metrics are available
                             for the selected cluster, namespace, resource, and time window.
@@ -246,7 +185,6 @@
             {% endif %}
         </div>
     </section>
-
     <section class="grid gap-4 xl:grid-cols-2">
         {% if forecast_items %}
             {% for item in forecast_items %}
@@ -258,10 +196,7 @@
                             </div>
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="text-base font-semibold text-slate-950 dark:text-white">
-                                        {{ item.label }} Forecast
-                                    </h3>
-
+                                    <h3 class="text-base font-semibold text-slate-950 dark:text-white">{{ item.label }} Forecast</h3>
                                     {% if item.status == 'critical' %}
                                         <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-950/60 dark:text-red-300">
                                             Critical
@@ -276,60 +211,32 @@
                                         </span>
                                     {% endif %}
                                 </div>
-                                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    {{ item.description }}
-                                </p>
+                                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.description }}</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Current Usage
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                {{ item.current_display }}
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Current Usage</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ item.current_display }}</p>
                             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 {{ item.current_percent }}% of {{ item.capacity_display }}
                             </p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Projected Usage
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                {{ item.projected_display }}
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                {{ item.projected_percent }}% projected
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Projected Usage</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ item.projected_display }}</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.projected_percent }}% projected</p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Growth Rate
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                {{ item.growth_display }}
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Based on linear trend
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Growth Rate</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ item.growth_display }}</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Based on linear trend</p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Confidence
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                {{ item.confidence }}
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                {{ item.confidence_reason }}
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Confidence</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ item.confidence }}</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.confidence_reason }}</p>
                         </div>
                     </div>
                 </div>
@@ -343,83 +250,47 @@
                         </div>
                         <div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="text-base font-semibold text-slate-950 dark:text-white">
-                                    {{ item.label }} Forecast
-                                </h3>
+                                <h3 class="text-base font-semibold text-slate-950 dark:text-white">{{ item.label }} Forecast</h3>
                                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                     No Data
                                 </span>
                             </div>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                {{ item.description }}
-                            </p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.description }}</p>
                         </div>
                     </div>
-
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Current Usage
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                N/A
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Waiting for Prometheus metrics
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Current Usage</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">N/A</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Waiting for Prometheus metrics</p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Projected Usage
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                N/A
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Forecast unavailable
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Projected Usage</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">N/A</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Forecast unavailable</p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Growth Rate
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                N/A
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Not enough data
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Growth Rate</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">N/A</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Not enough data</p>
                         </div>
-
                         <div class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                Confidence
-                            </p>
-                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                                Low
-                            </p>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Prometheus data unavailable
-                            </p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Confidence</p>
+                            <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">Low</p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Prometheus data unavailable</p>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         {% endif %}
     </section>
-
     <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
-            <h2 class="text-base font-semibold text-slate-950 dark:text-white">
-                Forecast Recommendations
-            </h2>
+            <h2 class="text-base font-semibold text-slate-950 dark:text-white">Forecast Recommendations</h2>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Actionable steps based on projected growth and capacity risk.
             </p>
         </div>
-
         <div class="p-6">
             {% if forecast_payload.recommendations %}
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -439,14 +310,9 @@
                                         <i data-lucide="check-circle-2" class="h-5 w-5"></i>
                                     </div>
                                 {% endif %}
-
                                 <div>
-                                    <h3 class="font-semibold text-slate-950 dark:text-white">
-                                        {{ recommendation.title }}
-                                    </h3>
-                                    <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                                        {{ recommendation.description }}
-                                    </p>
+                                    <h3 class="font-semibold text-slate-950 dark:text-white">{{ recommendation.title }}</h3>
+                                    <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">{{ recommendation.description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -459,9 +325,7 @@
                             <i data-lucide="plug-zap" class="h-5 w-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-slate-950 dark:text-white">
-                                Connect Prometheus Metrics
-                            </h3>
+                            <h3 class="font-semibold text-slate-950 dark:text-white">Connect Prometheus Metrics</h3>
                             <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
                                 Forecast analysis requires Prometheus metrics to calculate trend, growth rate,
                                 projected utilization, and capacity risk.

@@ -1,0 +1,381 @@
+{% set payload = consumer_payload %}
+{% set rows = payload.rows %}
+{% set pagination = payload.pagination %}
+<section x-data="{ expandedRow: null }"
+         class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-950 dark:text-white">Consumer Detail</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Ranked list of top resource consumers across CPU, memory, pods, and PVC.
+                </p>
+            </div>
+            <form id="consumer-table-filter"
+                  method="GET"
+                  action="{{ url_for('analytics.top_consumers_table') }}"
+                  hx-get="{{ url_for('analytics.top_consumers_table') }}"
+                  hx-trigger="keyup changed delay:350ms from:input[name='search'], change from:select[name='sort']"
+                  hx-target="#consumer-table"
+                  hx-swap="innerHTML"
+                  hx-indicator="#consumer-table-loading"
+                  class="grid min-w-0 gap-3 sm:grid-cols-[minmax(220px,320px)_190px]">
+                <input type="hidden"
+                       name="cluster_id"
+                       value="{{ cluster.id if cluster else '' }}">
+                <input type="hidden" name="namespace" value="{{ selected_namespace }}">
+                <input type="hidden" name="resource" value="{{ selected_resource }}">
+                <input type="hidden" name="time_range" value="{{ selected_time_range }}">
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="per_page" value="{{ pagination.per_page }}">
+                <label class="relative block min-w-0">
+                    <span class="sr-only">Search consumers</span>
+                    <i data-lucide="search"
+                       class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+                    <input type="search"
+                           name="search"
+                           value="{{ selected_search }}"
+                           placeholder="Search workload, pod, PVC..."
+                           class="h-9 w-full rounded-xl border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                </label>
+                <label class="block min-w-0">
+                    <span class="sr-only">Sort consumers</span>
+                    <select name="sort"
+                            class="h-9 w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                        {% for item in sort_options %}
+                            <option value="{{ item.value }}"
+                                    {% if selected_sort == item.value %}selected{% endif %}>
+                                Sort by: {{ item.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </form>
+        </div>
+    </div>
+   <div class="p-6">
+        <div id="consumer-table-loading"
+             class="htmx-indicator mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
+            <div class="flex items-center gap-2">
+                <i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i>
+                Loading consumer metrics...
+            </div>
+        </div>
+        {% if rows %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            <th class="whitespace-nowrap px-2 py-3">Rank</th>
+                            <th class="whitespace-nowrap px-2 py-3">Namespace</th>
+                            <th class="whitespace-nowrap px-2 py-3">Workload / Pod / PVC</th>
+                            <th class="whitespace-nowrap px-2 py-3">Resource Type</th>
+                            <th class="whitespace-nowrap px-2 py-3">Current Usage</th>
+                            <th class="whitespace-nowrap px-2 py-3">Request</th>
+                            <th class="whitespace-nowrap px-2 py-3">Limit / Capacity</th>
+                            <th class="whitespace-nowrap px-2 py-3">Usage %</th>
+                            <th class="whitespace-nowrap px-2 py-3">Risk</th>
+                            <th class="whitespace-nowrap px-2 py-3">Action</th>
+                            <th class="whitespace-nowrap px-2 py-3 text-right">Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800 dark:text-slate-300">
+                        {% for row in rows %}
+                            {% set row_key = 'consumer-' ~ row.rank %}
+                            {% set recommendation = row.recommendation %}
+                            {% set action_label = "Monitor" %}
+                            {% set action_class = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" %}
+                            {% if row.risk.key == 'critical' %}
+                                {% set action_label = "Immediate Review" %}
+                                {% set action_class = "bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300" %}
+                            {% elif row.risk.key == 'warning' %}
+                                {% set action_label = "Optimize" %}
+                                {% set action_class = "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300" %}
+                            {% elif 'Add' in recommendation %}
+                                {% set action_label = "Missing Config" %}
+                                {% set action_class = "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300" %}
+                            {% elif row.resource_type == 'pvc' %}
+                                {% set action_label = "Storage Review" %}
+                                {% set action_class = "bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300" %}
+                            {% endif %}
+                            <tr class="align-middle hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                                <td class="whitespace-nowrap px-2 py-3 font-semibold text-slate-500 dark:text-slate-400">{{ row.rank }}</td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 text-[10px] font-bold text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
+                                            NS
+                                        </span>
+                                        <span class="max-w-[180px] truncate" title="{{ row.namespace }}">{{ row.namespace }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-2 py-3">
+                                    <div class="max-w-[340px] truncate font-medium text-slate-800 dark:text-slate-100"
+                                         title="{{ row.workload }}">{{ row.workload }}</div>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold {{ row.resource_class }}">
+                                        <i data-lucide="{{ row.resource_icon }}" class="h-3.5 w-3.5"></i>
+                                        {{ row.resource_label }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <div class="grid min-w-[170px] grid-cols-[86px_1fr] items-center gap-3">
+                                        <span class="text-right tabular-nums">{{ row.current_display }}</span>
+                                        <div class="h-2 w-20 rounded-full bg-slate-100 dark:bg-slate-800">
+                                            <div class="h-2 rounded-full {% if row.resource_type == 'cpu' %}bg-blue-500{% elif row.resource_type == 'memory' %}bg-rose-500{% elif row.resource_type == 'pods' %}bg-violet-500{% else %}bg-orange-500{% endif %}"
+                                                 style="width: {{ row.usage_bar_percent }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3 tabular-nums">{{ row.request_display }}</td>
+                                <td class="whitespace-nowrap px-2 py-3 tabular-nums">{{ row.limit_display }}</td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <div class="grid min-w-[150px] grid-cols-[58px_1fr] items-center gap-3">
+                                        <span class="text-right tabular-nums">{{ row.usage_percent }}%</span>
+                                        <div class="h-2 w-20 rounded-full bg-slate-100 dark:bg-slate-800">
+                                            <div class="h-2 rounded-full {% if row.risk.key == 'critical' %}bg-red-500{% elif row.risk.key == 'warning' %}bg-amber-500{% else %}bg-emerald-500{% endif %}"
+                                                 style="width: {{ row.usage_bar_percent }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
+                                        {{ row.risk.label }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ action_class }}">{{ action_label }}</span>
+                                </td>
+                                <td class="whitespace-nowrap px-2 py-3 text-right">
+                                    <button type="button"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+                                            @click="expandedRow = expandedRow === '{{ row_key }}' ? null : '{{ row_key }}'">
+                                        <i data-lucide="chevrons-up-down" class="h-3.5 w-3.5"></i>
+                                        <span x-text="expandedRow === '{{ row_key }}' ? 'Hide' : 'View More'"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr x-cloak
+                                x-show="expandedRow === '{{ row_key }}'"
+                                x-transition
+                                class="bg-slate-50/70 dark:bg-slate-950/60">
+                                <td colspan="11" class="px-4 py-4">
+                                    <div class="grid gap-4 xl:grid-cols-3">
+                                        <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                                            <div class="mb-4 flex items-center gap-2">
+                                                <div class="flex h-8 w-8 items-center justify-center rounded-xl {{ row.resource_class }}">
+                                                    <i data-lucide="{{ row.resource_icon }}" class="h-4 w-4"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="font-semibold text-slate-950 dark:text-white">Consumer Identity</h3>
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400">Namespace, workload, pod, and container information.</p>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-3 text-sm">
+                                                <div class="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
+                                                    <span class="text-slate-500 dark:text-slate-400">Namespace</span>
+                                                    <span class="break-words font-semibold text-slate-800 dark:text-slate-100">{{ row.namespace }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
+                                                    <span class="text-slate-500 dark:text-slate-400">Resource</span>
+                                                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ row.resource_label }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
+                                                    <span class="text-slate-500 dark:text-slate-400">Workload</span>
+                                                    <span class="break-words font-semibold text-slate-800 dark:text-slate-100">{{ row.workload }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
+                                                    <span class="text-slate-500 dark:text-slate-400">Pod</span>
+                                                    <span class="break-words font-semibold text-slate-800 dark:text-slate-100">{{ row.pod if row.pod else '-' }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
+                                                    <span class="text-slate-500 dark:text-slate-400">Container</span>
+                                                    <span class="break-words font-semibold text-slate-800 dark:text-slate-100">
+                                                        {{ row.container if row.container else '-' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                                            <div class="mb-4 flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
+                                                        <i data-lucide="activity" class="h-4 w-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="font-semibold text-slate-950 dark:text-white">Resource Usage</h3>
+                                                        <p class="text-xs text-slate-500 dark:text-slate-400">Current usage compared with request, limit, or capacity.</p>
+                                                    </div>
+                                                </div>
+                                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ row.risk.class }}">
+                                                    {{ row.risk.label }}
+                                                </span>
+                                            </div>
+                                            <div class="grid gap-3 sm:grid-cols-2">
+                                                <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Current</p>
+                                                    <p class="mt-1 text-base font-bold text-slate-950 dark:text-white">{{ row.current_display }}</p>
+                                                </div>
+                                                <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Request</p>
+                                                    <p class="mt-1 text-base font-bold text-slate-950 dark:text-white">{{ row.request_display }}</p>
+                                                </div>
+                                                <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Limit / Capacity</p>
+                                                    <p class="mt-1 text-base font-bold text-slate-950 dark:text-white">{{ row.limit_display }}</p>
+                                                </div>
+                                                <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Usage</p>
+                                                    <p class="mt-1 text-base font-bold text-slate-950 dark:text-white">{{ row.usage_percent }}%</p>
+                                                </div>
+                                            </div>
+                                            <div class="mt-4">
+                                                <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    <span>Usage ratio</span>
+                                                    <span>{{ row.usage_percent }}%</span>
+                                                </div>
+                                                <div class="mt-2 h-3 rounded-full bg-slate-100 dark:bg-slate-800">
+                                                    <div class="h-3 rounded-full {% if row.risk.key == 'critical' %}bg-red-500{% elif row.risk.key == 'warning' %}bg-amber-500{% else %}bg-emerald-500{% endif %}"
+                                                         style="width: {{ row.usage_bar_percent }}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                                            <div class="mb-4 flex items-center gap-2">
+                                                <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300">
+                                                    <i data-lucide="lightbulb" class="h-4 w-4"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="font-semibold text-slate-950 dark:text-white">Recommendation</h3>
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400">Recommended action and reason.</p>
+                                                </div>
+                                            </div>
+                                            <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Action</p>
+                                                <p class="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">{{ row.recommendation }}</p>
+                                            </div>
+                                            <div class="mt-3 rounded-xl bg-blue-50 p-3 text-sm leading-6 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200">
+                                                <span class="font-semibold">Reason:</span>
+                                                {% if row.request_display == '-' and row.resource_type in ['cpu', 'memory'] %}
+                                                    {{ row.resource_label }} request is missing, so Kubernetes cannot reserve predictable capacity for this workload.
+                                                {% elif row.limit_display == '-' and row.resource_type in ['cpu', 'memory'] %}
+                                                    {{ row.resource_label }} limit is missing, so the workload has no configured upper resource boundary.
+                                                {% elif row.resource_type == 'pvc' and row.usage_percent >= 80 %}
+                                                    PVC usage is already {{ row.usage_percent }}%, so cleanup or expansion should be reviewed before capacity becomes critical.
+                                                {% elif row.usage_percent >= 90 %}
+                                                    Usage is {{ row.usage_percent }}%, above the critical threshold of 90%.
+                                                {% elif row.usage_percent >= 75 %}
+                                                    Usage is {{ row.usage_percent }}%, above the warning threshold of 75%.
+                                                {% else %}
+                                                    Usage is {{ row.usage_percent }}%, currently below the warning threshold. Continue monitoring growth.
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Suggested Steps</p>
+                                                <ul class="mt-2 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                                    {% if row.resource_type == 'pvc' %}
+                                                        {% if row.usage_percent >= 80 %}
+                                                            <li class="flex gap-2">
+                                                                <i data-lucide="check-circle-2"
+                                                                   class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                                Review PVC cleanup or retention policy.
+                                                            </li>
+                                                            <li class="flex gap-2">
+                                                                <i data-lucide="check-circle-2"
+                                                                   class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                                Prepare capacity expansion if usage continues to grow.
+                                                            </li>
+                                                        {% else %}
+                                                            <li class="flex gap-2">
+                                                                <i data-lucide="check-circle-2"
+                                                                   class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                                Monitor storage growth.
+                                                            </li>
+                                                            <li class="flex gap-2">
+                                                                <i data-lucide="check-circle-2"
+                                                                   class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                                Review retention policy periodically.
+                                                            </li>
+                                                        {% endif %}
+                                                    {% elif row.resource_type == 'pods' %}
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Review replica growth and HPA behavior.
+                                                        </li>
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Check namespace quota and pod density.
+                                                        </li>
+                                                    {% elif row.request_display == '-' %}
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Add {{ row.resource_label }} request for predictable scheduling.
+                                                        </li>
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Base request value on observed steady-state usage.
+                                                        </li>
+                                                    {% elif row.limit_display == '-' %}
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Add {{ row.resource_label }} limit to control resource blast radius.
+                                                        </li>
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Keep enough burst headroom above normal usage.
+                                                        </li>
+                                                    {% elif row.usage_percent >= 75 %}
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Review request and limit values.
+                                                        </li>
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Validate whether this usage is normal peak traffic or abnormal growth.
+                                                        </li>
+                                                    {% else %}
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            Continue monitoring usage trend.
+                                                        </li>
+                                                        <li class="flex gap-2">
+                                                            <i data-lucide="check-circle-2"
+                                                               class="mt-1 h-4 w-4 shrink-0 text-emerald-500"></i>
+                                                            No immediate change is required.
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include "analytics/top_consumers/partials/_consumer_pagination.html" %}
+        {% else %}
+            <div class="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-950">
+                <div>
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                        <i data-lucide="list-filter" class="h-7 w-7"></i>
+                    </div>
+                    <h3 class="mt-4 text-base font-semibold text-slate-950 dark:text-white">No consumer rows available</h3>
+                    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        Try changing the namespace, resource filter, time range, search keyword, or verify Prometheus metrics.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>

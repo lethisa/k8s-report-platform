@@ -3,10 +3,13 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <link rel="icon"
               type="image/svg+xml"
               href="{{ url_for('static', filename='favicon.svg') }}" />
-        <title>{% block title %} KubeReport {% endblock title %}</title>
+
+        <title>{% block title %}KubeReport{% endblock title %}</title>
+
         <script>
             ;(function () {
                 const theme = localStorage.getItem('theme')
@@ -16,60 +19,83 @@
                 }
             })()
         </script>
+
         <style>
             [x-cloak] {
                 display: none !important;
             }
+
+            .htmx-indicator {
+                opacity: 0;
+                transition: opacity 150ms ease-in;
+            }
+
+            .htmx-request .htmx-indicator,
+            .htmx-request.htmx-indicator {
+                opacity: 1;
+            }
         </style>
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
               rel="stylesheet" />
+
         <link rel="stylesheet"
               href="{{ url_for('static', filename='css/output.css') }}" />
     </head>
-    <body class="bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100 dark:text-white">
+
+    <body class="bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
         <div x-data="{ sidebarOpen: true }" class="flex h-screen overflow-hidden">
             {% include "components/navigation/sidebar.html" %}
+
             <div class="flex flex-1 flex-col overflow-hidden">
                 {% include "components/navigation/navbar.html" %}
+
                 <main class="flex-1 overflow-y-auto bg-slate-50 transition-colors duration-300 dark:bg-slate-900">
-                    <div class="p-6 lg:p-8">
+                    <div class="min-h-full p-6 lg:p-8">
                         {% block dashboard_content %}
                         {% endblock dashboard_content %}
                     </div>
                 </main>
             </div>
         </div>
+
         <script defer
                 src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                lucide.createIcons()
+                if (window.lucide) {
+                    window.lucide.createIcons()
+                }
             })
 
             document.body.addEventListener('htmx:afterSwap', () => {
                 if (window.lucide) {
-                    lucide.createIcons()
+                    window.lucide.createIcons()
                 }
             })
         </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const button = document.getElementById('theme-toggle')
 
-                if (!button) return
+ <script>
+    ;(function () {
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual'
+        }
 
-                button.addEventListener('click', () => {
-                    document.documentElement.classList.toggle('dark')
+        const theme = localStorage.getItem('theme')
 
-                    const dark = document.documentElement.classList.contains('dark')
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark')
+        }
+    })()
+</script>
 
-                    localStorage.setItem('theme', dark ? 'dark' : 'light')
-                })
-            })
-        </script>
+        {% block scripts %}
+        {% endblock scripts %}
     </body>
 </html>
