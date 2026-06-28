@@ -528,6 +528,9 @@
   .hidden {
     display: none;
   }
+  .inline {
+    display: inline;
+  }
   .inline-flex {
     display: inline-flex;
   }
@@ -632,6 +635,9 @@
   }
   .max-h-\[calc\(100vh-10rem\)\] {
     max-height: calc(100vh - 10rem);
+  }
+  .min-h-0 {
+    min-height: 0;
   }
   .min-h-\[120px\] {
     min-height: 120px;
@@ -879,6 +885,9 @@
   }
   .resize {
     resize: both;
+  }
+  .scroll-mt-6 {
+    scroll-margin-top: calc(var(--spacing) * 6);
   }
   .list-disc {
     list-style-type: disc;

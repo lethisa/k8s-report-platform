@@ -15,10 +15,10 @@
 <div class="border-t border-slate-200 px-6 py-4 dark:border-slate-800">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <form method="GET"
-              action="{{ url_for('analytics.top_consumers_table') }}"
+              action="{{ url_for('analytics.top_consumers') }}"
               hx-get="{{ url_for('analytics.top_consumers_table') }}"
               hx-target="#consumer-table"
-              hx-swap="innerHTML"
+              hx-swap="outerHTML"
               hx-indicator="#consumer-table-loading"
               class="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
             <input type="hidden"
@@ -59,11 +59,12 @@
 
         <div class="flex items-center justify-end gap-2">
             {% if has_prev and prev_page >= 1 %}
-                {% set prev_url = url_for('analytics.top_consumers_table', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=prev_page, per_page=per_page) %}
-                <a href="{{ prev_url }}"
-                   hx-get="{{ prev_url }}"
+                {% set prev_page_url = url_for('analytics.top_consumers', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=prev_page, per_page=per_page) %}
+                {% set prev_table_url = url_for('analytics.top_consumers_table', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=prev_page, per_page=per_page) %}
+                <a href="{{ prev_page_url }}"
+                   hx-get="{{ prev_table_url }}"
                    hx-target="#consumer-table"
-                   hx-swap="innerHTML"
+                   hx-swap="outerHTML"
                    hx-indicator="#consumer-table-loading"
                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i data-lucide="chevron-left" class="h-4 w-4"></i>
@@ -81,11 +82,12 @@
             </span>
 
             {% if has_next and next_page <= total_pages %}
-                {% set next_url = url_for('analytics.top_consumers_table', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=next_page, per_page=per_page) %}
-                <a href="{{ next_url }}"
-                   hx-get="{{ next_url }}"
+                {% set next_page_url = url_for('analytics.top_consumers', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=next_page, per_page=per_page) %}
+                {% set next_table_url = url_for('analytics.top_consumers_table', cluster_id=cluster.id if cluster else '', namespace=selected_namespace, resource=selected_resource, time_range=selected_time_range, search=selected_search, sort=selected_sort, page=next_page, per_page=per_page) %}
+                <a href="{{ next_page_url }}"
+                   hx-get="{{ next_table_url }}"
                    hx-target="#consumer-table"
-                   hx-swap="innerHTML"
+                   hx-swap="outerHTML"
                    hx-indicator="#consumer-table-loading"
                    class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
                     Next

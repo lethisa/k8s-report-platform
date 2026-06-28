@@ -70,75 +70,6 @@
 {% endblock dashboard_content %}
 
 {% block scripts %}
-<script>
-    ;(function () {
-        let resetAttempts = 0
-        let userInteracted = false
-
-        function getMainScroller() {
-            return document.querySelector('main')
-        }
-
-        function resetDashboardScroll() {
-            const main = getMainScroller()
-
-            if (!main || window.location.hash || userInteracted) {
-                return
-            }
-
-            main.scrollTop = 0
-            document.documentElement.scrollTop = 0
-            document.body.scrollTop = 0
-        }
-
-        function scheduleScrollReset() {
-            resetDashboardScroll()
-
-            const timer = window.setInterval(function () {
-                resetAttempts += 1
-                resetDashboardScroll()
-
-                if (resetAttempts >= 30 || userInteracted) {
-                    window.clearInterval(timer)
-                }
-            }, 100)
-        }
-
-        window.addEventListener(
-            'wheel',
-            function () {
-                userInteracted = true
-            },
-            { once: true, passive: true }
-        )
-
-        window.addEventListener(
-            'touchstart',
-            function () {
-                userInteracted = true
-            },
-            { once: true, passive: true }
-        )
-
-        window.addEventListener(
-            'keydown',
-            function () {
-                userInteracted = true
-            },
-            { once: true }
-        )
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', scheduleScrollReset, { once: true })
-        } else {
-            scheduleScrollReset()
-        }
-
-        window.addEventListener('load', scheduleScrollReset)
-        window.addEventListener('pageshow', scheduleScrollReset)
-    })()
-</script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
@@ -293,4 +224,41 @@
             })
         })()
     </script>
+
+<script>
+    ;(function () {
+        function scrollMainToConsumerTable() {
+            const main = document.querySelector('main')
+            const target = document.getElementById('consumer-table')
+
+            if (!main || !target) {
+                return
+            }
+
+            const mainRect = main.getBoundingClientRect()
+            const targetRect = target.getBoundingClientRect()
+            const offset = targetRect.top - mainRect.top
+
+            main.scrollTo({
+                top: main.scrollTop + offset - 16,
+                left: 0,
+                behavior: 'auto',
+            })
+        }
+
+        document.body.addEventListener('htmx:afterSettle', function (event) {
+            const target = event.detail && event.detail.target
+
+            if (!target || target.id !== 'consumer-table') {
+                return
+            }
+
+            scrollMainToConsumerTable()
+
+            window.setTimeout(scrollMainToConsumerTable, 50)
+            window.setTimeout(scrollMainToConsumerTable, 150)
+        })
+    })()
+</script>
+
 {% endblock scripts %}
