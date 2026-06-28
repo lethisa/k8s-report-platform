@@ -3,6 +3,7 @@ from datetime import datetime
 
 from flask import Flask
 
+from app.alertmanager.routes import alertmanager_bp
 from app.analytics.routes import analytics_bp
 from app.auth.routes import auth_bp
 from app.cluster.routes import cluster_bp
@@ -54,6 +55,7 @@ def create_app(config_name: str | None = None):
     app.register_blueprint(reports_bp)
     app.register_blueprint(prometheus_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(alertmanager_bp)
 
     register_commands(app)
 

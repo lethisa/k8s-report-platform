@@ -2286,6 +2286,11 @@
       justify-content: space-between;
     }
   }
+  .sm\:justify-end {
+    @media (width >= 40rem) {
+      justify-content: flex-end;
+    }
+  }
   .md\:col-span-2 {
     @media (width >= 48rem) {
       grid-column: span 2 / span 2;
@@ -2319,6 +2324,11 @@
   .md\:justify-between {
     @media (width >= 48rem) {
       justify-content: space-between;
+    }
+  }
+  .lg\:col-span-2 {
+    @media (width >= 64rem) {
+      grid-column: span 2 / span 2;
     }
   }
   .lg\:flex {
@@ -3202,6 +3212,11 @@
   .dark\:text-purple-300 {
     &:where(.dark, .dark *) {
       color: var(--color-purple-300);
+    }
+  }
+  .dark\:text-red-200 {
+    &:where(.dark, .dark *) {
+      color: var(--color-red-200);
     }
   }
   .dark\:text-red-300 {

@@ -1,3 +1,4 @@
+from app.models.alertmanager import AlertmanagerConfig
 from app.models.cluster import Cluster, ClusterStatus
 from app.models.inventory import (
     ClusterInventory,
@@ -25,4 +26,5 @@ __all__ = [
     'NamespaceInventory',
     'NodeInventory',
     'PrometheusConfig',
+    'AlertmanagerConfig',
 ]

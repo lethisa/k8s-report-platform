@@ -19,7 +19,7 @@ cluster_bp = Blueprint('cluster', __name__, url_prefix='/clusters')
 @login_required
 def list_clusters():
     return render_template(
-        'cluster/list.html',
+        'cluster/index.html',
         **build_cluster_context(),
     )
 

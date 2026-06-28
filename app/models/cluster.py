@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.extensions import db
 
 if TYPE_CHECKING:
+    from app.models.alertmanager import AlertmanagerConfig
     from app.models.prometheus import PrometheusConfig
 
 
@@ -49,6 +50,14 @@ class Cluster(db.Model):
         back_populates='cluster',
         uselist=False,
         cascade='all, delete-orphan',
+    )
+
+    alertmanager_config: Mapped[AlertmanagerConfig | None] = relationship(
+        'AlertmanagerConfig',
+        back_populates='cluster',
+        cascade='all, delete-orphan',
+        passive_deletes=True,
+        uselist=False,
     )
 
     def __repr__(self) -> str:
