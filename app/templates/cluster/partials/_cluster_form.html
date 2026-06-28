@@ -1,0 +1,93 @@
+<form method="POST"
+      {% if form_mode == 'add' %}enctype="multipart/form-data"{% endif %}>
+    {{ form.hidden_tag() }}
+
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <!-- Section Header -->
+        <div class="flex items-center gap-3 border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                <i data-lucide="{{ form_icon }}" class="h-5 w-5"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
+                    {{ form_title }}
+                </h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {{ form_description }}
+                </p>
+            </div>
+        </div>
+
+        {% if form.errors %}
+            <div class="border-b border-red-200 bg-red-50 px-6 py-4 dark:border-red-900/60 dark:bg-red-950/30">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="alert-circle" class="mt-0.5 h-5 w-5 text-red-500"></i>
+                    <div>
+                        <h3 class="font-medium text-red-700 dark:text-red-300">
+                            Validation Error
+                        </h3>
+                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600 dark:text-red-300">
+                            {% for field, errors in form.errors.items() %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Form Body -->
+        <div class="space-y-6 p-6">
+            <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Cluster Name
+                </label>
+                {{ form.name(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Environment
+                </label>
+                {{ form.environment(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Description
+                </label>
+                {{ form.description(rows="4", class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
+            </div>
+
+            {% if form_mode == 'add' %}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                        Kubeconfig
+                    </label>
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-900/60">
+                        {{ form.kubeconfig(class="w-full text-sm text-slate-700 dark:text-slate-200") }}
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            Upload kubeconfig file used to connect to the cluster.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/40">
+            <a href="{{ url_for('cluster.list_clusters') }}"
+               class="rounded-xl border border-slate-300 px-5 py-2.5 font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700">
+                <i data-lucide="save" class="h-4 w-4"></i>
+                <span>{{ submit_label }}</span>
+            </button>
+        </div>
+    </div>
+</form>

@@ -5,19 +5,30 @@
     <div class="space-y-6">
         <!-- Hero Header -->
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="flex items-center gap-4">
-                <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/10">
-                    <i data-lucide="activity" class="h-7 w-7 text-blue-500"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Prometheus Configuration</h1>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">
-                        Configure Prometheus integration for cluster
-                        <span class="font-semibold">{{ cluster.name }}</span>
-                    </p>
-                </div>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-red-500/10">
+                <i data-lucide="activity" class="h-7 w-7 text-red-500"></i>
+            </div>
+
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                    Prometheus Configuration
+                </h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Configure Prometheus integration for cluster
+                    <span class="font-semibold">{{ cluster.name }}</span>
+                </p>
             </div>
         </div>
+
+        <a href="{{ url_for('cluster.list_clusters') }}"
+           class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            Back to Clusters
+        </a>
+    </div>
+</div>
         <!-- Form Card -->
         <form method="POST"
               x-data="{ authType: '{{ form.auth_type.data or 'none' }}' }">

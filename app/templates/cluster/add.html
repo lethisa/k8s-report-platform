@@ -1,5 +1,7 @@
 {% extends "layouts/dashboard.html" %}
+
 {% block title %}Add Cluster{% endblock title %}
+
 {% block dashboard_content %}
     <div class="p-8">
         <div class="mx-auto max-w-5xl">
@@ -11,11 +13,15 @@
                             <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                 <i data-lucide="server" class="h-7 w-7"></i>
                             </div>
+
                             <div>
-                                <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Add Cluster</h1>
+                                <h1 class="text-3xl font-bold text-slate-900 dark:text-white">
+                                    Add Cluster
+                                </h1>
                                 <p class="mt-2 text-slate-500 dark:text-slate-400">
                                     Register a Kubernetes cluster to start inventory collection, monitoring, and reporting.
                                 </p>
+
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     <span class="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                                         Kubernetes
@@ -26,6 +32,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <a href="{{ url_for('cluster.list_clusters') }}"
                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                             <i data-lucide="arrow-left" class="h-4 w-4"></i>
@@ -34,61 +41,13 @@
                     </div>
                 </div>
             </div>
-            <form method="POST" enctype="multipart/form-data">
-                {{ form.hidden_tag() }}
-                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                    <!-- Section Header -->
-                    <div class="flex items-center gap-3 border-b border-slate-200 px-6 py-5 dark:border-slate-700">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                            <i data-lucide="file-plus-2" class="h-5 w-5"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Cluster Information</h2>
-                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Basic connection information for the Kubernetes cluster.</p>
-                        </div>
-                    </div>
-                    <!-- Form Body -->
-                    <div class="space-y-6 p-6">
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Cluster Name</label>
-                            {{ form.name(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900
-                                                        focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:border-slate-600
-                                                        dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
-                        </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Environment</label>
-                            {{ form.environment(class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3
-                                                        text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100
-                                                        dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
-                        </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Description</label>
-                            {{ form.description(rows="4", class="w-full rounded-xl border border-slate-300 bg-white px-4
-                                                        py-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100
-                                                        dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900/30") }}
-                        </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Kubeconfig</label>
-                            <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-900/60">
-                                {{ form.kubeconfig(class="w-full text-sm text-slate-700 dark:text-slate-200") }}
-                                <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Upload kubeconfig file used to connect to the cluster.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Footer -->
-                    <div class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/40">
-                        <a href="{{ url_for('cluster.list_clusters') }}"
-                           class="rounded-xl border border-slate-300 px-5 py-2.5 font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
-                            Cancel
-                        </a>
-                        <button type="submit"
-                                class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700">
-                            <i data-lucide="save" class="h-4 w-4"></i>
-                            <span>Save Cluster</span>
-                        </button>
-                    </div>
-                </div>
-            </form>
+
+            {% set form_mode = 'add' %}
+            {% set form_icon = 'file-plus-2' %}
+            {% set form_title = 'Cluster Information' %}
+            {% set form_description = 'Basic connection information for the Kubernetes cluster.' %}
+            {% set submit_label = 'Save Cluster' %}
+            {% include "cluster/partials/_cluster_form.html" %}
         </div>
     </div>
 {% endblock dashboard_content %}

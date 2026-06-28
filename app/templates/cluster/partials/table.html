@@ -1,22 +1,36 @@
 <div id="cluster-table-container" class="overflow-x-auto">
     <!-- Filter Bar -->
-    <div class="flex flex-col gap-3 border-b border-slate-200 px-6 py-4 md:flex-row md:items-center md:justify-between dark:border-slate-700">
-        <div class="relative w-full lg:max-w-lg">
-            <i data-lucide="search"
-               class="absolute top-3 left-3 h-4 w-4 text-slate-400 dark:text-slate-500"></i>
-            <input x-model="search"
-                   type="text"
-                   placeholder="Search clusters..."
-                   class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10" />
+    <div class="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="relative w-full lg:max-w-lg">
+                <i data-lucide="search"
+                   class="absolute top-3 left-3 h-4 w-4 text-slate-400 dark:text-slate-500"></i>
+
+                <input x-model="search"
+                       type="text"
+                       placeholder="Search clusters..."
+                       class="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/10">
+            </div>
+
+            <select x-model="envFilter"
+                    class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10">
+                <option value="all">All Environments</option>
+                <option value="prd">Production</option>
+                <option value="stg">Staging</option>
+                <option value="dev">Development</option>
+            </select>
         </div>
-        <select x-model="envFilter"
-                class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10">
-            <option value="all">All Environments</option>
-            <option value="prd">Production</option>
-            <option value="stg">Staging</option>
-            <option value="dev">Development</option>
-        </select>
+
+       <!-- Global HTMX Loading Bar -->
+<div id="cluster-table-loading"
+     class="htmx-indicator mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+    <div class="flex items-center gap-2">
+        <i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>
+        <span>Loading cluster inventory...</span>
     </div>
+</div>
+    </div>
+
     <!-- Table -->
     <table class="min-w-full text-slate-900 dark:text-slate-100">
         <thead>
@@ -29,16 +43,218 @@
                 <th class="px-6 py-4 text-center">Namespaces</th>
                 <th class="px-6 py-4 text-center">Inventory</th>
                 <th class="px-6 py-4 text-center">Prometheus</th>
+                <th class="px-6 py-4 text-center">Alertmanager</th>
                 <th class="px-6 py-4 text-center">Last Check</th>
-                <th class="w-64 px-6 py-4 text-center">Actions</th>
+                <th class="w-72 px-6 py-4 text-center">Actions</th>
             </tr>
         </thead>
+
         <tbody id="cluster-table-body">
             {% for cluster in clusters %}
-                {% include "cluster/partials/row.html" %}
+                {% set inventory = inventory_summary.get(cluster.id, {}) %}
+                {% set prometheus = prometheus_summary.get(cluster.id, {}) %}
+                {% set alertmanager = alertmanager_summary.get(cluster.id, {}) %}
+                {% set cluster_status = cluster.status or 'unknown' %}
+                {% set environment_value = cluster.environment or '-' %}
+                {% set environment_key = environment_value|lower %}
+                {% set cluster_search = (cluster.name ~ ' ' ~ environment_value ~ ' ' ~ cluster_status)|lower %}
+
+                <tr x-show="(search === '' || '{{ cluster_search }}'.includes(search.toLowerCase())) && (envFilter === 'all' || envFilter === '{{ environment_key }}')"
+                    class="border-b border-slate-100 transition hover:bg-slate-50 dark:border-slate-700/70 dark:hover:bg-slate-700/30">
+                    <!-- Name -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                                <i data-lucide="server" class="h-5 w-5"></i>
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="truncate font-semibold text-slate-900 dark:text-white">
+                                    {{ cluster.name }}
+                                </div>
+                                <div class="truncate text-xs text-slate-500 dark:text-slate-400">
+                                    {{ cluster.server or '-' }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Environment -->
+                    <td class="px-6 py-4 text-center">
+                        {% if environment_key == 'prd' %}
+                            <span class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                                Production
+                            </span>
+                        {% elif environment_key == 'stg' %}
+                            <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                Staging
+                            </span>
+                        {% elif environment_key == 'dev' %}
+                            <span class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                                Development
+                            </span>
+                        {% else %}
+                            <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                {{ environment_value }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Status -->
+                    <td class="px-6 py-4 text-center">
+                        {% if cluster_status == 'connected' %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                Connected
+                            </span>
+                        {% elif cluster_status == 'failed' %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                Failed
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                {{ cluster_status|title }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Nodes -->
+                    <td class="px-6 py-4 text-center text-sm font-semibold">
+                        {{ cluster.node_count or 0 }}
+                    </td>
+
+                    <!-- K8S Version -->
+                    <td class="px-6 py-4 text-center text-sm text-slate-600 dark:text-slate-300">
+                        {{ inventory.version or '-' }}
+                    </td>
+
+                    <!-- Namespaces -->
+                    <td class="px-6 py-4 text-center text-sm font-semibold">
+                        {{ inventory.namespaces or 0 }}
+                    </td>
+
+                    <!-- Inventory -->
+                    <td class="px-6 py-4 text-center">
+                        {% if inventory.synced_at %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                                <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i>
+                                Synced
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                <i data-lucide="clock" class="h-3.5 w-3.5"></i>
+                                Not Synced
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Prometheus -->
+                    <td class="px-6 py-4 text-center">
+                        {% if prometheus.configured %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                <i data-lucide="activity" class="h-3.5 w-3.5"></i>
+                                Configured
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                <i data-lucide="minus-circle" class="h-3.5 w-3.5"></i>
+                                Not Set
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Alertmanager -->
+                    <td class="px-6 py-4 text-center">
+                        {% if alertmanager.connected %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                <i data-lucide="siren" class="h-3.5 w-3.5"></i>
+                                Connected
+                            </span>
+                        {% elif alertmanager.configured %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                <i data-lucide="siren" class="h-3.5 w-3.5"></i>
+                                {{ alertmanager.label or 'Configured' }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                <i data-lucide="siren" class="h-3.5 w-3.5"></i>
+                                Not Set
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Last Check -->
+                    <td class="px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                        {% if cluster.last_check %}
+                            {{ cluster.last_check.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                            <form method="POST"
+                                  action="{{ url_for('cluster.test_cluster', cluster_id=cluster.id) }}"
+                                  hx-post="{{ url_for('cluster.test_cluster', cluster_id=cluster.id) }}"
+                                  hx-target="#cluster-table-container"
+                                  hx-swap="outerHTML"
+                                  hx-indicator="#cluster-table-loading"
+                                  class="inline-flex">
+                                <button type="submit"
+                                        title="Test Cluster Connection"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-blue-950/40 dark:hover:text-blue-300">
+                                    <i data-lucide="plug-zap" class="h-4 w-4"></i>
+                                </button>
+                            </form>
+
+                            <form method="POST"
+                                  action="{{ url_for('inventory.sync', cluster_id=cluster.id) }}"
+                                  hx-post="{{ url_for('inventory.sync', cluster_id=cluster.id) }}"
+                                  hx-target="#cluster-table-container"
+                                  hx-swap="outerHTML"
+                                  hx-indicator="#cluster-table-loading"
+                                  class="inline-flex">
+                                <button type="submit"
+                                        title="Sync Inventory"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-emerald-600 transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-900 dark:text-emerald-300 dark:hover:border-emerald-500 dark:hover:bg-emerald-950/40">
+                                    <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                                </button>
+                            </form>
+
+                            <a href="/prometheus/cluster/{{ cluster.id }}"
+                               title="Configure Prometheus"
+                               class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-blue-600 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:border-blue-500 dark:hover:bg-blue-950/40">
+                                <i data-lucide="activity" class="h-4 w-4"></i>
+                            </a>
+
+                            <a href="{{ url_for('alertmanager.cluster_alertmanager_config', cluster_id=cluster.id) }}"
+                               title="Configure Alertmanager"
+                               class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-red-600 transition hover:border-red-300 hover:bg-red-50 dark:border-slate-700 dark:bg-slate-900 dark:text-red-300 dark:hover:border-red-500 dark:hover:bg-red-950/40">
+                                <i data-lucide="siren" class="h-4 w-4"></i>
+                            </a>
+
+                            <a href="{{ url_for('cluster.edit_cluster', cluster_id=cluster.id) }}"
+                               title="Edit Cluster"
+                               class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+                                <i data-lucide="pencil" class="h-4 w-4"></i>
+                            </a>
+
+                            <button type="button"
+                                    title="Delete Cluster"
+                                    x-on:click="deleteModal = true; deleteUrl = '{{ url_for('cluster.delete_cluster_route', cluster_id=cluster.id) }}'; deleteName = '{{ cluster.name }}'"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600 transition hover:border-red-300 hover:bg-red-50 dark:border-red-900/60 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40">
+                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
             {% else %}
                 <tr>
-                    <td colspan="10"
+                    <td colspan="11"
                         class="py-16 text-center text-slate-400 dark:text-slate-500">
                         <div class="flex flex-col items-center gap-3">
                             <i data-lucide="server-off" class="h-12 w-12"></i>

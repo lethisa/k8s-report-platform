@@ -99,20 +99,10 @@ class AlertmanagerClient:
         status_payload = self.get_status()
         elapsed_ms = int((perf_counter() - started_at) * 1000)
 
-        version_info = {}
-        cluster_info = status_payload.get(
-            'cluster',
+        version_info = status_payload.get(
+            'versionInfo',
             {},
         )
-
-        if isinstance(
-            cluster_info,
-            dict,
-        ):
-            version_info = cluster_info.get(
-                'versionInfo',
-                {},
-            )
 
         if not isinstance(
             version_info,
@@ -120,11 +110,26 @@ class AlertmanagerClient:
         ):
             version_info = {}
 
+        cluster_info = status_payload.get(
+            'cluster',
+            {},
+        )
+
+        if not isinstance(
+            cluster_info,
+            dict,
+        ):
+            cluster_info = {}
+
         return {
             'connected': True,
             'response_time_ms': elapsed_ms,
             'version': version_info.get(
                 'version',
+                'unknown',
+            ),
+            'cluster_status': cluster_info.get(
+                'status',
                 'unknown',
             ),
             'payload': status_payload,

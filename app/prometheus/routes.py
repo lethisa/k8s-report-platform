@@ -32,7 +32,6 @@ prometheus_bp = Blueprint(
 def configuration(
     cluster_id: str,
 ):
-
     cluster = Cluster.query.get_or_404(
         cluster_id,
     )
@@ -69,7 +68,7 @@ def configuration(
         form.verify_ssl.data = config.verify_ssl
 
     return render_template(
-        'prometheus/configuration.html',
+        'prometheus/config.html',
         cluster=cluster,
         form=form,
     )
@@ -82,7 +81,6 @@ def configuration(
 def test_connection(
     cluster_id: str,
 ):
-
     cluster = Cluster.query.get_or_404(
         cluster_id,
     )
