@@ -3,13 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
         <link rel="icon"
               type="image/svg+xml"
               href="{{ url_for('static', filename='favicon.svg') }}" />
-
         <title>{% block title %}KubeReport{% endblock title %}</title>
-
         <script>
             ;(function () {
                 const theme = localStorage.getItem('theme')
@@ -19,7 +16,6 @@
                 }
             })()
         </script>
-
         <style>
             [x-cloak] {
                 display: none !important;
@@ -35,24 +31,19 @@
                 opacity: 1;
             }
         </style>
-
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
               rel="stylesheet" />
-
         <link rel="stylesheet"
               href="{{ url_for('static', filename='css/output.css') }}" />
     </head>
-
     <body class="h-full overflow-hidden bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
-        <div x-data="{ sidebarOpen: true }" class="flex h-full min-h-0 overflow-hidden">
+        <div x-data="{ sidebarOpen: true }"
+             class="flex h-full min-h-0 overflow-hidden">
             {% include "components/navigation/sidebar.html" %}
-
             <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
                 {% include "components/navigation/navbar.html" %}
-
                 <main class="min-h-0 flex-1 overflow-y-auto bg-slate-50 transition-colors duration-300 dark:bg-slate-900">
                     <div class="p-6 lg:p-8">
                         {% block dashboard_content %}
@@ -61,12 +52,10 @@
                 </main>
             </div>
         </div>
-
         <script defer
                 src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
-
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 if (window.lucide) {
@@ -80,7 +69,6 @@
                 }
             })
         </script>
-
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const button = document.getElementById('theme-toggle')
@@ -98,7 +86,6 @@
                 })
             })
         </script>
-
         {% block scripts %}
         {% endblock scripts %}
     </body>

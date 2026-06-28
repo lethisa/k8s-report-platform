@@ -35,6 +35,14 @@ SORT_OPTIONS: list[dict[str, str]] = [
     {'value': 'resource', 'label': 'Resource Type'},
 ]
 
+FOCUS_OPTIONS = {
+    '',
+    'missing_requests',
+    'high_usage',
+    'dominant_namespaces',
+    'high_pvc',
+}
+
 RESOURCE_LABELS = {
     'cpu': 'CPU',
     'memory': 'Memory',
@@ -98,6 +106,21 @@ def get_selected_sort(
     return selected_sort
 
 
+def get_selected_focus(
+    query_args: Mapping[str, Any],
+) -> str:
+    selected_focus = get_query_value(
+        query_args=query_args,
+        name='focus',
+        default='',
+    )
+
+    if selected_focus not in FOCUS_OPTIONS:
+        return ''
+
+    return selected_focus
+
+
 class TopConsumersService(AnalyticsBaseService):
     def __init__(
         self,
@@ -158,6 +181,7 @@ class TopConsumersService(AnalyticsBaseService):
         selected_resource: str,
         selected_search: str,
         selected_sort: str,
+        selected_focus: str,
         page: int,
         per_page: int,
     ) -> dict[str, Any]:
@@ -179,6 +203,7 @@ class TopConsumersService(AnalyticsBaseService):
             rows=all_rows,
             selected_search=selected_search,
             selected_resource=selected_resource,
+            selected_focus=selected_focus,
         )
         sorted_rows = self.sort_rows(
             rows=filtered_rows,
@@ -864,10 +889,12 @@ class TopConsumersService(AnalyticsBaseService):
             'cpu_chart': build_chart_series(
                 rows=cpu_rows,
                 unit='cores',
+                total_usage=total_cpu_usage,
             ),
             'memory_chart': build_chart_series(
                 rows=memory_rows,
                 unit='bytes',
+                total_usage=total_memory_usage,
             ),
             'summary': {
                 'total_cpu_used': format_cpu(
@@ -919,17 +946,73 @@ class TopConsumersService(AnalyticsBaseService):
         rows: list[dict[str, Any]],
         selected_search: str,
         selected_resource: str,
+        selected_focus: str,
     ) -> list[dict[str, Any]]:
         filtered_rows: list[dict[str, Any]] = []
+        dominant_namespace_names = set(
+            get_dominant_namespace_names(
+                rows,
+            )
+        )
 
         for row in rows:
-            if (
-                selected_resource != 'all'
-                and row.get(
+            resource_type = str(
+                row.get(
                     'resource_type',
+                    '',
                 )
-                != selected_resource
-            ):
+            )
+            namespace = str(
+                row.get(
+                    'namespace',
+                    '',
+                )
+            )
+            usage_percent = float(
+                row.get(
+                    'usage_percent',
+                    0,
+                )
+            )
+            request = float(
+                row.get(
+                    'request',
+                    0,
+                )
+            )
+
+            if selected_focus == 'missing_requests':
+                if resource_type not in [
+                    'cpu',
+                    'memory',
+                ]:
+                    continue
+
+                if request > 0:
+                    continue
+
+            elif selected_focus == 'high_usage':
+                if resource_type not in [
+                    'cpu',
+                    'memory',
+                ]:
+                    continue
+
+                if usage_percent < 75:
+                    continue
+
+            elif selected_focus == 'dominant_namespaces':
+                if namespace not in dominant_namespace_names:
+                    continue
+
+            elif selected_focus == 'high_pvc':
+                if resource_type != 'pvc':
+                    continue
+
+                if usage_percent < 80:
+                    continue
+
+            if selected_resource != 'all' and resource_type != selected_resource:
                 continue
 
             if selected_search:
@@ -1020,20 +1103,33 @@ class TopConsumersService(AnalyticsBaseService):
         *,
         rows: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        missing_requests = [row for row in rows if row['resource_type'] in ['cpu', 'memory'] and row['request'] <= 0]
-        high_pvc = [row for row in rows if row['resource_type'] == 'pvc' and row['usage_percent'] >= 80]
-        high_usage = [row for row in rows if row['resource_type'] in ['cpu', 'memory'] and row['usage_percent'] >= 75]
-        namespace_totals: dict[str, float] = {}
-        for row in rows:
-            namespace = str(row.get('namespace', ''))
-            namespace_totals[namespace] = namespace_totals.get(
-                namespace,
-                0,
-            ) + float(row.get('current_usage', 0))
-
-        dominant_namespaces = [namespace for namespace, value in namespace_totals.items() if value > 0 and namespace][
-            :2
+        missing_requests = [
+            row
+            for row in rows
+            if row['resource_type']
+            in [
+                'cpu',
+                'memory',
+            ]
+            and row['request'] <= 0
         ]
+
+        high_usage = [
+            row
+            for row in rows
+            if row['resource_type']
+            in [
+                'cpu',
+                'memory',
+            ]
+            and row['usage_percent'] >= 75
+        ]
+
+        high_pvc = [row for row in rows if row['resource_type'] == 'pvc' and row['usage_percent'] >= 80]
+
+        dominant_namespace_names = get_dominant_namespace_names(
+            rows,
+        )
 
         recommendations = [
             {
@@ -1046,7 +1142,9 @@ class TopConsumersService(AnalyticsBaseService):
                 )
                 if missing_requests
                 else 'CPU and memory requests are available for the visible top consumers.',
-                'action_label': 'View Missing Requests',
+                'action_label': 'View Missing Requests' if missing_requests else 'No Missing Requests',
+                'focus': 'missing_requests',
+                'actionable': bool(missing_requests),
             },
             {
                 'level': 'warning' if high_usage else 'normal',
@@ -1058,19 +1156,23 @@ class TopConsumersService(AnalyticsBaseService):
                 )
                 if high_usage
                 else 'No high CPU or memory consumers are above the warning threshold.',
-                'action_label': 'View High Usage',
+                'action_label': 'View High Usage' if high_usage else 'No High Usage',
+                'focus': 'high_usage',
+                'actionable': bool(high_usage),
             },
             {
-                'level': 'warning' if dominant_namespaces else 'normal',
+                'level': 'warning' if dominant_namespace_names else 'normal',
                 'icon': 'network',
                 'title': 'Investigate Dominant Namespaces',
                 'description': (
-                    f'{len(dominant_namespaces)} namespaces dominate the visible top consumers. '
-                    'Review distribution and apply quotas if needed.'
+                    f'{len(dominant_namespace_names)} namespaces dominate the visible high-usage consumers. '
+                    'Click to review workloads in those namespaces and apply quotas if needed.'
                 )
-                if dominant_namespaces
+                if dominant_namespace_names
                 else 'No dominant namespace pattern detected in the current selection.',
-                'action_label': 'View Namespaces',
+                'action_label': 'View Namespace Workloads' if dominant_namespace_names else 'No Dominant Namespaces',
+                'focus': 'dominant_namespaces',
+                'actionable': bool(dominant_namespace_names),
             },
             {
                 'level': 'critical' if high_pvc else 'normal',
@@ -1082,7 +1184,9 @@ class TopConsumersService(AnalyticsBaseService):
                 )
                 if high_pvc
                 else 'PVC usage is within the expected range for the visible consumers.',
-                'action_label': 'View High PVCs',
+                'action_label': 'View High PVCs' if high_pvc else 'No High PVCs',
+                'focus': 'high_pvc',
+                'actionable': bool(high_pvc),
             },
         ]
 
@@ -1115,6 +1219,9 @@ def get_top_consumers_context(
     selected_sort = get_selected_sort(
         query_args=query_args,
     )
+    selected_focus = get_selected_focus(
+        query_args=query_args,
+    )
     page = get_positive_int_arg(
         query_args=query_args,
         name='page',
@@ -1132,6 +1239,7 @@ def get_top_consumers_context(
             'selected_resource': selected_resource,
             'selected_time_range': selected_time_range,
             'selected_search': selected_search,
+            'selected_focus': selected_focus,
             'selected_sort': selected_sort,
             'resource_options': RESOURCE_OPTIONS,
             'sort_options': SORT_OPTIONS,
@@ -1219,6 +1327,7 @@ def get_top_consumers_context(
             selected_resource=selected_resource,
             selected_search=selected_search,
             selected_sort=selected_sort,
+            selected_focus=selected_focus,
             page=page,
             per_page=per_page,
         )
@@ -1398,6 +1507,51 @@ def get_resource_recommendation(
     return 'Monitor growth'
 
 
+def get_dominant_namespace_names(
+    rows: list[dict[str, Any]],
+) -> list[str]:
+    namespace_scores: dict[str, int] = {}
+
+    for row in rows:
+        namespace = str(
+            row.get(
+                'namespace',
+                '',
+            )
+        )
+        usage_percent = float(
+            row.get(
+                'usage_percent',
+                0,
+            )
+        )
+
+        if not namespace:
+            continue
+
+        if usage_percent < 75:
+            continue
+
+        namespace_scores[namespace] = (
+            namespace_scores.get(
+                namespace,
+                0,
+            )
+            + 1
+        )
+
+    sorted_namespaces = sorted(
+        namespace_scores.items(),
+        key=lambda item: (
+            item[1],
+            item[0],
+        ),
+        reverse=True,
+    )
+
+    return [namespace for namespace, _ in sorted_namespaces[:2]]
+
+
 def build_summary_card(
     *,
     rows: list[dict[str, Any]],
@@ -1464,6 +1618,7 @@ def build_chart_series(
     *,
     rows: list[dict[str, Any]],
     unit: str,
+    total_usage: float,
 ) -> dict[str, Any]:
     top_rows = sorted(
         rows,
@@ -1471,37 +1626,134 @@ def build_chart_series(
         reverse=True,
     )[:10]
 
+    max_usage = max(
+        [
+            float(
+                row.get(
+                    'current_usage',
+                    0,
+                )
+            )
+            for row in top_rows
+        ],
+        default=0,
+    )
+
+    chart_rows: list[dict[str, Any]] = []
     values: list[float] = []
 
-    for row in top_rows:
-        value = float(
+    for index, row in enumerate(
+        top_rows,
+        start=1,
+    ):
+        raw_value = float(
             row.get(
                 'current_usage',
                 0,
             )
         )
 
-        if unit == 'bytes':
-            value = value / (1024**3)
+        display_value = raw_value
+        value_suffix = 'cores'
 
+        if unit == 'bytes':
+            display_value = raw_value / (1024**3)
+            value_suffix = 'GiB'
+
+        rounded_value = safe_round(
+            display_value,
+            2,
+        )
         values.append(
-            safe_round(
-                value,
-                2,
+            rounded_value,
+        )
+
+        workload = str(
+            row.get(
+                'workload',
+                '-',
             )
+        )
+        namespace = str(
+            row.get(
+                'namespace',
+                '-',
+            )
+        )
+        pod = str(
+            row.get(
+                'pod',
+                '',
+            )
+        )
+        container = str(
+            row.get(
+                'container',
+                '',
+            )
+        )
+
+        primary_name = workload
+        secondary_parts = [
+            namespace,
+        ]
+
+        if container:
+            primary_name = container
+
+        if pod:
+            secondary_parts.append(
+                pod,
+            )
+        elif workload and workload != namespace:
+            secondary_parts.append(
+                workload,
+            )
+
+        percent_of_total = raw_percent(
+            raw_value,
+            total_usage,
+        )
+        bar_percent = raw_percent(
+            raw_value,
+            max_usage,
+        )
+
+        chart_rows.append(
+            {
+                'rank': index,
+                'primary_name': primary_name,
+                'secondary_name': ' · '.join([part for part in secondary_parts if part]),
+                'full_name': workload,
+                'namespace': namespace,
+                'value': rounded_value,
+                'value_display': f'{rounded_value} {value_suffix}',
+                'percent_of_total': safe_round(
+                    percent_of_total,
+                    1,
+                ),
+                'bar_percent': min(
+                    safe_round(
+                        bar_percent,
+                        1,
+                    ),
+                    100,
+                ),
+            }
         )
 
     return {
         'labels': [
             str(
                 row.get(
-                    'workload',
+                    'primary_name',
                     '-',
                 )
-            )[:42]
-            for row in top_rows
+            )
+            for row in chart_rows
         ],
         'values': values,
+        'rows': chart_rows,
     }
 
 
